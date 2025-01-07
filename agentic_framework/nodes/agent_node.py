@@ -1,12 +1,11 @@
 """
 Agent node implementation for the Agentic Framework.
 """
-
-from hmac import new
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, List
 from agentic_framework.node import Node
-from langchain_core.messages import SystemMessage
-from agentic_framework.state import AgenticState
+from langchain_core.messages import SystemMessage, AIMessage, ToolMessage
+from langchain.tools import StructuredTool, BaseTool
+import json
 
 class AgentNode(Node):
     """
@@ -30,6 +29,7 @@ class AgentNode(Node):
         """
         super().__init__(name, llm, node_prompt)
         self.child = None
+        self.tool_available = False
         
     def __call__(self, state):
         """
@@ -53,12 +53,15 @@ class AgentNode(Node):
         message_w_prompt = state['messages']
         message_w_prompt = [SystemMessage(content=self.node_prompt)] + message_w_prompt
         response = self.llm.invoke(message_w_prompt)
-        new_state = state
-        new_state['messages'].append(response)
-        if 'log' in new_state:
-            new_state['log'].append(f'{self.name}:{response.content}')
         
-        return new_state
+        state['messages'].append(response)
+        if 'log' in state:
+            state['log'].append(f'{self.name}:{response.content}')
+        
+        if self.tool_available:
+            state = self.call_tools(state)
+        
+        return state
     
     def __gt__(self, other):
         """
@@ -72,3 +75,71 @@ class AgentNode(Node):
         """
         self.child = other
         return other
+    
+    def bind_tools(self, tools):
+        """
+        Bind a tool to the agent node.
+        
+        Args:
+            tools: list of tools to bind to the agent node
+        """
+        self.tools = []
+        
+        if not isinstance(tools, List):
+            tools = [tools]
+        
+        for tool in tools:
+            
+            # if tool is already a langgraph tool, use it as is
+            if isinstance(tool, StructuredTool) or isinstance(tool, BaseTool):
+                pass
+            
+            # if tool is function, use StructuredTool to wrap it
+            elif callable(tool):
+                tool = StructuredTool.from_function(
+                        func = tool, 
+                        name = tool.__name__, 
+                        description = tool.__doc__)
+                
+            self.tools.append(tool)
+        
+        self.tools_by_name = {tool.name: tool for tool in self.tools}
+        self.tool_available = True
+        self.llm = self.llm.bind_tools(tools)
+
+    def call_tools(self, state):
+        """
+        check if the ai_message has a call to a tool and process it
+        then call llm again until no more calls to tools are found
+        
+        Args:
+            state: Current conversation state containing message history
+            
+        Returns:
+            Updated state with the agent's response appended
+        """ 
+        ai_message = state['messages'][-1]
+        
+        if not isinstance(ai_message, AIMessage):
+            return state
+        
+        if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
+            for tool_call in ai_message.tool_calls:
+                tool_result = self.tools_by_name[tool_call["name"]].invoke(
+                    tool_call["args"]
+                )
+                
+                tool_output = ToolMessage(
+                    content=json.dumps(tool_result),
+                    name=tool_call["name"],
+                    tool_call_id=tool_call["id"],
+                )
+                
+                state['messages'].append(tool_output)
+                
+                if 'log' in state:
+                    state['log'].append(f'tools:{tool_call["name"]}, args:{tool_call["args"]}, result:{tool_result}')
+                
+            state = self.__call__(state)
+        
+        return state
