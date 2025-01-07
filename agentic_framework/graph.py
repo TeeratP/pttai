@@ -2,7 +2,7 @@
 Graph implementation for the Agentic Framework.
 """
 
-from typing import Set, Union
+from typing import Literal, Set, Union
 from langgraph.graph import StateGraph, START, END, MessagesState
 from agentic_framework.nodes.agent_node import AgentNode
 from agentic_framework.nodes.decision_node import DecisionNode
@@ -68,7 +68,7 @@ class AgenticGraph(StateGraph):
                 self._build_graph(node.child, node)  # recursively build graph
             
         elif isinstance(node, DecisionNode):
-            self.add_conditional_edges(prev_node_name, node)  # node performs as function that returns name of next node
+            self.add_conditional_edges(prev_node_name, node, [x.child.name for x in node.choices])  # node performs as function that returns name of next node
             for choice in node.choices:
                 self._build_graph(choice.child, node)
         else:

@@ -73,7 +73,7 @@ class DecisionNode(Node):
         Initialize the choices and configure LLM for structured output.
         """
         class OutputModel(BaseModel):
-            choice: Union[Literal[tuple(self.choices_name)]]
+            choice: Literal[tuple(self.choices_name)]
             
         self.llm = self.llm.with_structured_output(OutputModel)
         self.choices = [Choice(name) for name in self.choices_name]
@@ -94,7 +94,6 @@ class DecisionNode(Node):
         """
         if self.llm is None:
             raise ValueError(f"{self.name} requires a LLM to be set before call.")
-        
         
         if 'messages' not in state:
             raise ValueError("State must contain a 'messages' key")
