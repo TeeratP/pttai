@@ -68,7 +68,10 @@ class AgenticGraph(StateGraph):
                 self._build_graph(node.child, node)  # recursively build graph
             
         elif isinstance(node, DecisionNode):
-            self.add_conditional_edges(prev_node_name, node, [x.child.name for x in node.choices])  # node performs as function that returns name of next node
+            
+            self.add_node(curr_node_name, node)
+            self.add_edge(prev_node_name, curr_node_name)
+            self.add_conditional_edges(curr_node_name, node.route, [x.child.name for x in node.choices])  # node performs as function that returns name of next node
             for choice in node.choices:
                 self._build_graph(choice.child, node)
         else:

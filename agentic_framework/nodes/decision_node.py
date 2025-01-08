@@ -4,7 +4,7 @@ Decision node implementation for the Agentic Framework.
 
 from typing import Any, Dict, List, Literal, Optional, Union
 from agentic_framework.node import Node
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import SystemMessage, AIMessage
 from pydantic import BaseModel
 
 class Choice:
@@ -101,17 +101,26 @@ class DecisionNode(Node):
         message_w_prompt = state['messages']
         message_w_prompt = [SystemMessage(content=self.node_prompt)] + message_w_prompt
         response = self.llm.invoke(message_w_prompt)  # use llm to decide which choice to make
+        decision_message = AIMessage(content=response.choice)
+        state['messages'].append(decision_message)
+        if 'log' in state:
+            state['log'].append(f'{self.name}:{decision_message.content}')
         
+        return state
+    
+    def route(self, state):
+        
+        decision_choice = state['messages'][-1].content
         for choice in self.choices:
-            if response.choice == choice.name:
+            if decision_choice == choice.name:
                 if choice.child is None:
                     raise ValueError(
-                        f"Choice {response.choice} does not have a child. "
+                        f"Choice {decision_choice} does not have a child. "
                         "Please create an edge from this choice to another node. "
                         "For example: `decision_node['abc'] > other_node`"
                     )
                 return choice.child.name
-        raise ValueError(f"Choice {response['choice']} not found in choices")
+        raise ValueError(f"Choice {decision_choice} not found in choices")
         
     def __gt__(self, other) -> None:
         """
