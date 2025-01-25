@@ -8,5 +8,5 @@ from typing import List
 from langgraph.graph import MessagesState
 
 class AgenticState(MessagesState):
-    log: List[str] = []
+    log: List[str] = ["START"]
     
