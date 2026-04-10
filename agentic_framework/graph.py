@@ -4,8 +4,7 @@ Graph implementation for the Agentic Framework.
 
 from typing import Literal, Set, Union
 from langgraph.graph import StateGraph, START, END, MessagesState
-from agentic_framework.nodes.agent_node import AgentNode
-from agentic_framework.nodes.decision_node import DecisionNode
+from agentic_framework.nodes import AgentNode, InputNode, DecisionNode
 
 class AgenticGraph(StateGraph):
     """
@@ -103,7 +102,7 @@ class AgenticGraph(StateGraph):
         
         self._seen_nodes.add(curr_node_name)
         
-        if isinstance(node, AgentNode):
+        if isinstance(node, AgentNode) or isinstance(node, InputNode):
             
             self.add_node(curr_node_name, node)
             if not isinstance(prev_node, DecisionNode):  # normal case

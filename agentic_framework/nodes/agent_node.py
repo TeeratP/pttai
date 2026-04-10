@@ -63,19 +63,6 @@ class AgentNode(Node):
         
         return state
     
-    def __gt__(self, other):
-        """
-        Create edge from this node to another node.
-        
-        Args:
-            other: The node to create an edge to
-            
-        Returns:
-            The other node to allow for chain building
-        """
-        self.child = other
-        return other
-    
     def bind_tools(self, tools):
         """
         Bind a tool to the agent node.

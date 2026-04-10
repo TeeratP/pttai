@@ -41,8 +41,7 @@ class Node(ABC):
         Raises:
             ValueError: If LLM is not set
         """
-        if self.llm is None:
-            raise ValueError(f"{self.name} requires a LLM to be set.")
+        pass
     
     def set_llm(self, llm: Any) -> None:
         """
@@ -52,3 +51,16 @@ class Node(ABC):
             llm: Language model instance
         """
         self.llm = llm
+
+    def __gt__(self, other):
+        """
+        Create edge from this node to another node.
+        
+        Args:
+            other: The node to create an edge to
+            
+        Returns:
+            The other node to allow for chain building
+        """
+        self.child = other
+        return other
