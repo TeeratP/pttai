@@ -50,11 +50,13 @@ Remaining:
 ## Status
 
 <!-- AUTO-MAINTAINED by .githooks/post-commit — keep this a 1-3 sentence summary -->
-3-phase LangGraph-native refactor complete on branch `roadmap/phases-1-3`: reducer state, delta nodes, decision routing field, interrupt/resume, RAG tool, packaging, streaming/async, configurable I/O fields. 28 tests passing.
+3-phase LangGraph-native refactor complete on branch `roadmap/phases-1-3`: reducer state, delta nodes, decision routing field, interrupt/resume, RAG tool, packaging, streaming/async, configurable I/O fields. 28 tests passing. A runnable end-to-end demo now lives at `examples/sample_usage.py` (tool-using agent → decision routing → branched handlers, wired with `>`).
 
 ## Recent changes
 
 <!-- AUTO-MAINTAINED by .githooks/post-commit — newest first, max 15 bullets -->
+- 86e8d91 2026-06-17 — Stop tracking `.env` (committed before the ignore rule); leaked key remains in history and should be rotated
+- 9b7a9a6 2026-06-17 — Add examples/sample_usage.py: runnable tool→decision→branch demo wired with `>`
 - 7f1735b 2026-06-17 — Phase 3: streaming/async, configurable I/O fields, LangSmith docs
 - 9bfebfa 2026-06-17 — Phase 2: interrupt/resume, tool-loop cap, RAG tool, packaging
 - bcd7d8f 2026-06-17 — Phase 1: pytest suite + clear stale notebook outputs
