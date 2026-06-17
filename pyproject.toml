@@ -9,17 +9,16 @@ description = "A declarative DSL over LangGraph for building agent workflows."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "langgraph>=0.2.60,<0.3",
-    "langchain>=0.3,<0.4",
-    "langchain-core>=0.3,<0.4",
+    "langgraph>=1.0,<2",
+    "langchain-core>=1.0,<2",
     "pydantic>=2,<3",
 ]
 
 [project.optional-dependencies]
 # Convenience LLM provider used by the examples/notebook.
-openai = ["langchain-openai>=0.2,<0.3", "python-dotenv>=1.0"]
+openai = ["langchain-openai>=1,<2", "python-dotenv>=1.0"]
 # Retrieval (ChromaRAG); the rag_tool core works with any retriever without this.
-rag = ["langchain-chroma>=0.1"]
+rag = ["langchain-chroma>=0.2"]
 dev = ["pytest>=8"]
 
 [tool.setuptools.packages.find]

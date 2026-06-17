@@ -1,7 +1,7 @@
 """InputNode interrupts the run and resumes via Command(resume=...) with a checkpointer."""
 
 from langchain_core.messages import HumanMessage
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
 from agentic_framework.graph import AgenticGraph
@@ -15,7 +15,7 @@ def test_interrupt_then_resume(t):
     b = AgentNode(name="b", llm=t.FakeLLM(responses=[t.ai("done")]), node_prompt="p")
     a > inp > b
     g = AgenticGraph(state=AgenticState, start_node=a, end_nodes=b,
-                     checkpointer=MemorySaver())
+                     checkpointer=InMemorySaver())
     config = {"configurable": {"thread_id": "test-1"}}
 
     paused = g.invoke({"messages": [HumanMessage(content="hi")], "log": []}, config=config)

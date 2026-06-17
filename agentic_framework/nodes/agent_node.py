@@ -4,7 +4,7 @@ Agent node implementation for the Agentic Framework.
 from typing import Any, Optional, List
 from agentic_framework.node import Node
 from langchain_core.messages import SystemMessage, AIMessage, ToolMessage
-from langchain.tools import StructuredTool, BaseTool
+from langchain_core.tools import StructuredTool, BaseTool
 import json
 
 class AgentNode(Node):

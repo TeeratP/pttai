@@ -8,7 +8,7 @@ Chroma vector store; its import of `langchain_chroma` is lazy so this module
 imports fine without the optional `rag` dependency installed.
 """
 
-from langchain.tools import StructuredTool
+from langchain_core.tools import StructuredTool
 
 
 def _format_docs(docs) -> str:
