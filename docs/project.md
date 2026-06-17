@@ -17,44 +17,47 @@ pip install -e ".[dev]"        # editable install + pytest  (or: uv pip install 
 
 ## Dependencies & gotchas
 
-- `pyproject.toml` declares the **direct** deps (langgraph, langchain, langchain-core, pydantic) + extras. `requirements.txt` remains the **frozen lock** for exact reproduction (now includes pytest).
+- `pyproject.toml` declares the **direct** deps (langgraph≥1.0, langchain-core≥1.0, pydantic) + extras — **no `langchain` meta-dep** (tool classes come from `langchain_core.tools`). `requirements.txt` is the **frozen lock** (langgraph 1.2.5, langchain-core 1.4.7, langchain-openai 1.3.2, pytest).
 - `test.ipynb` imports `langchain_ollama` (`ChatOllama`), which is **not** declared. Either `pip install langchain-ollama` or stick to the `ChatOpenAI` line.
 - `ChromaRAG` needs the `rag` extra; the import of `langchain_chroma` is lazy so `agentic_framework.tools` imports fine without it.
 
 ## Verifying changes
 
-- **Automated:** `python -m pytest tests/` — 28 tests, no API calls (a scripted `FakeLLM` stands in for the model). Covers state reducers, graph construction, routing, the tool-call loop, interrupt/resume, RAG tool wiring, streaming/async, and configurable fields.
-- **Manual / live model:** run `test.ipynb` with `OPENAI_API_KEY` set; inspect `state['log']` for the per-node trace. (Notebook outputs are cleared in git — re-run locally.)
+- **Automated:** `python -m pytest tests/` — 33 tests, no API calls (a scripted `FakeLLM` stands in). Covers state reducers, graph construction, routing, the tool-call loop, interrupt/resume, RAG tool wiring, streaming/async, configurable fields, and node caching/retry/`reasoning_effort`/`durability`.
+- **Manual / live model:** `python examples/sample_usage.py` (or `test.ipynb`) with `OPENAI_API_KEY` set — exercises **gpt-5.4-nano** end-to-end (tool call → routing → reasoning handler); inspect `state['log']` for the per-node trace.
 
 ## Current status & rough edges
 
-The 3-phase LangGraph-native refactor (branch `roadmap/phases-1-3`) is complete: reducer-based state, delta-returning nodes, routing off the message stream, interrupt/resume, RAG tooling, packaging, streaming/async, and configurable I/O fields. Remaining rough edges:
+Phases 1–4 are complete on branch `roadmap/phases-1-3`: reducer state, delta nodes, routing off messages, interrupt/resume, RAG tooling, packaging, streaming/async, configurable fields, the **LangGraph 1.0 stack**, **gpt-5.4-nano** + node `reasoning_effort`, node `cache_ttl`/`retry`, and a `durability` passthrough. Verified live on gpt-5.4-nano. Remaining rough edges:
 
-- **Async is graph-level only.** `ainvoke`/`astream` run the sync nodes in LangGraph's threadpool; true per-node async LLM calls (a node-level `ainvoke` using `llm.ainvoke`) are not implemented yet.
-- **ChromaRAG is untested end-to-end.** Only `make_retriever_tool` is covered (fake retriever); the Chroma path needs live embeddings and isn't exercised by the suite.
-- `test.ipynb` hasn't been re-run against a live model since the refactor (outputs cleared).
+- **Async is graph-level only.** `ainvoke`/`astream` run the sync nodes in LangGraph's threadpool; true per-node async LLM calls aren't implemented — which is also why **node `timeout` is unavailable** (LangGraph only times out async nodes).
+- **`reasoning_effort` is AgentNode-only** — it conflicts with `DecisionNode`'s structured output on current OpenAI models.
+- **ChromaRAG is untested end-to-end.** Only `make_retriever_tool` is covered (fake retriever); the Chroma path needs live embeddings.
 
 ## Roadmap
 
-Done in the refactor:
+Done:
 - [x] Resumable Human/Input node — `checkpointer` + `Command(resume=...)`.
 - [x] RAG tools — `make_retriever_tool` + `ChromaRAG`.
 - [x] Configurable input/output fields per node — `AgentNode`/`DecisionNode`.
 - [x] LangSmith integration — automatic via env vars (see `.env.example`).
+- [x] LangGraph 1.0 upgrade; gpt-5.4-nano + node `reasoning_effort`; node `cache_ttl`/`retry`; `durability` passthrough (Phase 4 #1–4).
 
 Remaining:
 - [ ] Conversation memory (`ConversationSummaryMemory`-style summarization node).
 - [ ] TTS and STT nodes.
-- [ ] True per-node async LLM execution.
+- [ ] True per-node async LLM execution (also unlocks node `timeout` and token-level streaming).
 
 ## Status
 
 <!-- AUTO-MAINTAINED by .githooks/post-commit — keep this a 1-3 sentence summary -->
-3-phase LangGraph-native refactor complete on branch `roadmap/phases-1-3`: reducer state, delta nodes, decision routing field, interrupt/resume, RAG tool, packaging, streaming/async, configurable I/O fields. 28 tests passing. A runnable end-to-end demo now lives at `examples/sample_usage.py` (tool-using agent → decision routing → branched handlers, wired with `>`).
+3-phase LangGraph-native refactor complete on branch `roadmap/phases-1-3`: reducer state, delta nodes, decision routing field, interrupt/resume, RAG tool, packaging, streaming/async, configurable I/O fields. Phase 4 (on the LangGraph 1.0 / LangChain 1.0 stack) is now layering resilience/perf knobs: per-node `reasoning_effort` on `AgentNode`, `cache_ttl`/`retry` policies with an auto-provided `InMemoryCache`, and a `durability` passthrough on all invoke/stream methods. 33 tests pass; a runnable end-to-end demo lives at `examples/sample_usage.py` (tool-using agent → decision routing → branched handlers, wired with `>`).
 
 ## Recent changes
 
 <!-- AUTO-MAINTAINED by .githooks/post-commit — newest first, max 15 bullets -->
+- a561424 2026-06-17 — Phase 4 #2-4: AgentNode `reasoning_effort`, per-node `cache_ttl`/`retry` knobs (auto `InMemoryCache`), and `durability` passthrough on invoke/stream; 33 tests pass
+- 666ef08 2026-06-17 — Phase 4 #1: upgrade to LangGraph 1.0 / LangChain 1.0 stack (tool imports → `langchain_core.tools`, `MemorySaver`→`InMemorySaver`, relocked deps); 28 tests pass unchanged
 - 86e8d91 2026-06-17 — Stop tracking `.env` (committed before the ignore rule); leaked key remains in history and should be rotated
 - 9b7a9a6 2026-06-17 — Add examples/sample_usage.py: runnable tool→decision→branch demo wired with `>`
 - 7f1735b 2026-06-17 — Phase 3: streaming/async, configurable I/O fields, LangSmith docs
