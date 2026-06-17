@@ -8,18 +8,21 @@ from langchain_core.messages import HumanMessage
 from langgraph.types import interrupt
 
 class InputNode(Node):
-    def __init__(self, 
+    def __init__(self,
                  name: str = 'input_node',
                  node_prompt: str = "Please review the following message and provide feedback.",
                  n: int = 1,
+                 cache_ttl: Optional[int] = None,
+                 retry: bool = False,
                  ) -> None:
         """
         Initialize an InputNode.
-        
+
         Args:
             name: Unique identifier for the node
+            cache_ttl/retry: see Node — node-level caching/retry.
         """
-        super().__init__(name)
+        super().__init__(name, cache_ttl=cache_ttl, retry=retry)
         self.child = None
         self.node_prompt = node_prompt
         self.n = n

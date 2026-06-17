@@ -50,7 +50,9 @@ class DecisionNode(Node):
                  llm: Optional[Any] = None,
                  node_prompt: str = "",
                  choices: List[str] = [],
-                 input_field: str = "messages") -> None:
+                 input_field: str = "messages",
+                 cache_ttl: Optional[int] = None,
+                 retry: bool = False) -> None:
         """
         Initialize a DecisionNode.
 
@@ -60,13 +62,14 @@ class DecisionNode(Node):
             node_prompt: System prompt/instructions for the language model
             choices: List of possible decision options
             input_field: State key to read the message history from.
+            cache_ttl/retry: see Node — node-level caching/retry.
 
         Raises:
             AssertionError: If node_prompt or choices is empty
         """
         assert node_prompt, "DecisionNode requires a node_prompt to be set."
         assert choices, "DecisionNode requires choices to be set."
-        super().__init__(name, llm, node_prompt)
+        super().__init__(name, llm, node_prompt, cache_ttl=cache_ttl, retry=retry)
         self.choices_name: List[str] = choices
         self.input_field = input_field
         self._create_choices()

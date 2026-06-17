@@ -24,13 +24,20 @@ class FakeLLM:
     survives the wrapping that AgentNode/DecisionNode perform.
     """
 
-    def __init__(self, responses=None, structured_value=None, repeat=False):
+    def __init__(self, responses=None, structured_value=None, repeat=False, fail_times=0):
         self._responses = list(responses or [])
         self._i = 0
         self._structured_value = structured_value
         self._repeat = repeat  # when True, keep returning the last response
+        self._fail_times = fail_times  # raise on the first N invokes (retry tests)
+        self.invoke_count = 0  # total invokes (cache/retry assertions)
+        self.last_kwargs = {}  # kwargs from the most recent invoke (reasoning_effort)
 
-    def invoke(self, messages):
+    def invoke(self, messages, **kwargs):
+        self.last_kwargs = kwargs
+        self.invoke_count += 1
+        if self.invoke_count <= self._fail_times:
+            raise ConnectionError("simulated transient failure")
         if self._structured_value is not None:
             return _Structured(self._structured_value)
         if self._repeat and self._i >= len(self._responses):

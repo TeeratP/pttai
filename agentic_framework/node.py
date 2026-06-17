@@ -13,18 +13,23 @@ class Node(ABC):
     providing core functionality for language model integration and prompt management.
     """
     
-    def __init__(self, name: str, llm: Optional[Any] = None, node_prompt: str = "") -> None:
+    def __init__(self, name: str, llm: Optional[Any] = None, node_prompt: str = "",
+                 cache_ttl: Optional[int] = None, retry: bool = False) -> None:
         """
         Initialize a new Node.
-        
+
         Args:
             name: Unique identifier for the node
             llm: Language model instance to be used by this node
             node_prompt: System prompt/instructions for the language model
+            cache_ttl: Seconds to cache this node's result (LangGraph CachePolicy).
+            retry: When True, retry this node on exception (LangGraph RetryPolicy).
         """
         self.name = name
         self.llm = llm
         self.node_prompt = node_prompt
+        self.cache_ttl = cache_ttl
+        self.retry = retry
 
     @abstractmethod
     def __call__(self, *args: Any, **kwargs: Any) -> Any:

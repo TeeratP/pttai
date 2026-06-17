@@ -21,7 +21,10 @@ class AgentNode(Node):
                  node_prompt: str = "you are a helpful assistant",
                  max_tool_iterations: int = 25,
                  input_field: str = "messages",
-                 output_field: str = "messages") -> None:
+                 output_field: str = "messages",
+                 reasoning_effort: Optional[str] = None,
+                 cache_ttl: Optional[int] = None,
+                 retry: bool = False) -> None:
         """
         Initialize an AgentNode.
 
@@ -36,13 +39,21 @@ class AgentNode(Node):
                 produced messages are appended to the conversation; any other key
                 receives the final response's string content instead (useful for
                 transform nodes — that key must exist in your state schema).
+            reasoning_effort: Reasoning effort for reasoning-capable models
+                (e.g. "low"/"medium"/"high" on gpt-5.x). Passed as a per-call
+                kwarg to the LLM. (DecisionNode does not expose this — reasoning
+                effort conflicts with structured output on current OpenAI models.)
+            cache_ttl/retry: see Node — node-level caching/retry.
         """
-        super().__init__(name, llm, node_prompt)
+        super().__init__(name, llm, node_prompt, cache_ttl=cache_ttl, retry=retry)
         self.child = None
         self.tool_available = False
         self.max_tool_iterations = max_tool_iterations
         self.input_field = input_field
         self.output_field = output_field
+        self.reasoning_effort = reasoning_effort
+        # Per-call kwarg (survives bind_tools, unlike a pre-bound reasoning_effort).
+        self._invoke_kwargs = {"reasoning_effort": reasoning_effort} if reasoning_effort else {}
 
     def __call__(self, state):
         """
@@ -73,7 +84,7 @@ class AgentNode(Node):
         new_log = []
 
         prompt = [SystemMessage(content=self.node_prompt)] + history
-        response = self.llm.invoke(prompt)
+        response = self.llm.invoke(prompt, **self._invoke_kwargs)
         new_messages.append(response)
         new_log.append(f'{self.name}:{response.content}')
 
@@ -100,7 +111,7 @@ class AgentNode(Node):
                     )
                     new_log.append(f'tools:{tool_call["name"]}, args:{tool_call["args"]}, result:{tool_result}')
                 prompt = [SystemMessage(content=self.node_prompt)] + history + new_messages
-                response = self.llm.invoke(prompt)
+                response = self.llm.invoke(prompt, **self._invoke_kwargs)
                 new_messages.append(response)
                 new_log.append(f'{self.name}:{response.content}')
 

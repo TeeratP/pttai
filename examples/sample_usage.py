@@ -66,11 +66,13 @@ def build_graph(llm) -> AgenticGraph:
         name="positive_handler",
         llm=llm,
         node_prompt="Report the number to the user in an upbeat, celebratory tone.",
+        reasoning_effort="low",  # gpt-5.x reasoning effort, passed per call
     )
     negative_handler = AgentNode(
         name="negative_handler",
         llm=llm,
         node_prompt="Report the number to the user in a gloomy, melodramatic tone.",
+        reasoning_effort="low",
     )
 
     # Wire the graph with the `>` operator.
@@ -87,7 +89,7 @@ def build_graph(llm) -> AgenticGraph:
 
 def main() -> None:
     load_dotenv()
-    llm = ChatOpenAI(model="gpt-4o-mini")
+    llm = ChatOpenAI(model="gpt-5.4-nano")
     graph = build_graph(llm)
 
     # `log` is conventionally seeded with [] so every node appends a trace line.
