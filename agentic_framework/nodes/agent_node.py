@@ -19,7 +19,9 @@ class AgentNode(Node):
                  name: str = 'agent_node',
                  llm: Optional[Any] = None,
                  node_prompt: str = "you are a helpful assistant",
-                 max_tool_iterations: int = 25) -> None:
+                 max_tool_iterations: int = 25,
+                 input_field: str = "messages",
+                 output_field: str = "messages") -> None:
         """
         Initialize an AgentNode.
 
@@ -29,11 +31,18 @@ class AgentNode(Node):
             node_prompt: System prompt/instructions for the language model
             max_tool_iterations: Safety cap on the internal tool-call loop; a
                 model that keeps requesting tools beyond this raises RuntimeError.
+            input_field: State key to read the message history from.
+            output_field: State key to write to. When "messages" (default) the
+                produced messages are appended to the conversation; any other key
+                receives the final response's string content instead (useful for
+                transform nodes — that key must exist in your state schema).
         """
         super().__init__(name, llm, node_prompt)
         self.child = None
         self.tool_available = False
         self.max_tool_iterations = max_tool_iterations
+        self.input_field = input_field
+        self.output_field = output_field
 
     def __call__(self, state):
         """
@@ -56,10 +65,10 @@ class AgentNode(Node):
         if self.llm is None:
             raise ValueError(f"{self.name} requires a LLM to be set before call.")
 
-        if 'messages' not in state:
-            raise ValueError("State must contain a 'messages' key")
+        if self.input_field not in state:
+            raise ValueError(f"State must contain a {self.input_field!r} key")
 
-        history = state['messages']
+        history = state[self.input_field]
         new_messages = []
         new_log = []
 
@@ -95,7 +104,10 @@ class AgentNode(Node):
                 new_messages.append(response)
                 new_log.append(f'{self.name}:{response.content}')
 
-        return {"messages": new_messages, "log": new_log}
+        if self.output_field == "messages":
+            return {"messages": new_messages, "log": new_log}
+        # Transform node: write the final response content to the named field.
+        return {self.output_field: new_messages[-1].content, "log": new_log}
 
     def bind_tools(self, tools):
         """

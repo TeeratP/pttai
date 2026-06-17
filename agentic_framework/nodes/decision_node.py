@@ -45,20 +45,22 @@ class DecisionNode(Node):
     determining the next node in the graph based on the choice made.
     """
     
-    def __init__(self, 
-                 name: str = 'decision_node', 
-                 llm: Optional[Any] = None, 
-                 node_prompt: str = "", 
-                 choices: List[str] = []) -> None:
+    def __init__(self,
+                 name: str = 'decision_node',
+                 llm: Optional[Any] = None,
+                 node_prompt: str = "",
+                 choices: List[str] = [],
+                 input_field: str = "messages") -> None:
         """
         Initialize a DecisionNode.
-        
+
         Args:
             name: Unique identifier for the node
             llm: Language model instance to be used by this node
             node_prompt: System prompt/instructions for the language model
             choices: List of possible decision options
-            
+            input_field: State key to read the message history from.
+
         Raises:
             AssertionError: If node_prompt or choices is empty
         """
@@ -66,6 +68,7 @@ class DecisionNode(Node):
         assert choices, "DecisionNode requires choices to be set."
         super().__init__(name, llm, node_prompt)
         self.choices_name: List[str] = choices
+        self.input_field = input_field
         self._create_choices()
         
     def _create_choices(self) -> None:
@@ -95,10 +98,10 @@ class DecisionNode(Node):
         if self.llm is None:
             raise ValueError(f"{self.name} requires a LLM to be set before call.")
 
-        if 'messages' not in state:
-            raise ValueError("State must contain a 'messages' key")
+        if self.input_field not in state:
+            raise ValueError(f"State must contain a {self.input_field!r} key")
 
-        message_w_prompt = [SystemMessage(content=self.node_prompt)] + state['messages']
+        message_w_prompt = [SystemMessage(content=self.node_prompt)] + state[self.input_field]
         response = self.llm.invoke(message_w_prompt)  # use llm to decide which choice to make
         choice = response.choice
         # Routing label is written to the dedicated `decision` field, not injected

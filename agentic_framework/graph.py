@@ -74,7 +74,24 @@ class AgenticGraph(StateGraph):
             Updated state after processing through the graph
         """
         return self.compiled_graph.invoke(state, config=config)
-        
+
+    def stream(self, state, config=None, **kwargs):
+        """
+        Stream graph execution, yielding updates as nodes complete.
+
+        Passes through to the compiled graph's stream (default mode='updates').
+        """
+        return self.compiled_graph.stream(state, config=config, **kwargs)
+
+    async def ainvoke(self, state, config=None):
+        """Async variant of invoke. Sync nodes run in LangGraph's threadpool."""
+        return await self.compiled_graph.ainvoke(state, config=config)
+
+    async def astream(self, state, config=None, **kwargs):
+        """Async streaming variant of stream."""
+        async for chunk in self.compiled_graph.astream(state, config=config, **kwargs):
+            yield chunk
+
     def compile(self, checkpointer = None, *, store = None, interrupt_before = None, interrupt_after = None, debug = False):
         return super().compile(checkpointer, store=store, interrupt_before=interrupt_before, interrupt_after=interrupt_after, debug=debug)
             
