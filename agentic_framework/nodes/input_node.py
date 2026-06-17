@@ -39,7 +39,5 @@ class InputNode(Node):
                 }
             )
 
-        state['messages'].append(HumanMessage(content=human_message))
-        
-        return state
+        return {"messages": [HumanMessage(content=human_message)]}
     

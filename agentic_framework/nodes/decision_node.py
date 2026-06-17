@@ -4,7 +4,7 @@ Decision node implementation for the Agentic Framework.
 
 from typing import Any, Dict, List, Literal, Optional, Union
 from agentic_framework.node import Node
-from langchain_core.messages import SystemMessage, AIMessage
+from langchain_core.messages import SystemMessage
 from pydantic import BaseModel
 
 class Choice:
@@ -87,30 +87,27 @@ class DecisionNode(Node):
             state: Current conversation state containing message history
             
         Returns:
-            Name of the next node based on the decision made
-            
+            A state delta: {"decision": <chosen label>, "log": [...]}
+
         Raises:
             ValueError: If LLM is not set, if choice is invalid, or if choice has no connected node
         """
         if self.llm is None:
             raise ValueError(f"{self.name} requires a LLM to be set before call.")
-        
+
         if 'messages' not in state:
             raise ValueError("State must contain a 'messages' key")
-            
-        message_w_prompt = state['messages']
-        message_w_prompt = [SystemMessage(content=self.node_prompt)] + message_w_prompt
+
+        message_w_prompt = [SystemMessage(content=self.node_prompt)] + state['messages']
         response = self.llm.invoke(message_w_prompt)  # use llm to decide which choice to make
-        decision_message = AIMessage(content=response.choice)
-        state['messages'].append(decision_message)
-        if 'log' in state:
-            state['log'].append(f'{self.name}:{decision_message.content}')
-        
-        return state
-    
+        choice = response.choice
+        # Routing label is written to the dedicated `decision` field, not injected
+        # into `messages`, so it does not pollute the conversation history.
+        return {"decision": choice, "log": [f'{self.name}:{choice}']}
+
     def route(self, state):
-        
-        decision_choice = state['messages'][-1].content
+
+        decision_choice = state['decision']
         for choice in self.choices:
             if decision_choice == choice.name:
                 if choice.child is None:

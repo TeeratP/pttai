@@ -2,7 +2,7 @@
 Graph implementation for the Agentic Framework.
 """
 
-from typing import Literal, Set, Union
+from typing import Literal, Union
 from langgraph.graph import StateGraph, START, END, MessagesState
 from agentic_framework.nodes import AgentNode, InputNode, DecisionNode
 
@@ -30,7 +30,7 @@ class AgenticGraph(StateGraph):
         self.end_nodes = end_nodes if isinstance(end_nodes, (list, tuple, set)) else [end_nodes]
         self.child = None
         
-        self._seen_nodes: Set = set()
+        self._seen_nodes: dict = {}
         self.build_graph()
         self.compiled_graph = self.compile()
         
@@ -98,9 +98,14 @@ class AgenticGraph(StateGraph):
         curr_node_name = node.name
         
         if curr_node_name in self._seen_nodes:
+            if self._seen_nodes[curr_node_name] is not node:
+                raise ValueError(
+                    f"Duplicate node name {curr_node_name!r}: two distinct nodes share "
+                    "this name. Node names must be unique within a graph."
+                )
             return
-        
-        self._seen_nodes.add(curr_node_name)
+
+        self._seen_nodes[curr_node_name] = node
         
         if isinstance(node, AgentNode) or isinstance(node, InputNode):
             
