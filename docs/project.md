@@ -51,11 +51,12 @@ Remaining:
 ## Status
 
 <!-- AUTO-MAINTAINED by .githooks/post-commit — keep this a 1-3 sentence summary -->
-Phases 1–4 are complete on branch `roadmap/phases-1-3` (LangGraph 1.0 / LangChain 1.0 stack): reducer state, delta nodes, decision routing field, interrupt/resume, RAG tool, packaging, streaming/async, configurable I/O fields, plus Phase 4 resilience/perf knobs — per-node `reasoning_effort` on `AgentNode`, `cache_ttl`/`retry` with an auto-provided `InMemoryCache`, and a `durability` passthrough. 33 tests pass; a runnable end-to-end demo lives at `examples/sample_usage.py`. The repo is now public-ready: the README is rewritten to reflect the shipped feature set (now with a Features list, the surfaced 33-test count, and a Limitations section), an MIT LICENSE is added, and build artifacts (`egg-info`) are untracked and ignored.
+Phases 1–4 are complete on branch `roadmap/phases-1-3` (LangGraph 1.0 / LangChain 1.0 stack): reducer state, delta nodes, decision routing field, interrupt/resume, RAG tool, packaging, streaming/async, configurable I/O fields, plus Phase 4 resilience/perf knobs — per-node `reasoning_effort` on `AgentNode`, `cache_ttl`/`retry` with an auto-provided `InMemoryCache`, and a `durability` passthrough. 33 tests pass; a runnable end-to-end demo lives at `examples/sample_usage.py`. The repo is now public-ready: the README is a portfolio-grade showcase (tagline + badges, a problem→solution value prop, a Mermaid diagram of the example graph, and a "Design decisions" section, alongside the Features list, 33-test count, and Limitations section), an MIT LICENSE is added, and build artifacts (`egg-info`) are untracked and ignored.
 
 ## Recent changes
 
 <!-- AUTO-MAINTAINED by .githooks/post-commit — newest first, max 15 bullets -->
+- e5ac44c 2026-06-20 — Rewrite README as a portfolio-grade showcase: tagline + badges, problem→solution value prop, a Mermaid diagram of the example graph, and a "Design decisions" section (all claims verified against source)
 - 842f24e 2026-06-20 — Expand README with a Features list, surface the 33-test suite count, and add a Limitations section (docs only, grounded in existing code)
 - 0822000 2026-06-20 — Rewrite README as a finished project (accurate LangGraph 1.0 feature set, `>` DSL/InputNode/RAG/caching) + add MIT LICENSE for the now-public repo
 - d3f52d1 2026-06-17 — Stop tracking build artifacts (`agentic_framework.egg-info`); add `__pycache__/`/`*.egg-info/`/`.venv/` to .gitignore
