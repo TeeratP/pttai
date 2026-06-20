@@ -1,126 +1,155 @@
 # Agentic Framework
 
-A framework for building agent-based AI systems using LangGraph. This framework provides a flexible and type-safe way to construct graphs of language model agents that can make decisions and process information.
+A thin, declarative DSL over [LangGraph](https://langchain-ai.github.io/langgraph/) for building agent workflows. You instantiate `Node` objects, wire them with the `>` operator, and hand the start/end nodes to `AgenticGraph`, which compiles down to a native LangGraph `StateGraph`.
 
-## Features
+The value-add over raw LangGraph is the **`>` wiring syntax** and a small set of node abstractions: an automatic tool-call loop, structured-output routing, resumable human-in-the-loop, and reducer-based state. Because it compiles to plain LangGraph, you keep checkpointing, streaming, and LangSmith tracing for free.
 
-- **Node System**:
-  - `AgentNode`: Process messages and generate responses using language models
-    - Tool binding support for integrating external functions
-    - Automatic tool call handling and response processing
-  - `DecisionNode`: Make branching decisions based on language model output
-    - Structured output using Pydantic models
-    - Type-safe choice handling
-  - Extensible base `Node` class for custom node types
+```python
+randomizer > classifier
+classifier["positive"] > positive_handler
+classifier["negative"] > negative_handler
+```
 
-- **Graph Management**:
-  - Automated graph construction from node relationships
-  - Support for conditional edges and decision-based routing
-  - Type-safe node connections and state management
+That's the whole mental model: `>` builds a graph, branches index by choice.
 
-- **State Management**:
-  - Conversation history tracking using LangChain message types
-  - Automatic logging of node outputs and tool calls
-  - Structured state validation
+## How it works
 
-## Requirements
+1. **Wiring is deferred.** `a > b` just sets `a.child = b` and returns `b`, so chains like `a > b > c` build a linked list in memory — no edges exist yet.
+2. **`AgenticGraph(...)` materializes the graph.** At construction it walks the `.child` pointers, emits the real LangGraph `add_node`/`add_edge` calls, and `compile()`s. The graph is frozen at build time.
+3. **Termination is explicit.** Nodes you pass in `end_nodes` get an edge to `END`; everything else recurses into its `.child`.
+4. **Loops are allowed.** Revisited nodes are short-circuited by name, so cycles (e.g. a research loop) just work. Node names must be unique within a graph.
+5. **Decision nodes route by structured output.** `decision["positive"] > handler` sets the branch; the LLM is wrapped with `with_structured_output` over a `Literal` of the choice names, so it can only return a valid choice. The label is written to a dedicated `decision` state field — it never pollutes `messages`.
 
-- Python 3.6+
-- LangGraph
-- LangChain
-- Pydantic
+## Install
 
-## Installation
+Requires **Python ≥ 3.10**. Core deps are LangGraph ≥ 1.0, LangChain-core ≥ 1.0, and Pydantic 2.
 
 ```bash
-pip install -r requirements.txt
+python -m venv .venv && source .venv/bin/activate
+pip install -e .                 # core
+pip install -e ".[openai]"       # + langchain-openai & python-dotenv (for the example/notebook)
+pip install -e ".[rag]"          # + langchain-chroma (for ChromaRAG)
+pip install -e ".[dev]"          # + pytest
 ```
 
-## Usage
+For live model calls, copy `.env.example` to `.env` and set `OPENAI_API_KEY`.
 
-Here's an example of creating an agent workflow with tool integration and decision making:
+## Quickstart
+
+A tool call → decision → branch graph, wired entirely with `>` (full runnable version in [`examples/sample_usage.py`](examples/sample_usage.py)):
 
 ```python
-from agentic_framework.nodes import AgentNode, DecisionNode
+import random
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage
+
 from agentic_framework.graph import AgenticGraph
+from agentic_framework.nodes import AgentNode, DecisionNode
 from agentic_framework.state import AgenticState
 
-# Define a tool function
-def search_database(query: str) -> str:
-    """Search the database for information."""
-    # Implementation here
-    return f"Results for {query}"
 
-# Create nodes
-research_agent = AgentNode(
-    name="researcher",
-    llm=your_llm,
-    node_prompt="Research the given topic using the search tool and provide a detailed response"
+def random_number(maximum: int) -> int:
+    """Return a random integer between 1 and `maximum` (inclusive)."""
+    return random.randint(1, maximum)
+
+
+llm = ChatOpenAI(model="gpt-5.4-nano")
+
+# An agent that can call a tool. bind_tools wraps the bare function as a
+# StructuredTool and runs the tool-call loop automatically.
+randomizer = AgentNode(
+    name="randomizer",
+    llm=llm,
+    node_prompt="Use the random_number tool to pick a number, then state it.",
 )
-# Bind tool to the agent
-research_agent.bind_tools(search_database)
+randomizer.bind_tools([random_number])
 
-decision = DecisionNode(
+# A decision node returns one of `choices` into the `decision` state field.
+classifier = DecisionNode(
     name="classifier",
-    llm=your_llm,
-    node_prompt="Based on the research results, classify if we need more information or can proceed with a conclusion",
-    choices=["need_more_info", "conclude"]
+    llm=llm,
+    node_prompt="If the number is greater than 5 answer 'positive', else 'negative'.",
+    choices=["positive", "negative"],
 )
 
-follow_up = AgentNode(
-    name="follow_up",
-    llm=your_llm,
-    node_prompt="Generate follow-up questions for additional research"
-)
+positive_handler = AgentNode(name="positive_handler", llm=llm,
+                             node_prompt="Report the number in an upbeat tone.")
+negative_handler = AgentNode(name="negative_handler", llm=llm,
+                             node_prompt="Report the number in a gloomy tone.")
 
-conclusion = AgentNode(
-    name="conclusion",
-    llm=your_llm,
-    node_prompt="Synthesize the research into a final conclusion"
-)
+# Wire it.
+randomizer > classifier
+classifier["positive"] > positive_handler
+classifier["negative"] > negative_handler
 
-# Connect nodes
-research_agent > decision
-decision["need_more_info"] > follow_up
-decision["conclude"] > conclusion
-follow_up > research_agent  # Create a research loop
-
-# Create and build graph
 graph = AgenticGraph(
     state=AgenticState,
-    start_node=research_agent,
-    end_nodes={conclusion}
+    start_node=randomizer,
+    end_nodes={positive_handler, negative_handler},
 )
 
-# Run the graph
-state = {"messages": [HumanMessage(content="Research quantum computing advances")]}
-result = graph.invoke(state)
+result = graph.invoke({
+    "messages": [HumanMessage(content="Give me a random number up to 10.")],
+    "log": [],
+})
+print("routed to :", result["decision"])
+print("final reply:", result["messages"][-1].content)
+for line in result["log"]:          # per-node + tool-call trace
+    print("  -", line)
 ```
 
-The framework will:
+## Node types
 
-1. Start with the research agent, which can use its search tool
-2. Pass results to the decision node for classification
-3. Either generate follow-up questions and loop back to research, or
-4. Proceed to the conclusion node for final synthesis
+All nodes are callables (`__call__(state) -> delta`) invoked by LangGraph with the shared state. They return **only the keys they update** — the reducers merge them; nodes never mutate state in place.
 
-## State and Logging
+| Node | Purpose |
+|------|---------|
+| **`AgentNode`** | Prepends its `node_prompt` as a `SystemMessage`, calls the LLM, returns a delta. `bind_tools(...)` wraps bare callables and runs an internal tool-call loop (capped by `max_tool_iterations`, default 25), accumulating every message produced this turn into one delta. A non-default `output_field` writes the final response *content* to that key instead of `messages` (transform nodes). Optional `reasoning_effort` (`"low"`/`"medium"`/`"high"`) is passed per-call for gpt-5.x. |
+| **`DecisionNode`** | Branching only. Reads from `input_field`, writes its choice to the `decision` field, and routes via conditional edges. Wired by indexing a choice (`decision["x"] > handler`); `decision > x` is an error. |
+| **`InputNode`** | Human-in-the-loop via LangGraph's `interrupt()`. Resumes when the graph is built with a `checkpointer` and invoked with a `thread_id`, via `Command(resume=value)`. |
 
-The framework automatically maintains conversation history and can log operations:
+All node types also accept `cache_ttl` (LangGraph `CachePolicy`) and `retry` (LangGraph `RetryPolicy`); `AgenticGraph` auto-provides an `InMemoryCache` when any node sets `cache_ttl`.
 
-```python
-state = {
-    "messages": [...],  # Conversation history using LangChain message types
-    "log": [           # Optional logging of operations
-        "researcher: Found initial results on quantum computing",
-        "tools: search_database, args: {'query': 'quantum computing'}, result: ...",
-        "classifier: Need more specific information",
-        "follow_up: Generated questions about quantum error correction"
-    ]
-}
+## State
+
+`AgenticState` is a `TypedDict` with reduced channels:
+
+- **`messages`** — `add_messages` reducer: appends, replaces by matching `id`, coerces bare strings to `HumanMessage`, and merges parallel branches.
+- **`log`** — `operator.add`: every node appends a trace line (`"{name}:{content}"`, tool calls, decisions). Seed it with `[]` on invoke to capture the trace.
+- **`decision`** — transient routing key written by `DecisionNode`, read by its `route()`.
+
+Reducer-based deltas are what make checkpointing, parallel branches, and subgraph composition correct. Custom schemas just add more reduced channels (e.g. a `summary` field for an `output_field` node).
+
+## Running it
+
+```bash
+python -m pytest tests/            # full suite, no API calls (a scripted FakeLLM stands in)
+python examples/sample_usage.py    # live end-to-end demo (needs OPENAI_API_KEY)
 ```
 
-## TODO
+The test suite covers state reducers, graph construction, routing, the tool-call loop, interrupt/resume, RAG tool wiring, streaming/async, configurable fields, and node caching/retry/`reasoning_effort`/`durability`.
 
-- structured output for llm
-- RAG tools
+## Composition & graphs as nodes
+
+An `AgenticGraph` can itself be a node inside a larger `AgenticGraph` — `graph_0 > graph_1` wires them, and the parent graph embeds the child's compiled graph. Run any graph via `invoke` / `stream` / `ainvoke` / `astream` (all accept an optional LangGraph `config` and `durability`). Pass `checkpointer=...` to enable `InputNode` interrupt/resume.
+
+## Project layout
+
+```
+agentic_framework/
+  graph.py            # AgenticGraph — walks `.child`, compiles to StateGraph
+  node.py             # base Node + the `>` operator
+  state.py            # AgenticState (reduced channels)
+  nodes/              # AgentNode, DecisionNode, InputNode
+  tools/              # RAG tool helpers (make_retriever_tool, ChromaRAG)
+examples/sample_usage.py
+tests/                # pytest suite (no live API calls)
+docs/project.md       # living notes: setup, status, roadmap, rough edges
+CLAUDE.md             # stable architecture & conventions
+```
+
+See [`docs/project.md`](docs/project.md) for setup details, current status, and the roadmap, and [`CLAUDE.md`](CLAUDE.md) for the architecture in depth.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
