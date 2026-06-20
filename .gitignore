@@ -4,3 +4,6 @@
 __pycache__/
 *.egg-info/
 .venv/
+
+# Personal AI-assistant working notes — kept local, not published.
+CLAUDE.md

@@ -171,7 +171,7 @@ tests/                # pytest suite (no live API calls)
 docs/project.md       # living notes: setup, status, roadmap, rough edges
 ```
 
-See [`docs/project.md`](docs/project.md) for setup, status, and roadmap, and [`CLAUDE.md`](CLAUDE.md) for the architecture in depth.
+See [`docs/project.md`](docs/project.md) for setup, status, and roadmap.
 
 ## License
 

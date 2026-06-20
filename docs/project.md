@@ -1,6 +1,6 @@
 # Project status & working notes
 
-Living companion to [CLAUDE.md](../CLAUDE.md). CLAUDE.md holds the stable architecture; this file holds everything that changes — setup, dependencies, how to verify work, current status, rough edges, and the roadmap.
+Working notes for the project — setup, dependencies, how to verify work, current status, rough edges, and the roadmap. (The stable architecture and conventions live in the README's *Design decisions* and *How the `>` DSL compiles* sections.)
 
 The **Status** and **Recent changes** sections at the bottom are auto-maintained by the post-commit hook (`.githooks/post-commit`) via headless Claude. You can also edit them by hand — the hook only refreshes those two sections.
 
