@@ -12,6 +12,18 @@ classifier["negative"] > negative_handler
 
 That's the whole mental model: `>` builds a graph, branches index by choice.
 
+## Features
+
+- **`>` wiring DSL** — build graphs by writing `a > b`; branches index by choice (`decision["x"] > handler`). Compiles to a native LangGraph `StateGraph`.
+- **Automatic tool-call loop** — `AgentNode.bind_tools([fn])` wraps bare callables as `StructuredTool`s and runs the call/respond loop for you (capped by `max_tool_iterations`).
+- **Structured-output routing** — `DecisionNode` constrains the LLM to a `Literal` of your choice names, so it can only return a valid branch; the label lands in a dedicated `decision` field, never in `messages`.
+- **Resumable human-in-the-loop** — `InputNode` uses LangGraph's `interrupt()`; resume with a `checkpointer` + `Command(resume=...)`.
+- **Reducer-based state** — deltas merged by `add_messages` / `operator.add`, which keeps checkpointing, parallel branches, and subgraph composition correct.
+- **Graphs as nodes** — an `AgenticGraph` can be embedded inside another (`graph_0 > graph_1`).
+- **RAG helpers** — `make_retriever_tool` wraps any LangChain retriever; `ChromaRAG` is an optional Chroma convenience.
+- **Per-node knobs** — `cache_ttl`, `retry`, and `reasoning_effort` (gpt-5.x) per node.
+- **Free LangGraph plumbing** — streaming (`stream`/`astream`), async (`ainvoke`/`astream`), `durability`, and LangSmith tracing, because it's plain LangGraph underneath.
+
 ## How it works
 
 1. **Wiring is deferred.** `a > b` just sets `a.child = b` and returns `b`, so chains like `a > b > c` build a linked list in memory — no edges exist yet.
@@ -127,7 +139,13 @@ python -m pytest tests/            # full suite, no API calls (a scripted FakeLL
 python examples/sample_usage.py    # live end-to-end demo (needs OPENAI_API_KEY)
 ```
 
-The test suite covers state reducers, graph construction, routing, the tool-call loop, interrupt/resume, RAG tool wiring, streaming/async, configurable fields, and node caching/retry/`reasoning_effort`/`durability`.
+The 33-test suite covers state reducers, graph construction, routing, the tool-call loop, interrupt/resume, RAG tool wiring, streaming/async, configurable fields, and node caching/retry/`reasoning_effort`/`durability`.
+
+## Limitations
+
+- **Async is graph-level only.** `ainvoke`/`astream` run the sync nodes in LangGraph's threadpool; true per-node async LLM calls aren't implemented (which is also why a per-node `timeout` isn't exposed — LangGraph only times out async nodes).
+- **`reasoning_effort` is `AgentNode`-only** — it conflicts with `DecisionNode`'s structured output on current OpenAI models.
+- **`ChromaRAG` is untested end-to-end** — only `make_retriever_tool` is covered (against a fake retriever); the live Chroma path needs real embeddings.
 
 ## Composition & graphs as nodes
 
