@@ -9,6 +9,38 @@ from langchain_core.messages import AnyMessage
 from langgraph.graph.message import add_messages
 
 
+def _deep_sum(a: dict, b: dict) -> dict:
+    """Recursively add ``b`` into ``a``: numeric fields are summed, nested dicts
+    (e.g. ``input_token_details``) are deep-summed, other values take ``b``."""
+    out = dict(a)
+    for k, v in b.items():
+        cur = out.get(k)
+        if isinstance(cur, dict) and isinstance(v, dict):
+            out[k] = _deep_sum(cur, v)
+        elif isinstance(cur, (int, float)) and isinstance(v, (int, float)):
+            out[k] = cur + v
+        else:
+            out[k] = v
+    return out
+
+
+def merge_token_usage(left, right) -> dict:
+    """Reducer for the ``token`` channel: merge two ``{model_name: usage}`` dicts.
+
+    Union by model key; when the same model appears on both sides its usage
+    breakdown is deep-summed (top-level token counts AND nested ``*_details``).
+    Associative/commutative so parallel fan-in merges cleanly. A missing/None
+    ``left`` (the first update) is treated as ``{}``.
+    """
+    merged = dict(left or {})
+    for model, usage in (right or {}).items():
+        if model in merged:
+            merged[model] = _deep_sum(merged[model], usage)
+        else:
+            merged[model] = dict(usage)
+    return merged
+
+
 class AgenticState(TypedDict):
     # add_messages appends new messages, replaces an existing message when IDs
     # match, and coerces bare strings to HumanMessage. It also merges updates
@@ -20,3 +52,7 @@ class AgenticState(TypedDict):
     # Plain (no reducer): last-writer-wins, which is correct because route()
     # always runs immediately after the same node writes it.
     decision: str
+    # Per-model token tally: {model_name: usage_metadata}. The reducer unions by
+    # model and deep-sums a model's usage across every LLM call in the run (incl.
+    # tool-loop calls and parallel fan-out), so out["token"] is the run total.
+    token: Annotated[dict, merge_token_usage]

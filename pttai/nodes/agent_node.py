@@ -4,10 +4,21 @@ Agent node implementation for the Agentic Framework.
 from typing import Any, Optional, List
 from pttai.node import Node
 from pttai.nodes._fields import partition_reads
+from pttai.state import merge_token_usage
 from langchain_core.messages import SystemMessage, AIMessage, ToolMessage
 from langchain_core.tools import StructuredTool, BaseTool
 from pydantic import create_model
 import json
+
+
+def _usage_delta(response):
+    """Return ``{model_name: usage_metadata}`` for one LLM response, or ``{}``
+    when it carries no ``usage_metadata`` (fakes / structured-output path)."""
+    usage = getattr(response, "usage_metadata", None)
+    if not usage:
+        return {}
+    model = (getattr(response, "response_metadata", None) or {}).get("model_name", "unknown")
+    return {model: usage}
 
 class AgentNode(Node):
     """
@@ -123,6 +134,7 @@ class AgentNode(Node):
         response = self.llm.invoke(prompt, **self._invoke_kwargs)
         new_messages.append(response)
         new_log.append(f'{self.name}:{response.content}')
+        token = _usage_delta(response)
 
         if self.tool_available:
             iterations = 0
@@ -150,11 +162,16 @@ class AgentNode(Node):
                 response = self.llm.invoke(prompt, **self._invoke_kwargs)
                 new_messages.append(response)
                 new_log.append(f'{self.name}:{response.content}')
+                token = merge_token_usage(token, _usage_delta(response))
 
         if not scalar_writes:  # writes == ["messages"] (default)
-            return {"messages": new_messages, "log": new_log}
-        # Transform node: write the final response content to the single field.
-        return {scalar_writes[0]: new_messages[-1].content, "log": new_log}
+            delta = {"messages": new_messages, "log": new_log}
+        else:
+            # Transform node: write the final response content to the single field.
+            delta = {scalar_writes[0]: new_messages[-1].content, "log": new_log}
+        if token:  # only emit when at least one call reported usage_metadata
+            delta["token"] = token
+        return delta
 
     def bind_tools(self, tools):
         """

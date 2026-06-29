@@ -65,9 +65,18 @@ class FakeLLM:
 _ids = itertools.count()
 
 
-def ai(content="", tool_calls=None):
+def ai(content="", tool_calls=None, usage_metadata=None, model_name=None):
     # Distinct id per message so add_messages appends instead of dedupes.
-    return AIMessage(content=content, tool_calls=tool_calls or [], id=f"ai-{next(_ids)}")
+    # Optional usage_metadata / response_metadata.model_name feed the `token`
+    # channel (per-model token tally); omit them to mimic providers/fakes that
+    # report no usage (the node then contributes nothing to `token`).
+    kwargs = {}
+    if usage_metadata is not None:
+        kwargs["usage_metadata"] = usage_metadata
+    if model_name is not None:
+        kwargs["response_metadata"] = {"model_name": model_name}
+    return AIMessage(content=content, tool_calls=tool_calls or [],
+                     id=f"ai-{next(_ids)}", **kwargs)
 
 
 def tool_call_msg(name, args, call_id="call-1"):
