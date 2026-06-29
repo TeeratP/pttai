@@ -1,6 +1,10 @@
 """Shared read-side helpers for multi-key state IO (reads/writes)."""
 
-from langchain_core.messages import BaseMessage
+import string
+import typing
+
+from langchain_core.messages import AnyMessage, BaseMessage
+from langgraph.graph.message import add_messages
 
 
 def partition_reads(state, keys):
@@ -32,3 +36,35 @@ def partition_reads(state, keys):
         else:
             scalars[k] = v
     return history, scalars
+
+
+def prompt_placeholders(prompt: str) -> set:
+    """The ``{name}`` field names referenced in ``prompt`` (``str.format`` style).
+
+    Uses ``string.Formatter().parse`` so escaped braces (``{{`` / ``}}``) are
+    ignored and only the base name of dotted/indexed fields (``{a.b}``/``{a[0]}``)
+    is returned. Positional/empty fields (``{}``/``{0}``) are skipped.
+    """
+    names = set()
+    for _, field, _, _ in string.Formatter().parse(prompt):
+        if not field:
+            continue
+        base = field.split(".")[0].split("[")[0]
+        if base:  # skip positional `{}` / `{0}`
+            names.add(base)
+    return names
+
+
+def is_history_annotation(annotation) -> bool:
+    """True if a state schema annotation is a message-list/history channel
+    (reducer is ``add_messages``, or the type is ``list[AnyMessage|BaseMessage]``).
+    Such reads become conversation history and are never interpolated."""
+    meta = getattr(annotation, "__metadata__", ())
+    if any(m is add_messages for m in meta):
+        return True
+    base = typing.get_args(annotation)[0] if meta else annotation
+    if typing.get_origin(base) in (list, typing.List):
+        args = typing.get_args(base)
+        if args and args[0] in (AnyMessage, BaseMessage):
+            return True
+    return False

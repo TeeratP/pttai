@@ -11,10 +11,11 @@ from langgraph.cache.memory import InMemoryCache
 from langchain_core.messages import HumanMessage
 from pttai.node import Branch, Spread
 from pttai.nodes import AgentNode, InputNode, DecisionNode
+from pttai.nodes._fields import prompt_placeholders, is_history_annotation
 from pttai.state import AgenticState
 from pttai.validation import (
     GraphValidationError, ValidationReport, Issue, schema_keys, reduced_keys,
-    compute_availability, collect_issues,
+    compute_availability, collect_issues, check_placeholders,
 )
 
 
@@ -547,6 +548,20 @@ class AgenticGraph(StateGraph):
                     f"map(...) spreads over {field!r} but it is not available "
                     f"here (produced by: {producers}, none of which are upstream); "
                     f"available keys here: {sorted(avail)}"))
+
+        # Scalar reads must line up with node_prompt {placeholders} (Issue #4):
+        # a placeholder with no matching scalar read is a runtime KeyError (hard
+        # error); a scalar read never interpolated is a dead read (warning). A
+        # node with no scalar reads skips .format_map entirely, so it is skipped.
+        hints = get_type_hints(self.state_schema, include_extras=True)
+        message_keys = {k for k, ann in hints.items() if is_history_annotation(ann)}
+        for nm, node in self._seen_nodes.items():
+            if not isinstance(node, (AgentNode, DecisionNode)):
+                continue
+            scalar_reads = {r[:-1] if r.endswith("?") else r
+                            for r in node.reads} - message_keys
+            issues.extend(check_placeholders(
+                nm, node.node_prompt, scalar_reads, prompt_placeholders(node.node_prompt)))
 
         if strict:
             for i in issues:

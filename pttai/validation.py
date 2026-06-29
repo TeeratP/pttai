@@ -173,6 +173,38 @@ def compute_availability(initial, edges, writes, send_workers=None, spread_colle
     return may, must
 
 
+def check_placeholders(name, node_prompt, scalar_reads, placeholders):
+    """Cross-check a node's scalar reads against its ``node_prompt`` placeholders.
+
+    A scalar read exists to be interpolated into the prompt. With no scalar
+    reads the node skips ``.format_map`` entirely (brace-heavy prompts pass
+    untouched), so this check is skipped. Otherwise:
+      - Check A (hard error): every ``{name}`` placeholder must be a declared
+        scalar read — an undeclared one is a guaranteed runtime ``KeyError``.
+      - Check B (warning): every scalar read should appear as a placeholder —
+        an uninterpolated scalar read is a dead read.
+
+    Args:
+        scalar_reads: the node's reads that are NOT message-history channels.
+        placeholders: ``{name}`` field names parsed from ``node_prompt``.
+    """
+    if not scalar_reads:
+        return []
+    issues = []
+    for ph in sorted(placeholders):
+        if ph not in scalar_reads:
+            issues.append(Issue("error", name,
+                f"node_prompt references placeholder {{{ph}}} but {ph!r} is not a "
+                f"declared scalar read {sorted(scalar_reads)}; this raises KeyError "
+                f"when the prompt is interpolated"))
+    for sr in sorted(scalar_reads):
+        if sr not in placeholders:
+            issues.append(Issue("warning", name,
+                f"declares scalar read {sr!r} but node_prompt never interpolates "
+                f"{{{sr}}}; the value is fetched and silently ignored (dead read)"))
+    return issues
+
+
 def collect_issues(graph_name, schema, reduced, node_io, may, must,
                    concurrency_pairs, decision_choices, end_with_children,
                    unreachable):
