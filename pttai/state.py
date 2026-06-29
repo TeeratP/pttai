@@ -9,6 +9,14 @@ from langchain_core.messages import AnyMessage
 from langgraph.graph.message import add_messages
 
 
+# Framework-managed channels. They are written/seeded internally and must not be
+# created or overwritten by USER node declarations or invoke extra kwargs.
+# (`messages` is exempt from the user-declaration guard — it is the standard
+# conversation channel and the default node read/write — but it is still
+# supplied through the dedicated input/`message=` path, not as an extra kwarg.)
+RESERVED = {"messages", "log", "decision", "token"}
+
+
 def _deep_sum(a: dict, b: dict) -> dict:
     """Recursively add ``b`` into ``a``: numeric fields are summed, nested dicts
     (e.g. ``input_token_details``) are deep-summed, other values take ``b``."""

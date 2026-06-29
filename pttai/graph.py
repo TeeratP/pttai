@@ -12,7 +12,7 @@ from langchain_core.messages import HumanMessage
 from pttai.node import Branch, Spread
 from pttai.nodes import AgentNode, InputNode, DecisionNode
 from pttai.nodes._fields import prompt_placeholders, is_history_annotation
-from pttai.state import AgenticState
+from pttai.state import AgenticState, RESERVED
 from pttai.validation import (
     GraphValidationError, ValidationReport, Issue, schema_keys, reduced_keys,
     compute_availability, collect_issues, check_placeholders,
@@ -35,7 +35,33 @@ def _augment_schema(base, extra_keys):
 _UNSET = object()  # sentinel: "no positional input given"
 
 
-def _normalize_input(input=_UNSET, *, message=None, **extra):
+def _check_extra_keys(extra, schema_keys_set):
+    """Guard the ``**extra`` invoke kwargs (NOT the positional dict form, which
+    stays back-compat for ``invoke({"messages":..., "log":[]})``):
+
+    - a RESERVED framework channel (``log``/``decision``/``token``) cannot be
+      seeded as an extra kwarg — it is managed internally; and
+    - a key that maps to no channel in the (augmented) schema is a helpful error
+      naming the key, not LangGraph's silent drop.
+
+    The reserved error takes precedence over the unknown-key error.
+    """
+    reserved_extra = RESERVED - {"messages"}  # messages has its own input path
+    for k in extra:
+        if k in reserved_extra:
+            raise ValueError(
+                f"{k!r} is a reserved framework channel and cannot be seeded at "
+                f"invoke(); it is managed internally "
+                f"(reserved: {sorted(reserved_extra)})")
+    if schema_keys_set is not None:
+        for k in extra:
+            if k not in schema_keys_set:
+                raise ValueError(
+                    f"unknown state key {k!r} — no node reads or writes it; "
+                    f"declare it via state= or have a node read it")
+
+
+def _normalize_input(input=_UNSET, *, message=None, _schema=None, **extra):
     """Coerce a run-method input into a full state dict and auto-seed boilerplate.
 
     Source of the input is either the positional ``input`` or the keyword
@@ -44,11 +70,15 @@ def _normalize_input(input=_UNSET, *, message=None, **extra):
     - ``str``  -> ``{"messages": [HumanMessage(content=input)]}``
     - ``list`` -> ``{"messages": list(input)}`` (a list of messages)
     - ``dict`` -> a shallow copy (the full-state form; behaves as before)
-    Any ``**extra`` keys are merged in as additional state entries. Finally the
-    reduced channels that need an empty start are seeded if absent (at minimum
-    ``log: []``). Anything that is not str/list/dict (e.g. a ``Command`` resume)
-    is passed through untouched so interrupt/resume keeps working.
+    Any ``**extra`` keys are merged in as additional state entries (after the
+    reserved/unknown-key guard in ``_check_extra_keys``; ``_schema`` is the set
+    of augmented-schema keys passed by the run methods, ``None`` to skip the
+    unknown-key check on direct unit-test calls). Finally the reduced channels
+    that need an empty start are seeded if absent (at minimum ``log: []``).
+    Anything that is not str/list/dict (e.g. a ``Command`` resume) is passed
+    through untouched so interrupt/resume keeps working.
     """
+    _check_extra_keys(extra, _schema)
     if input is not _UNSET and message is not None:
         raise ValueError("pass either a positional input or message=, not both")
     if input is _UNSET:
@@ -94,12 +124,13 @@ class AgenticGraph(StateGraph):
 
         Args:
             state: The state schema (a TypedDict). OPTIONAL — defaults to the
-                standard ``AgenticState`` (messages/log/decision). Any scalar key
-                a node declares in ``writes`` that the schema doesn't already
-                declare is auto-registered as a PLAIN (last-writer-wins) channel,
-                so you rarely need a hand-written schema. Pass an explicit
-                ``state=`` (with reducers) when you want to type/reduce a key
-                precisely.
+                standard ``AgenticState`` (messages/log/decision/token). Any
+                scalar key a node ``writes``, and any non-optional key a node
+                ``reads`` that no node writes (a graph INPUT seeded at invoke),
+                is auto-registered as a PLAIN (last-writer-wins) channel when the
+                schema doesn't already declare it — so you rarely need a
+                hand-written schema. Pass an explicit ``state=`` (with reducers)
+                when you want to type/reduce a key precisely.
             start_node: The initial node in the graph
             end_nodes: Set of nodes that represent terminal states
             checkpointer: Optional LangGraph checkpointer (e.g. InMemorySaver).
@@ -129,16 +160,20 @@ class AgenticGraph(StateGraph):
             state = AgenticState
         self.start_node = start_node
         self.end_nodes = end_nodes if isinstance(end_nodes, (list, tuple, set)) else [end_nodes]
-        # Auto-register every undeclared key a node WRITES as a plain channel, so
-        # users don't have to predeclare scalars in a TypedDict. (Reads are NOT
-        # auto-registered: a read of a key no node writes and that the schema
-        # doesn't declare stays a hard error — the dangling-read guardrail.)
+        # Forbid USER node declarations colliding with a reserved channel before
+        # anything else (so a bad reserved write is never auto-registered).
+        self._check_reserved()
+        # Auto-register undeclared keys a node references as PLAIN channels so a
+        # schema-free graph builds: every undeclared WRITE, plus every undeclared
+        # non-optional READ that NO node writes (a never-written read is a graph
+        # INPUT seeded at invoke, not a dangling-read error).
         state = _augment_schema(state, self._auto_register_keys(state))
 
         super().__init__(state)
 
         self.name = name
         self.state_schema = state
+        self._schema_keys = schema_keys(state)  # for invoke unknown-key guard
         self.children: list = []
         self._head = self  # head of the chain this graph is currently the tail of
         self.checkpointer = checkpointer
@@ -226,7 +261,7 @@ class AgenticGraph(StateGraph):
             Updated state after processing through the graph
         """
         return self.compiled_graph.invoke(
-            _normalize_input(input, message=message, **extra), config=config, durability=durability)
+            _normalize_input(input, message=message, _schema=self._schema_keys, **extra), config=config, durability=durability)
 
     def stream(self, input=_UNSET, /, *, message=None, config=None, durability=None, **extra):
         """
@@ -236,17 +271,17 @@ class AgenticGraph(StateGraph):
         ``**extra`` state keys), then passes through to the compiled graph's stream.
         """
         return self.compiled_graph.stream(
-            _normalize_input(input, message=message, **extra), config=config, durability=durability)
+            _normalize_input(input, message=message, _schema=self._schema_keys, **extra), config=config, durability=durability)
 
     async def ainvoke(self, input=_UNSET, /, *, message=None, config=None, durability=None, **extra):
         """Async variant of invoke. Sync nodes run in LangGraph's threadpool."""
         return await self.compiled_graph.ainvoke(
-            _normalize_input(input, message=message, **extra), config=config, durability=durability)
+            _normalize_input(input, message=message, _schema=self._schema_keys, **extra), config=config, durability=durability)
 
     async def astream(self, input=_UNSET, /, *, message=None, config=None, durability=None, **extra):
         """Async streaming variant of stream."""
         async for chunk in self.compiled_graph.astream(
-                _normalize_input(input, message=message, **extra), config=config, durability=durability):
+                _normalize_input(input, message=message, _schema=self._schema_keys, **extra), config=config, durability=durability):
             yield chunk
 
     def compile(self, checkpointer = None, *, cache = None, store = None, interrupt_before = None, interrupt_after = None, debug = False):
@@ -466,14 +501,53 @@ class AgenticGraph(StateGraph):
         return seen
 
     def _auto_register_keys(self, base_state) -> set:
-        """Keys WRITTEN by some node that ``base_state`` does not declare. These
-        become plain channels so the build doesn't reject undeclared writes."""
+        """Undeclared keys to add to ``base_state`` as plain channels:
+
+        - every key some node WRITES (so undeclared writes aren't rejected), and
+        - every NON-OPTIONAL key some node READS that NO node writes (a
+          never-written read is a graph INPUT seeded at invoke, not a
+          dangling-read error). Optional (``key?``) reads are excluded so they
+          stay warn-only and don't silently become required inputs.
+        """
         base = schema_keys(base_state)
-        extra = set()
+        writes, required_reads = set(), set()
         for node in self._collect_nodes(self.start_node).values():
-            _, writes = self._node_io(node)
-            extra |= writes
-        return extra - base
+            reads, w = self._node_io(node)
+            writes |= w
+            required_reads |= {r for r in reads if not r.endswith("?")}
+        auto_writes = writes - base
+        auto_inputs = required_reads - base - writes  # never-written reads -> inputs
+        return auto_writes | auto_inputs
+
+    def _check_reserved(self) -> None:
+        """Reject USER-declared node reads/writes that collide with a reserved
+        framework channel (``log``/``decision``/``token``).
+
+        ``messages`` is exempt — it is the standard conversation channel and the
+        default node read/write. The framework's OWN reserved writes (``log`` for
+        every node, ``decision`` for a DecisionNode, ``token`` from the agent
+        delta) are injected in ``_node_io``/``__call__``, never in
+        ``node.writes``/``node.reads``, so they are not seen here — only genuine
+        user declarations are."""
+        guarded = RESERVED - {"messages"}
+        for node in self._collect_nodes(self.start_node).values():
+            user_writes, user_reads = set(), set()
+            if isinstance(node, AgentNode):
+                user_writes = set(node.writes)  # dict keys = user-declared writes
+            if isinstance(node, (AgentNode, DecisionNode)):
+                user_reads = {r[:-1] if r.endswith("?") else r for r in node.reads}
+            bad_w = user_writes & guarded
+            bad_r = user_reads & guarded
+            if bad_w:
+                raise ValueError(
+                    f"node {node.name!r} declares writes={sorted(bad_w)} which "
+                    f"collide with reserved framework channel(s) {sorted(guarded)}; "
+                    f"these are framework-managed and cannot be user-declared")
+            if bad_r:
+                raise ValueError(
+                    f"node {node.name!r} declares reads={sorted(bad_r)} which "
+                    f"collide with reserved framework channel(s) {sorted(guarded)}; "
+                    f"these are framework-managed and cannot be user-declared")
 
     def _node_io(self, node):
         """Per-node (reads, writes) key sets for the dataflow analysis."""

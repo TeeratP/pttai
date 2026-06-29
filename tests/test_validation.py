@@ -48,15 +48,16 @@ def _agent(t, name, content=None, **kw):
     return AgentNode(name=name, llm=t.FakeLLM(responses=[t.ai(content or name)]), **kw)
 
 
-def test_missing_key_raises(t):
-    n = _agent(t, "n", input_field="context")  # 'context' never produced
-    with pytest.raises(GraphValidationError) as ei:
-        AgenticGraph(state=AgenticState, start_node=n, end_nodes=n)
-    msg = str(ei.value)
-    assert "n" in msg                       # names the node
-    assert "context" in msg                 # names the missing key
-    assert "available" in msg.lower()       # lists available keys
-    assert "messages" in msg                # ... and they include the schema keys
+def test_neverwritten_read_autoregisters_as_input(t):
+    # A read of a key NO node produces is no longer a hard error: it is
+    # auto-registered as a plain INPUT channel (schema-free state) and seeded at
+    # invoke. (This replaces the old dangling-read hard error — see issue #7.)
+    n = _agent(t, "n", node_prompt="{context}", reads=["context"])  # never written
+    g = AgenticGraph(state=AgenticState, start_node=n, end_nodes=n)  # builds, no raise
+    assert "context" in schema_keys(g.state_schema)  # registered as a channel
+    assert g.validate().ok is True                   # and it's a legit input, not an error
+    out = g.invoke(message="hi", context="ctx-value")
+    assert out["context"] == "ctx-value"             # value seeded at invoke round-trips
 
 
 def test_valid_multikey_passes(t):

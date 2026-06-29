@@ -11,10 +11,6 @@ from pttai.nodes import AgentNode
 from pttai.state import AgenticState
 
 
-class TopicState(AgenticState):
-    topic: str  # plain entry key a node reads; seeded at invoke via **extra
-
-
 def _single_node_graph(t, **node_kwargs):
     """A one-node graph (start == end) plus its node and scripted LLM."""
     llm = t.FakeLLM(responses=[t.ai("r1")])
@@ -83,8 +79,10 @@ def test_invoke_list_seeds_all_messages(t):
 
 def test_invoke_extra_kwargs_seed_state(t):
     llm = t.FakeLLM(responses=[t.ai("r1")])
+    # No custom schema: `topic` is auto-registered as an input because the node
+    # reads it (and no node writes it) on the default AgenticState.
     a = AgentNode(name="a", llm=llm, node_prompt="{topic}", reads=["topic"])
-    g = AgenticGraph(state=TopicState, start_node=a, end_nodes=a)
+    g = AgenticGraph(start_node=a, end_nodes=a)
     g.invoke("hi", topic="product")
     # {topic} placeholder interpolated from the extra-seeded state key
     assert llm.last_messages[0].content == "product"
@@ -123,7 +121,7 @@ def test_invoke_message_keyword(t):
 def test_invoke_message_keyword_with_extra(t):
     llm = t.FakeLLM(responses=[t.ai("r1")])
     a = AgentNode(name="a", llm=llm, node_prompt="{topic}", reads=["topic"])
-    g = AgenticGraph(state=TopicState, start_node=a, end_nodes=a)
+    g = AgenticGraph(start_node=a, end_nodes=a)  # default state + auto-registered topic
     g.invoke(message="x", topic="product")
     assert llm.last_messages[0].content == "product"
 
@@ -149,6 +147,6 @@ def test_neither_input_nor_message_raises():
 def test_ainvoke_normalizes_str_with_extra(t):
     llm = t.FakeLLM(responses=[t.ai("r1")])
     a = AgentNode(name="a", llm=llm, node_prompt="{topic}", reads=["topic"])
-    g = AgenticGraph(state=TopicState, start_node=a, end_nodes=a)
+    g = AgenticGraph(start_node=a, end_nodes=a)  # default state + auto-registered topic
     asyncio.run(g.ainvoke("hi", topic="async-topic"))
     assert llm.last_messages[0].content == "async-topic"
