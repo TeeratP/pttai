@@ -62,11 +62,12 @@ Remaining:
 ## Status
 
 <!-- AUTO-MAINTAINED by .githooks/post-commit — keep this a 1-3 sentence summary -->
-Phases 1–4 are complete on branch `roadmap/phases-1-3` (LangGraph 1.0 / LangChain 1.0 stack): reducer state, delta nodes, decision routing field, interrupt/resume, RAG tool, packaging, streaming/async, configurable I/O fields, plus Phase 4 resilience/perf knobs — per-node `reasoning_effort` on `AgentNode`, `cache_ttl`/`retry` with an auto-provided `InMemoryCache`, and a `durability` passthrough. 33 tests pass; a runnable end-to-end demo lives at `examples/sample_usage.py`. The repo is now public-ready: the README is a portfolio-grade showcase (tagline + badges, a problem→solution value prop, a Mermaid diagram of the example graph, and a "Design decisions" section, alongside the Features list, 33-test count, and Limitations section), an MIT LICENSE is added, and build artifacts (`egg-info`) are untracked and ignored.
+Phases 1–5 are complete and the package is the public-ready `pttai` (LangGraph 1.0 / LangChain 1.0 stack): reducer state, delta nodes, decision routing, interrupt/resume, RAG tooling, packaging, streaming/async, configurable I/O, `reasoning_effort`/`cache_ttl`/`retry`/`durability`, plus the Phase 5 surface — parallel fan-out/join, map-reduce, schema-free typed multi-key IO, and compile-time static validation (`summary()`/`validate()`). 69 tests pass with no API calls; offline tours live in `examples/`, and a runnable live-model sandbox showcasing the schema-free API and all seven shipped features is at `example.py` (gitignored).
 
 ## Recent changes
 
 <!-- AUTO-MAINTAINED by .githooks/post-commit — newest first, max 15 bullets -->
+- 52ddd24 2026-06-29 — Add runnable `example.py` live-model sandbox (gitignored): schema-free API tour of all 7 shipped features — parallel fan-out/join, per-model token usage, opt-in prompt caching, map-reduce, typed multi-key IO, `summary()`, build-time validation
 - 63b6e53 2026-06-29 — Stop tracking `.gitignore` (kept local per request); also ignore the personal `example.ipynb` scratch notebook
 - e5ac44c 2026-06-20 — Rewrite README as a portfolio-grade showcase: tagline + badges, problem→solution value prop, a Mermaid diagram of the example graph, and a "Design decisions" section (all claims verified against source)
 - 842f24e 2026-06-20 — Expand README with a Features list, surface the 33-test suite count, and add a Limitations section (docs only, grounded in existing code)
