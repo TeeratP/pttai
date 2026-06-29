@@ -2,9 +2,9 @@
 
 from langchain_core.messages import HumanMessage
 
-from agentic_framework.graph import AgenticGraph
-from agentic_framework.nodes import AgentNode, DecisionNode
-from agentic_framework.state import AgenticState
+from pttai.graph import AgenticGraph
+from pttai.nodes import AgentNode, DecisionNode
+from pttai.state import AgenticState
 
 
 def test_linear_invoke_merges_messages_and_log(t):

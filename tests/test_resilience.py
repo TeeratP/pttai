@@ -3,9 +3,9 @@
 from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.memory import InMemorySaver
 
-from agentic_framework.graph import AgenticGraph
-from agentic_framework.nodes import AgentNode
-from agentic_framework.state import AgenticState
+from pttai.graph import AgenticGraph
+from pttai.nodes import AgentNode
+from pttai.state import AgenticState
 
 
 # --- Item 2: reasoning_effort -------------------------------------------------

@@ -2,9 +2,11 @@
 Agent node implementation for the Agentic Framework.
 """
 from typing import Any, Optional, List
-from agentic_framework.node import Node
+from pttai.node import Node
+from pttai.nodes._fields import partition_reads
 from langchain_core.messages import SystemMessage, AIMessage, ToolMessage
 from langchain_core.tools import StructuredTool, BaseTool
+from pydantic import create_model
 import json
 
 class AgentNode(Node):
@@ -22,6 +24,8 @@ class AgentNode(Node):
                  max_tool_iterations: int = 25,
                  input_field: str = "messages",
                  output_field: str = "messages",
+                 reads: Optional[List[str]] = None,
+                 writes: Optional[List[str]] = None,
                  reasoning_effort: Optional[str] = None,
                  cache_ttl: Optional[int] = None,
                  retry: bool = False) -> None:
@@ -39,6 +43,16 @@ class AgentNode(Node):
                 produced messages are appended to the conversation; any other key
                 receives the final response's string content instead (useful for
                 transform nodes — that key must exist in your state schema).
+            reads: State keys this node reads (multi-key form; back-compat
+                generalization of input_field). Each read is dispatched by VALUE
+                type: a non-empty list of messages becomes conversation history
+                (concatenated in order), anything else is a scalar interpolated
+                into node_prompt via .format_map. Use reads OR input_field.
+            writes: State keys this node writes (multi-key form; back-compat
+                generalization of output_field). ["messages"] appends to the
+                conversation; a single scalar key writes the final response
+                content; two or more scalar keys switch to structured output (a
+                str field per key, no tool loop). Use writes OR output_field.
             reasoning_effort: Reasoning effort for reasoning-capable models
                 (e.g. "low"/"medium"/"high" on gpt-5.x). Passed as a per-call
                 kwarg to the LLM. (DecisionNode does not expose this — reasoning
@@ -46,11 +60,13 @@ class AgentNode(Node):
             cache_ttl/retry: see Node — node-level caching/retry.
         """
         super().__init__(name, llm, node_prompt, cache_ttl=cache_ttl, retry=retry)
-        self.child = None
         self.tool_available = False
         self.max_tool_iterations = max_tool_iterations
         self.input_field = input_field
         self.output_field = output_field
+        # reads/writes win if both forms are given (document: use one or the other).
+        self.reads = reads if reads is not None else [input_field]
+        self.writes = writes if writes is not None else [output_field]
         self.reasoning_effort = reasoning_effort
         # Per-call kwarg (survives bind_tools, unlike a pre-bound reasoning_effort).
         self._invoke_kwargs = {"reasoning_effort": reasoning_effort} if reasoning_effort else {}
@@ -76,14 +92,34 @@ class AgentNode(Node):
         if self.llm is None:
             raise ValueError(f"{self.name} requires a LLM to be set before call.")
 
-        if self.input_field not in state:
-            raise ValueError(f"State must contain a {self.input_field!r} key")
-
-        history = state[self.input_field]
+        # Partition reads by value type: message lists -> history, rest -> scalars.
+        history, scalars = partition_reads(state, self.reads)
         new_messages = []
         new_log = []
 
-        prompt = [SystemMessage(content=self.node_prompt)] + history
+        # Only interpolate when there is a scalar read, so prompts containing
+        # literal braces (e.g. JSON) with no scalars pass through verbatim.
+        sys = self.node_prompt.format_map(scalars) if scalars else self.node_prompt
+
+        scalar_writes = [w for w in self.writes if w != "messages"]
+        if "messages" in self.writes and scalar_writes:
+            raise ValueError(
+                "a node writes either the conversation ('messages') or "
+                "structured fields, not both")
+
+        prompt = [SystemMessage(content=sys)] + history
+
+        # >=2 scalar writes -> structured output (str field per key, no tool loop,
+        # no reasoning_effort — mirrors DecisionNode).
+        # ponytail: all structured fields are typed `str` in v1; a future
+        # `output_model: type[BaseModel]` param is the escape hatch for
+        # typed/nested output — not built now.
+        if len(scalar_writes) >= 2:
+            Model = create_model("Out", **{w: (str, ...) for w in scalar_writes})
+            out = self.llm.with_structured_output(Model).invoke(prompt)
+            values = {w: getattr(out, w) for w in scalar_writes}
+            return values | {"log": [f"{self.name}:{values}"]}
+
         response = self.llm.invoke(prompt, **self._invoke_kwargs)
         new_messages.append(response)
         new_log.append(f'{self.name}:{response.content}')
@@ -110,15 +146,15 @@ class AgentNode(Node):
                         )
                     )
                     new_log.append(f'tools:{tool_call["name"]}, args:{tool_call["args"]}, result:{tool_result}')
-                prompt = [SystemMessage(content=self.node_prompt)] + history + new_messages
+                prompt = [SystemMessage(content=sys)] + history + new_messages
                 response = self.llm.invoke(prompt, **self._invoke_kwargs)
                 new_messages.append(response)
                 new_log.append(f'{self.name}:{response.content}')
 
-        if self.output_field == "messages":
+        if not scalar_writes:  # writes == ["messages"] (default)
             return {"messages": new_messages, "log": new_log}
-        # Transform node: write the final response content to the named field.
-        return {self.output_field: new_messages[-1].content, "log": new_log}
+        # Transform node: write the final response content to the single field.
+        return {scalar_writes[0]: new_messages[-1].content, "log": new_log}
 
     def bind_tools(self, tools):
         """
@@ -127,6 +163,12 @@ class AgentNode(Node):
         Args:
             tools: list of tools to bind to the agent node
         """
+        # Structured output preempts the free-form tool loop on OpenAI/LangGraph.
+        if len([w for w in self.writes if w != "messages"]) >= 2:
+            raise ValueError(
+                "multi-field structured output (writes=[...]) cannot be combined "
+                "with bind_tools in v1")
+
         self.tools = []
 
         if not isinstance(tools, List):

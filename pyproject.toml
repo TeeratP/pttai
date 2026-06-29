@@ -3,11 +3,12 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agentic-framework"
+name = "pttai"
 version = "0.1.0"
-description = "A declarative DSL over LangGraph for building agent workflows."
+description = "Keras for LangGraph — parallel, typed agent graphs in Python, compiled to LangGraph"
 readme = "README.md"
 requires-python = ">=3.10"
+keywords = ["langgraph", "agent", "llm", "ai", "workflow", "dataflow", "agents", "langchain", "graph"]
 dependencies = [
     "langgraph>=1.0,<2",
     "langchain-core>=1.0,<2",
@@ -22,5 +23,5 @@ rag = ["langchain-chroma>=0.2"]
 dev = ["pytest>=8"]
 
 [tool.setuptools.packages.find]
-include = ["agentic_framework*"]
+include = ["pttai*"]
 exclude = ["tests*"]

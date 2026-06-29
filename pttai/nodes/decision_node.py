@@ -3,7 +3,8 @@ Decision node implementation for the Agentic Framework.
 """
 
 from typing import Any, Dict, List, Literal, Optional, Union
-from agentic_framework.node import Node
+from pttai.node import Node, Branch, Spread
+from pttai.nodes._fields import partition_reads
 from langchain_core.messages import SystemMessage
 from pydantic import BaseModel
 
@@ -34,6 +35,13 @@ class Choice:
         Returns:
             The other node to allow for chain building
         """
+        # ponytail: v1 — a decision choice can't host a Send/fan-out directly
+        # (the choice edge is already conditional; nesting a Spread/Branch fan-out
+        # under it isn't supported). Wrap the fan-out in an AgenticGraph instead.
+        if isinstance(other, (Spread, Branch)):
+            raise ValueError(
+                "A decision choice cannot route directly to a fan-out/`.map`; "
+                "wrap it in an AgenticGraph and route to that.")
         self.child = other
         return other
         
@@ -51,6 +59,7 @@ class DecisionNode(Node):
                  node_prompt: str = "",
                  choices: List[str] = [],
                  input_field: str = "messages",
+                 reads: Optional[List[str]] = None,
                  cache_ttl: Optional[int] = None,
                  retry: bool = False) -> None:
         """
@@ -62,6 +71,10 @@ class DecisionNode(Node):
             node_prompt: System prompt/instructions for the language model
             choices: List of possible decision options
             input_field: State key to read the message history from.
+            reads: State keys this node reads (multi-key form; back-compat
+                generalization of input_field). Reads are dispatched by VALUE
+                type just like AgentNode — message lists become history, scalars
+                are interpolated into node_prompt. Use reads OR input_field.
             cache_ttl/retry: see Node — node-level caching/retry.
 
         Raises:
@@ -72,6 +85,7 @@ class DecisionNode(Node):
         super().__init__(name, llm, node_prompt, cache_ttl=cache_ttl, retry=retry)
         self.choices_name: List[str] = choices
         self.input_field = input_field
+        self.reads = reads if reads is not None else [input_field]
         self._create_choices()
         
     def _create_choices(self) -> None:
@@ -101,10 +115,10 @@ class DecisionNode(Node):
         if self.llm is None:
             raise ValueError(f"{self.name} requires a LLM to be set before call.")
 
-        if self.input_field not in state:
-            raise ValueError(f"State must contain a {self.input_field!r} key")
-
-        message_w_prompt = [SystemMessage(content=self.node_prompt)] + state[self.input_field]
+        # Partition reads by value type: message lists -> history, rest -> scalars.
+        history, scalars = partition_reads(state, self.reads)
+        sys = self.node_prompt.format_map(scalars) if scalars else self.node_prompt
+        message_w_prompt = [SystemMessage(content=sys)] + history
         response = self.llm.invoke(message_w_prompt)  # use llm to decide which choice to make
         choice = response.choice
         # Routing label is written to the dedicated `decision` field, not injected

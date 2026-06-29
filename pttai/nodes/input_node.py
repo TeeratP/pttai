@@ -3,7 +3,7 @@ Input node implementation for the Agentic Framework.
 """
 from typing import Any, Optional, List
 
-from agentic_framework.node import Node
+from pttai.node import Node
 from langchain_core.messages import HumanMessage
 from langgraph.types import interrupt
 
@@ -23,7 +23,6 @@ class InputNode(Node):
             cache_ttl/retry: see Node — node-level caching/retry.
         """
         super().__init__(name, cache_ttl=cache_ttl, retry=retry)
-        self.child = None
         self.node_prompt = node_prompt
         self.n = n
         

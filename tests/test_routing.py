@@ -3,7 +3,7 @@
 import pytest
 from langchain_core.messages import HumanMessage
 
-from agentic_framework.nodes import AgentNode, DecisionNode
+from pttai.nodes import AgentNode, DecisionNode
 
 
 def _decision(t, value="positive"):

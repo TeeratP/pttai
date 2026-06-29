@@ -7,8 +7,8 @@ import pytest
 from langchain_core.messages import AnyMessage, HumanMessage
 from langgraph.graph.message import add_messages
 
-from agentic_framework.graph import AgenticGraph
-from agentic_framework.nodes import AgentNode
+from pttai.graph import AgenticGraph
+from pttai.nodes import AgentNode
 
 
 class SummaryState(TypedDict):

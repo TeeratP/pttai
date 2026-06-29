@@ -4,9 +4,9 @@ import asyncio
 
 from langchain_core.messages import HumanMessage
 
-from agentic_framework.graph import AgenticGraph
-from agentic_framework.nodes import AgentNode
-from agentic_framework.state import AgenticState
+from pttai.graph import AgenticGraph
+from pttai.nodes import AgentNode
+from pttai.state import AgenticState
 
 
 def _two_node(t):

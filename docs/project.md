@@ -19,17 +19,21 @@ pip install -e ".[dev]"        # editable install + pytest  (or: uv pip install 
 
 - `pyproject.toml` declares the **direct** deps (langgraph≥1.0, langchain-core≥1.0, pydantic) + extras — **no `langchain` meta-dep** (tool classes come from `langchain_core.tools`). `requirements.txt` is the **frozen lock** (langgraph 1.2.5, langchain-core 1.4.7, langchain-openai 1.3.2, pytest).
 - `test.ipynb` imports `langchain_ollama` (`ChatOllama`), which is **not** declared. Either `pip install langchain-ollama` or stick to the `ChatOpenAI` line.
-- `ChromaRAG` needs the `rag` extra; the import of `langchain_chroma` is lazy so `agentic_framework.tools` imports fine without it.
+- `ChromaRAG` needs the `rag` extra; the import of `langchain_chroma` is lazy so `pttai.tools` imports fine without it.
 
 ## Verifying changes
 
-- **Automated:** `python -m pytest tests/` — 33 tests, no API calls (a scripted `FakeLLM` stands in). Covers state reducers, graph construction, routing, the tool-call loop, interrupt/resume, RAG tool wiring, streaming/async, configurable fields, and node caching/retry/`reasoning_effort`/`durability`.
+- **Automated:** `python -m pytest tests/` — 69 tests, no API calls (a scripted `FakeLLM` stands in). Covers state reducers, graph construction, routing, the tool-call loop, interrupt/resume, RAG tool wiring, streaming/async, configurable fields, parallel fan-out/join, map-reduce, multi-key IO, static validation, and node caching/retry/`reasoning_effort`/`durability`.
+- **Offline feature tour:** `python examples/parallel_usage.py` — no API key; demonstrates parallel fan-out/join, map-reduce, typed multi-key IO, `summary()`, and a caught build-time validation error on an inline fake LLM.
 - **Manual / live model:** `python examples/sample_usage.py` (or `test.ipynb`) with `OPENAI_API_KEY` set — exercises **gpt-5.4-nano** end-to-end (tool call → routing → reasoning handler); inspect `state['log']` for the per-node trace.
 
 ## Current status & rough edges
 
-Phases 1–4 are complete on branch `roadmap/phases-1-3`: reducer state, delta nodes, routing off messages, interrupt/resume, RAG tooling, packaging, streaming/async, configurable fields, the **LangGraph 1.0 stack**, **gpt-5.4-nano** + node `reasoning_effort`, node `cache_ttl`/`retry`, and a `durability` passthrough. Verified live on gpt-5.4-nano. Remaining rough edges:
+The package is now **`pttai`** (renamed from the old `agentic-framework` import; PyPI name `pttai`). Phases 1–5 are complete: reducer state, delta nodes, routing off messages, interrupt/resume, RAG tooling, packaging, streaming/async, configurable fields, the **LangGraph 1.0 stack**, **gpt-5.4-nano** + node `reasoning_effort`, node `cache_ttl`/`retry`, a `durability` passthrough, and the Phase 5 surface: **parallel fan-out/join** (`a > fanout(b, c) > d` and `a > [b, c] > d`, multi-node branch chains), **map-reduce** (`worker.map("field")`, Send-based, deferred collector), **typed multi-key state IO** (`reads=[...]`/`writes=[...]`), and **compile-time static validation** (`validate=`/`validate()`/`summary()`/`inputs=`). Verified live on gpt-5.4-nano. Remaining rough edges / deferred items:
 
+- **Structured multi-write fields are `str`-only in v1.** A typed/nested escape hatch (`output_model=`) is planned, not built.
+- **Map workers don't echo their source item** — the worker receives each item but returns only its reply, and must output `messages`.
+- **`must` (all-paths) validation is imprecise for decision→handler→merge** — warning-only, never a wrong hard error (hard errors come only from the precise `may` analysis).
 - **Async is graph-level only.** `ainvoke`/`astream` run the sync nodes in LangGraph's threadpool; true per-node async LLM calls aren't implemented — which is also why **node `timeout` is unavailable** (LangGraph only times out async nodes).
 - **`reasoning_effort` is AgentNode-only** — it conflicts with `DecisionNode`'s structured output on current OpenAI models.
 - **ChromaRAG is untested end-to-end.** Only `make_retriever_tool` is covered (fake retriever); the Chroma path needs live embeddings.
@@ -42,8 +46,15 @@ Done:
 - [x] Configurable input/output fields per node — `AgentNode`/`DecisionNode`.
 - [x] LangSmith integration — automatic via env vars (see `.env.example`).
 - [x] LangGraph 1.0 upgrade; gpt-5.4-nano + node `reasoning_effort`; node `cache_ttl`/`retry`; `durability` passthrough (Phase 4 #1–4).
+- [x] Parallel fan-out/join (`fanout(...)` / `[a, b]`, multi-node branch chains) and map-reduce (`worker.map("field")`).
+- [x] Typed multi-key state IO (`reads=[...]`/`writes=[...]`: type-based reads, 3 write modes, tools-XOR-structured).
+- [x] Compile-time static validation (`validate=`/`validate()`/`summary()`/`inputs=`).
+- [x] Rename to **`pttai`** + public import surface (`from pttai import AgenticGraph, AgentNode, …`).
 
 Remaining:
+- [ ] Typed/nested structured output via `output_model=` (today multi-write fields are `str`-only).
+- [ ] Map workers that echo their source item alongside the reply.
+- [ ] Tighten `must` (all-paths) validation precision for decision→handler→merge.
 - [ ] Conversation memory (`ConversationSummaryMemory`-style summarization node).
 - [ ] TTS and STT nodes.
 - [ ] True per-node async LLM execution (also unlocks node `timeout` and token-level streaming).
@@ -59,7 +70,7 @@ Phases 1–4 are complete on branch `roadmap/phases-1-3` (LangGraph 1.0 / LangCh
 - e5ac44c 2026-06-20 — Rewrite README as a portfolio-grade showcase: tagline + badges, problem→solution value prop, a Mermaid diagram of the example graph, and a "Design decisions" section (all claims verified against source)
 - 842f24e 2026-06-20 — Expand README with a Features list, surface the 33-test suite count, and add a Limitations section (docs only, grounded in existing code)
 - 0822000 2026-06-20 — Rewrite README as a finished project (accurate LangGraph 1.0 feature set, `>` DSL/InputNode/RAG/caching) + add MIT LICENSE for the now-public repo
-- d3f52d1 2026-06-17 — Stop tracking build artifacts (`agentic_framework.egg-info`); add `__pycache__/`/`*.egg-info/`/`.venv/` to .gitignore
+- d3f52d1 2026-06-17 — Stop tracking build artifacts (`pttai.egg-info`); add `__pycache__/`/`*.egg-info/`/`.venv/` to .gitignore
 - a561424 2026-06-17 — Phase 4 #2-4: AgentNode `reasoning_effort`, per-node `cache_ttl`/`retry` knobs (auto `InMemoryCache`), and `durability` passthrough on invoke/stream; 33 tests pass
 - 666ef08 2026-06-17 — Phase 4 #1: upgrade to LangGraph 1.0 / LangChain 1.0 stack (tool imports → `langchain_core.tools`, `MemorySaver`→`InMemorySaver`, relocked deps); 28 tests pass unchanged
 - 86e8d91 2026-06-17 — Stop tracking `.env` (committed before the ignore rule); leaked key remains in history and should be rotated
