@@ -5,14 +5,14 @@ import operator
 from typing import Annotated, TypedDict
 
 import pytest
-from langchain_core.messages import AnyMessage
+from langchain_core.messages import AnyMessage, HumanMessage
 from langgraph.graph.message import add_messages
 
 from pttai import fanout
 from pttai.graph import AgenticGraph
 from pttai.nodes import AgentNode, DecisionNode
 from pttai.state import AgenticState
-from pttai.validation import GraphValidationError
+from pttai.validation import GraphValidationError, schema_keys
 
 
 class SummaryState(TypedDict):
@@ -79,10 +79,33 @@ def test_diamond_join_no_false_positive(t):
     assert g.validate().ok is True
 
 
-def test_write_unknown_key_caught(t):
-    n = _agent(t, "n", output_field="sumary")  # typo, not in schema
-    with pytest.raises(GraphValidationError, match="not declared"):
-        AgenticGraph(state=SummaryState, start_node=n, end_nodes=n)
+def test_write_unknown_key_autoregistered(t):
+    # A node writing a key the schema doesn't declare no longer errors; the key
+    # is auto-registered as a plain channel, so the graph builds and runs and
+    # the value round-trips through invoke.
+    n = _agent(t, "n", content="hi", output_field="sumary")  # not in schema
+    g = AgenticGraph(state=SummaryState, start_node=n, end_nodes=n)
+    assert "sumary" in schema_keys(g.state_schema)
+    out = g.invoke({"messages": [HumanMessage(content="x")], "log": []})
+    assert out["sumary"] == "hi"
+
+
+def test_default_state_no_state_arg(t):
+    # The graph builds with NO state= arg and runs on the default AgenticState.
+    a = _agent(t, "a", content="hello")
+    g = AgenticGraph(start_node=a, end_nodes=a)
+    out = g.invoke({"messages": [HumanMessage(content="hi")], "log": []})
+    assert any(m.content == "hello" for m in out["messages"])
+
+
+def test_undeclared_scalar_autoregisters_and_roundtrips(t):
+    # Default state + a node writing an undeclared scalar key: the key is
+    # auto-registered and its value round-trips through invoke.
+    n = _agent(t, "n", content="val", output_field="result")
+    g = AgenticGraph(start_node=n, end_nodes=n)
+    assert "result" in schema_keys(g.state_schema)
+    out = g.invoke({"messages": [HumanMessage(content="x")], "log": []})
+    assert out["result"] == "val"
 
 
 def test_parallel_unreduced_write_caught(t):

@@ -3,17 +3,32 @@ Graph implementation for the Agentic Framework.
 """
 
 import sys
-from typing import Literal, Union
+import uuid
+from typing import Any, Literal, Union, TypedDict, get_type_hints
 from langgraph.graph import StateGraph, START, END, MessagesState
 from langgraph.types import CachePolicy, RetryPolicy, Send
 from langgraph.cache.memory import InMemoryCache
 from langchain_core.messages import HumanMessage
 from pttai.node import Branch, Spread
 from pttai.nodes import AgentNode, InputNode, DecisionNode
+from pttai.state import AgenticState
 from pttai.validation import (
     GraphValidationError, ValidationReport, Issue, schema_keys, reduced_keys,
     compute_availability, collect_issues,
 )
+
+
+def _augment_schema(base, extra_keys):
+    """Return a TypedDict like ``base`` plus a PLAIN (last-writer-wins) channel
+    for each key in ``extra_keys``. Existing reduced channels keep their
+    reducers (their resolved ``Annotated[..., reducer]`` annotations are copied
+    verbatim). Returns ``base`` unchanged when there is nothing to add."""
+    if not extra_keys:
+        return base
+    hints = dict(get_type_hints(base, include_extras=True))
+    for k in extra_keys:
+        hints[k] = Any  # untyped plain channel (no reducer metadata)
+    return TypedDict(f"{base.__name__}Plus", hints)
 
 
 def _make_send_fn(worker, field):
@@ -33,13 +48,20 @@ class AgenticGraph(StateGraph):
     agent-based workflows.
     """
     
-    def __init__(self, state: MessagesState, start_node, end_nodes, name: str = 'graph',
+    def __init__(self, state=None, start_node=None, end_nodes=None, name: str = 'graph',
                  checkpointer=None, cache=None, validate: bool = True,
                  inputs=None) -> None:
         """
         Initialize the AgenticGraph.
 
         Args:
+            state: The state schema (a TypedDict). OPTIONAL — defaults to the
+                standard ``AgenticState`` (messages/log/decision). Any scalar key
+                a node declares in ``writes`` that the schema doesn't already
+                declare is auto-registered as a PLAIN (last-writer-wins) channel,
+                so you rarely need a hand-written schema. Pass an explicit
+                ``state=`` (with reducers) when you want to type/reduce a key
+                precisely.
             start_node: The initial node in the graph
             end_nodes: Set of nodes that represent terminal states
             checkpointer: Optional LangGraph checkpointer (e.g. InMemorySaver).
@@ -57,12 +79,20 @@ class AgenticGraph(StateGraph):
                 writes is declared, FAILING the build (GraphValidationError) on a
                 hard error. Set False to skip (escape hatch). See ``validate()``.
         """
+        if state is None:
+            state = AgenticState
+        self.start_node = start_node
+        self.end_nodes = end_nodes if isinstance(end_nodes, (list, tuple, set)) else [end_nodes]
+        # Auto-register every undeclared key a node WRITES as a plain channel, so
+        # users don't have to predeclare scalars in a TypedDict. (Reads are NOT
+        # auto-registered: a read of a key no node writes and that the schema
+        # doesn't declare stays a hard error — the dangling-read guardrail.)
+        state = _augment_schema(state, self._auto_register_keys(state))
+
         super().__init__(state)
 
         self.name = name
         self.state_schema = state
-        self.start_node = start_node
-        self.end_nodes = end_nodes if isinstance(end_nodes, (list, tuple, set)) else [end_nodes]
         self.children: list = []
         self._head = self  # head of the chain this graph is currently the tail of
         self.checkpointer = checkpointer
@@ -328,6 +358,48 @@ class AgenticGraph(StateGraph):
             raise TypeError(f"Unsupported node type: {type(node)}. Must be either AgentNode or DecisionNode")
 
     # --- validation / introspection -------------------------------------
+
+    def _collect_nodes(self, start) -> dict:
+        """Walk the ``.children`` / choice / spread graph from ``start`` and
+        return ``{name: node}`` for every node, BEFORE the StateGraph is built
+        (so key auto-registration can run before ``super().__init__``)."""
+        seen: dict = {}
+
+        def children_of(node):
+            if isinstance(node, DecisionNode):
+                return [c.child for c in node.choices if c.child is not None]
+            return list(getattr(node, "children", None) or [])
+
+        def walk(node):
+            if isinstance(node, Spread):
+                worker = node.worker
+                if worker.name not in seen:
+                    seen[worker.name] = worker
+                    for ch in children_of(worker):
+                        walk(ch)
+                if node.collector is not None:
+                    walk(node.collector)
+                return
+            name = node.name
+            if name in seen:
+                return
+            seen[name] = node
+            for ch in children_of(node):
+                walk(ch)
+
+        if start is not None:
+            walk(start)
+        return seen
+
+    def _auto_register_keys(self, base_state) -> set:
+        """Keys WRITTEN by some node that ``base_state`` does not declare. These
+        become plain channels so the build doesn't reject undeclared writes."""
+        base = schema_keys(base_state)
+        extra = set()
+        for node in self._collect_nodes(self.start_node).values():
+            _, writes = self._node_io(node)
+            extra |= writes
+        return extra - base
 
     def _node_io(self, node):
         """Per-node (reads, writes) key sets for the dataflow analysis."""
