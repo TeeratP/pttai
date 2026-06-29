@@ -51,7 +51,8 @@ class AgenticGraph(StateGraph):
     
     def __init__(self, state=None, start_node=None, end_nodes=None, name: str = 'graph',
                  checkpointer=None, cache=None, validate: bool = True,
-                 inputs=None) -> None:
+                 inputs=None, prompt_cache: bool = False,
+                 prompt_cache_key: "str | None" = None) -> None:
         """
         Initialize the AgenticGraph.
 
@@ -79,6 +80,14 @@ class AgenticGraph(StateGraph):
                 node reads is produced upstream/in the schema and every key it
                 writes is declared, FAILING the build (GraphValidationError) on a
                 hard error. Set False to skip (escape hatch). See ``validate()``.
+            prompt_cache: Opt-in (default False). When True AND a node's model is
+                OpenAI, every model call passes a ``prompt_cache_key`` so OpenAI
+                routes the shared SystemMessage/history prefix to one cache. No
+                effect on non-OpenAI models.
+            prompt_cache_key: The cache key to use verbatim for the whole run.
+                When omitted, one key is generated per graph build and shared by
+                every node, so all sibling/sequential calls land on the same
+                cache.
         """
         if state is None:
             state = AgenticState
@@ -108,6 +117,20 @@ class AgenticGraph(StateGraph):
         self._spread_collectors: dict = {}  # collector_name -> (spread_pred, worker)
         self._spread_fields: list = []    # (spread_pred_name, field) — field is read here
         self.build_graph()
+
+        # OpenAI prompt caching: thread one cache key to every AgentNode so all
+        # calls in a run share a cache prefix. ponytail: this is a PER-BUILD key
+        # (one uuid generated here), not per-run — still groups all
+        # sibling/sequential calls onto one cache; upgrade to a per-run id via
+        # the RunnableConfig LangGraph passes if finer granularity is needed.
+        self.prompt_cache = prompt_cache
+        self._prompt_cache_key = prompt_cache_key or uuid.uuid4().hex
+        if prompt_cache:
+            for n in self._seen_nodes.values():
+                if isinstance(n, AgentNode):
+                    n._prompt_cache_enabled = True
+                    n._prompt_cache_key = self._prompt_cache_key
+
         # Compute this graph's free reads / schema-bound writes so a PARENT graph
         # can treat it as a single node (subgraph composition).
         self._compute_subgraph_io()

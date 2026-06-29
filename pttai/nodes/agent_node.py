@@ -20,6 +20,15 @@ def _usage_delta(response):
     model = (getattr(response, "response_metadata", None) or {}).get("model_name", "unknown")
     return {model: usage}
 
+
+def _is_openai(llm) -> bool:
+    """Duck-type whether ``llm`` is a langchain_openai ChatOpenAI, WITHOUT
+    importing langchain_openai. Unwraps the RunnableBinding that ``bind_tools``
+    produces so detection still works after tools are bound."""
+    target = getattr(llm, "bound", llm)  # RunnableBinding -> underlying model
+    cls = type(target)
+    return cls.__name__ == "ChatOpenAI" or cls.__module__.startswith("langchain_openai")
+
 class AgentNode(Node):
     """
     A node that represents an agent capable of processing messages and generating responses.
@@ -81,6 +90,9 @@ class AgentNode(Node):
         self.reasoning_effort = reasoning_effort
         # Per-call kwarg (survives bind_tools, unlike a pre-bound reasoning_effort).
         self._invoke_kwargs = {"reasoning_effort": reasoning_effort} if reasoning_effort else {}
+        # OpenAI prompt-cache routing — set by AgenticGraph when prompt_cache=True.
+        self._prompt_cache_enabled = False
+        self._prompt_cache_key = None
 
     def __call__(self, state):
         """
@@ -131,7 +143,13 @@ class AgentNode(Node):
             values = {w: getattr(out, w) for w in scalar_writes}
             return values | {"log": [f"{self.name}:{values}"]}
 
-        response = self.llm.invoke(prompt, **self._invoke_kwargs)
+        # Per-call kwargs: reasoning_effort (if set) plus an OpenAI
+        # prompt_cache_key when prompt caching is on AND the model is OpenAI.
+        invoke_kwargs = dict(self._invoke_kwargs)
+        if self._prompt_cache_enabled and _is_openai(self.llm):
+            invoke_kwargs["prompt_cache_key"] = self._prompt_cache_key
+
+        response = self.llm.invoke(prompt, **invoke_kwargs)
         new_messages.append(response)
         new_log.append(f'{self.name}:{response.content}')
         token = _usage_delta(response)
@@ -159,7 +177,7 @@ class AgentNode(Node):
                     )
                     new_log.append(f'tools:{tool_call["name"]}, args:{tool_call["args"]}, result:{tool_result}')
                 prompt = [SystemMessage(content=sys)] + history + new_messages
-                response = self.llm.invoke(prompt, **self._invoke_kwargs)
+                response = self.llm.invoke(prompt, **invoke_kwargs)
                 new_messages.append(response)
                 new_log.append(f'{self.name}:{response.content}')
                 token = merge_token_usage(token, _usage_delta(response))

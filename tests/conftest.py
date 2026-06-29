@@ -62,6 +62,11 @@ class FakeLLM:
         return self
 
 
+class ChatOpenAI(FakeLLM):
+    """FakeLLM whose class is *named* ChatOpenAI so pttai's duck-typed OpenAI
+    detection (`type(llm).__name__ == 'ChatOpenAI'`) treats it as OpenAI."""
+
+
 _ids = itertools.count()
 
 
@@ -86,4 +91,5 @@ def tool_call_msg(name, args, call_id="call-1"):
 @pytest.fixture
 def t():
     """Toolkit: FakeLLM + message constructors."""
-    return SimpleNamespace(FakeLLM=FakeLLM, ai=ai, tool_call_msg=tool_call_msg)
+    return SimpleNamespace(FakeLLM=FakeLLM, ChatOpenAI=ChatOpenAI, ai=ai,
+                           tool_call_msg=tool_call_msg)
