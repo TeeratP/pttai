@@ -10,7 +10,7 @@ from langgraph.types import CachePolicy, RetryPolicy, Send
 from langgraph.cache.memory import InMemoryCache
 from langchain_core.messages import HumanMessage
 from pttai.node import Branch, Spread
-from pttai.nodes import AgentNode, InputNode, DecisionNode
+from pttai.nodes import AgentNode, InputNode, DecisionNode, RouterNode, ConditionNode
 from pttai.nodes._fields import prompt_placeholders, is_history_annotation
 from pttai.state import AgenticState, RESERVED, accumulate
 from pttai.validation import (
@@ -347,7 +347,7 @@ class AgenticGraph(StateGraph):
             if node.name in nodes:
                 return
             nodes[node.name] = node
-            if isinstance(node, DecisionNode):
+            if isinstance(node, RouterNode):
                 for choice in node.choices:  # conditional out-edges: not counted
                     if choice.child is not None:
                         walk(choice.child)
@@ -417,7 +417,7 @@ class AgenticGraph(StateGraph):
                 )
             # Fan-in revisit: the node is already built, but this parent's join
             # edge is not yet wired. Add it (decision edges are conditional).
-            if prev_node is not START and not isinstance(prev_node, DecisionNode):
+            if prev_node is not START and not isinstance(prev_node, RouterNode):
                 self._add_edge(prev_node_name, curr_node_name)
             return
 
@@ -426,9 +426,9 @@ class AgenticGraph(StateGraph):
         if isinstance(node, AgentNode) or isinstance(node, InputNode):
 
             self.add_node(curr_node_name, node, defer=getattr(node, '_defer', False), **self._node_policies(node))
-            if not isinstance(prev_node, DecisionNode):  # normal case
+            if not isinstance(prev_node, RouterNode):  # normal case
                 self._add_edge(prev_node_name, curr_node_name)
-            # else: edge from decision node is already added in DecisionNode
+            # else: edge from router node is already added in the RouterNode branch
 
             if node in self.end_nodes:
                 self._add_edge(curr_node_name, END)  # only case that creates forward edge is when node is end node
@@ -438,7 +438,7 @@ class AgenticGraph(StateGraph):
                 for child in node.children:  # recursively build graph
                     self._build_graph(child, node)
 
-        elif isinstance(node, DecisionNode):
+        elif isinstance(node, RouterNode):
 
             self.add_node(curr_node_name, node, **self._node_policies(node))
             self._add_edge(prev_node_name, curr_node_name)
@@ -453,9 +453,9 @@ class AgenticGraph(StateGraph):
         elif isinstance(node, AgenticGraph):
 
             self.add_node(curr_node_name, node.compiled_graph, defer=getattr(node, '_defer', False))
-            if not isinstance(prev_node, DecisionNode):  # normal case
+            if not isinstance(prev_node, RouterNode):  # normal case
                 self._add_edge(prev_node_name, curr_node_name)
-            # else: edge from decision node is already added in DecisionNode
+            # else: edge from router node is already added in the RouterNode branch
 
             if node in self.end_nodes:
                 self._add_edge(curr_node_name, END)  # only case that creates forward edge is when node is end node
@@ -477,7 +477,7 @@ class AgenticGraph(StateGraph):
         seen: dict = {}
 
         def children_of(node):
-            if isinstance(node, DecisionNode):
+            if isinstance(node, RouterNode):
                 return [c.child for c in node.choices if c.child is not None]
             return list(getattr(node, "children", None) or [])
 
@@ -512,7 +512,7 @@ class AgenticGraph(StateGraph):
         spreads: list = []
 
         def children_of(node):
-            if isinstance(node, DecisionNode):
+            if isinstance(node, RouterNode):
                 return [c.child for c in node.choices if c.child is not None]
             return list(getattr(node, "children", None) or [])
 
@@ -587,7 +587,7 @@ class AgenticGraph(StateGraph):
             user_writes, user_reads = set(), set()
             if isinstance(node, AgentNode):
                 user_writes = set(node.writes)  # dict keys = user-declared writes
-            if isinstance(node, (AgentNode, DecisionNode)):
+            if isinstance(node, (AgentNode, RouterNode)):
                 user_reads = {r[:-1] if r.endswith("?") else r for r in node.reads}
             bad_w = user_writes & guarded
             bad_r = user_reads & guarded
@@ -606,7 +606,7 @@ class AgenticGraph(StateGraph):
         """Per-node (reads, writes) key sets for the dataflow analysis."""
         if isinstance(node, AgenticGraph):
             return set(node._io_reads), set(node._io_writes)
-        if isinstance(node, DecisionNode):
+        if isinstance(node, RouterNode):
             return set(node.reads), {"decision", "log"}
         if isinstance(node, InputNode):
             return {"messages"}, {"messages"}
@@ -717,13 +717,13 @@ class AgenticGraph(StateGraph):
         decision_choices = {
             name: [(c.name, c.child is not None) for c in node.choices]
             for name, node in self._seen_nodes.items()
-            if isinstance(node, DecisionNode)
+            if isinstance(node, RouterNode)
         }
         end_names = {n.name for n in self.end_nodes}
         end_with_children = [
             name for name, node in self._seen_nodes.items()
             if name in end_names and getattr(node, "children", None)
-            and not isinstance(node, DecisionNode)
+            and not isinstance(node, RouterNode)
         ]
         reachable = self._reachable_from_start()
         unreachable = [name for name in self._seen_nodes if name not in reachable]
