@@ -10,7 +10,7 @@ from langgraph.types import CachePolicy, RetryPolicy, Send
 from langgraph.cache.memory import InMemoryCache
 from langchain_core.messages import HumanMessage
 from pttai.node import Branch, Spread
-from pttai.nodes import AgentNode, InputNode, DecisionNode, RouterNode, ConditionNode
+from pttai.nodes import AgentNode, HumanNode, DecisionNode, RouterNode, ConditionNode
 from pttai.nodes._fields import prompt_placeholders, is_history_annotation
 from pttai.state import AgenticState, RESERVED, accumulate
 from pttai.validation import (
@@ -136,7 +136,7 @@ class AgenticGraph(StateGraph):
             start_node: The initial node in the graph
             end_nodes: Set of nodes that represent terminal states
             checkpointer: Optional LangGraph checkpointer (e.g. InMemorySaver).
-                Required for InputNode interrupt/resume. When set, every invoke
+                Required for HumanNode interrupt/resume. When set, every invoke
                 must pass a config with a ``thread_id``.
             cache: Optional LangGraph cache backend. Defaults to an InMemoryCache
                 when any node sets ``cache_ttl``; pass explicitly to override.
@@ -423,7 +423,7 @@ class AgenticGraph(StateGraph):
 
         self._seen_nodes[curr_node_name] = node
 
-        if isinstance(node, AgentNode) or isinstance(node, InputNode):
+        if isinstance(node, AgentNode) or isinstance(node, HumanNode):
 
             self.add_node(curr_node_name, node, defer=getattr(node, '_defer', False), **self._node_policies(node))
             if not isinstance(prev_node, RouterNode):  # normal case
@@ -608,8 +608,8 @@ class AgenticGraph(StateGraph):
             return set(node._io_reads), set(node._io_writes)
         if isinstance(node, RouterNode):
             return set(node.reads), {"decision", "log"}
-        if isinstance(node, InputNode):
-            return {"messages"}, {"messages"}
+        if isinstance(node, HumanNode):
+            return {"messages"}, {node.into}
         if isinstance(node, AgentNode):
             return set(node.reads), set(node.writes) | {"log"}
         return set(), set()  # ponytail: unknown node type — no IO claims

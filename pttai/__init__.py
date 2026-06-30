@@ -13,7 +13,7 @@ Public API::
         AgentNode,      # LLM node: tool-call loop, typed multi-key reads/writes
         DecisionNode,   # constrained structured-output routing
         ConditionNode,  # deterministic routing by a Python predicate (no LLM)
-        InputNode,      # resumable human-in-the-loop (interrupt/resume)
+        HumanNode,      # resumable human-in-the-loop (interrupt/resume)
         fanout,         # explicit parallel fan-out: a > fanout(b, c) > d
         AgenticState,   # default reduced-channel state (messages / log / decision)
     )
@@ -21,7 +21,7 @@ Public API::
 
 from pttai.graph import AgenticGraph
 from pttai.node import fanout
-from pttai.nodes import AgentNode, DecisionNode, ConditionNode, InputNode
+from pttai.nodes import AgentNode, DecisionNode, ConditionNode, HumanNode
 from pttai.state import AgenticState
 
 __all__ = [
@@ -29,7 +29,7 @@ __all__ = [
     "AgentNode",
     "DecisionNode",
     "ConditionNode",
-    "InputNode",
+    "HumanNode",
     "fanout",
     "AgenticState",
 ]
