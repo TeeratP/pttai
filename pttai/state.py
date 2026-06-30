@@ -49,6 +49,13 @@ def merge_token_usage(left, right) -> dict:
     return merged
 
 
+def accumulate(left, right):
+    """Reducer for a map-reduce collection channel: each parallel writer
+    contributes ONE value, accumulated into a list (arrival order). A
+    missing/None left (the first update) is treated as []."""
+    return (left or []) + [right]
+
+
 class AgenticState(TypedDict):
     # add_messages appends new messages, replaces an existing message when IDs
     # match, and coerces bare strings to HumanMessage. It also merges updates
