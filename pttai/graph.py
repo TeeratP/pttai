@@ -4,7 +4,7 @@ Graph implementation for the Agentic Framework.
 
 import sys
 import uuid
-from typing import Any, Literal, Union, TypedDict, get_type_hints
+from typing import Annotated, Any, Literal, Union, TypedDict, get_type_hints
 from langgraph.graph import StateGraph, START, END, MessagesState
 from langgraph.types import CachePolicy, RetryPolicy, Send
 from langgraph.cache.memory import InMemoryCache
@@ -12,23 +12,25 @@ from langchain_core.messages import HumanMessage
 from pttai.node import Branch, Spread
 from pttai.nodes import AgentNode, InputNode, DecisionNode
 from pttai.nodes._fields import prompt_placeholders, is_history_annotation
-from pttai.state import AgenticState, RESERVED
+from pttai.state import AgenticState, RESERVED, accumulate
 from pttai.validation import (
     GraphValidationError, ValidationReport, Issue, schema_keys, reduced_keys,
     compute_availability, collect_issues, check_placeholders,
 )
 
 
-def _augment_schema(base, extra_keys):
-    """Return a TypedDict like ``base`` plus a PLAIN (last-writer-wins) channel
-    for each key in ``extra_keys``. Existing reduced channels keep their
-    reducers (their resolved ``Annotated[..., reducer]`` annotations are copied
-    verbatim). Returns ``base`` unchanged when there is nothing to add."""
-    if not extra_keys:
+def _augment_schema(base, extra):
+    """Return a TypedDict like ``base`` plus one channel per item of ``extra``, a
+    ``{key: annotation}`` map. The annotation is used verbatim — ``Any`` for a
+    plain (last-writer-wins) channel, ``Annotated[list, accumulate]`` for a
+    map-worker collection channel. Existing reduced channels keep their reducers
+    (their resolved annotations are copied). Returns ``base`` unchanged when
+    there is nothing to add."""
+    if not extra:
         return base
     hints = dict(get_type_hints(base, include_extras=True))
-    for k in extra_keys:
-        hints[k] = Any  # untyped plain channel (no reducer metadata)
+    for k, annotation in extra.items():
+        hints[k] = annotation
     return TypedDict(f"{base.__name__}Plus", hints)
 
 
@@ -500,14 +502,55 @@ class AgenticGraph(StateGraph):
             walk(start)
         return seen
 
-    def _auto_register_keys(self, base_state) -> set:
-        """Undeclared keys to add to ``base_state`` as plain channels:
+    def _collect_spreads(self, start) -> list:
+        """Walk the same ``.children`` / choice / Spread structure as
+        ``_collect_nodes`` and return ``[(field, worker), ...]`` — one tuple per
+        ``Spread`` encountered (the data ``_collect_nodes`` discards). Captures
+        nested/sequential spreads; a seen-set keyed by node identity keeps cycles
+        finite."""
+        seen: set = set()
+        spreads: list = []
+
+        def children_of(node):
+            if isinstance(node, DecisionNode):
+                return [c.child for c in node.choices if c.child is not None]
+            return list(getattr(node, "children", None) or [])
+
+        def walk(node):
+            if isinstance(node, Spread):
+                spreads.append((node.field, node.worker))
+                if id(node.worker) not in seen:
+                    seen.add(id(node.worker))
+                    for ch in children_of(node.worker):
+                        walk(ch)
+                if node.collector is not None:
+                    walk(node.collector)
+                return
+            if id(node) in seen:
+                return
+            seen.add(id(node))
+            for ch in children_of(node):
+                walk(ch)
+
+        if start is not None:
+            walk(start)
+        return spreads
+
+    def _auto_register_keys(self, base_state) -> dict:
+        """``{key: annotation}`` for undeclared keys to add to ``base_state``:
 
         - every key some node WRITES (so undeclared writes aren't rejected), and
         - every NON-OPTIONAL key some node READS that NO node writes (a
           never-written read is a graph INPUT seeded at invoke, not a
-          dangling-read error). Optional (``key?``) reads are excluded so they
-          stay warn-only and don't silently become required inputs.
+          dangling-read error) — each as ``Any`` (a plain last-writer-wins
+          channel). Optional (``key?``) reads are excluded so they stay warn-only.
+        - each ``.map(field)`` spread ``field`` as ``Any`` (a plain input the
+          Send machinery reads), and each map-worker scalar write key as
+          ``Annotated[list, accumulate]`` (N parallel writers accumulate into one
+          list). The accumulate channel wins over a plain entry for the same key.
+
+        Keys already declared in ``base_state`` are SKIPPED throughout — an
+        explicit ``state=`` always wins.
         """
         base = schema_keys(base_state)
         writes, required_reads = set(), set()
@@ -517,7 +560,17 @@ class AgenticGraph(StateGraph):
             required_reads |= {r for r in reads if not r.endswith("?")}
         auto_writes = writes - base
         auto_inputs = required_reads - base - writes  # never-written reads -> inputs
-        return auto_writes | auto_inputs
+
+        extra = {k: Any for k in (auto_writes | auto_inputs)}
+        for field, worker in self._collect_spreads(self.start_node):
+            if field not in base:
+                extra[field] = Any  # spread field is read by the Send machinery
+            if isinstance(worker, AgentNode):
+                for k in set(worker.writes) - {"messages"}:
+                    if k not in base:
+                        # accumulate wins over a plain entry (the stronger signal)
+                        extra[k] = Annotated[list, accumulate]
+        return extra
 
     def _check_reserved(self) -> None:
         """Reject USER-declared node reads/writes that collide with a reserved

@@ -89,11 +89,13 @@ class Node(ABC):
         LangGraph ``Send`` over the items, then all replies join into the
         collector (which runs once, after).
 
-        v1 limitations: (1) workers return their REPLY only, not the source item
-        (the ``Send`` payload is the worker's input, never a state update);
-        (2) map workers MUST output ``messages`` (the default) — a worker with a
-        non-message ``output_field``/scalar write would make N parallel workers
-        write the same plain key, raising ``InvalidUpdateError``.
+        A mapped worker's scalar write key becomes a LIST channel — one entry per
+        item (a 1-element list for a single item; arrival order, not input order)
+        — and ``state=`` is not required: the channel and its accumulate reducer
+        are inferred at build time.
+
+        v1 limitation: workers return their REPLY only, not the source item (the
+        ``Send`` payload is the worker's input, never a state update).
         """
         return Spread(self, field)
 
