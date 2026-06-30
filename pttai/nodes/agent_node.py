@@ -38,7 +38,7 @@ class AgentNode(Node):
     """
 
     def __init__(self,
-                 name: str = 'agent_node',
+                 name: Optional[str] = None,
                  llm: Optional[Any] = None,
                  node_prompt: str = "you are a helpful assistant",
                  max_tool_iterations: int = 25,

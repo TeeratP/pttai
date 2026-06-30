@@ -14,7 +14,7 @@ class ConditionNode(RouterNode):
     deterministic. ``condition(state)`` must return one of ``choices``."""
 
     def __init__(self,
-                 name: str = 'condition_node',
+                 name: Optional[str] = None,
                  condition: Optional[Callable] = None,
                  choices: List[str] = [],
                  reads: Optional[List[str]] = None,
