@@ -154,6 +154,8 @@ class DecisionNode(RouterNode):
         """
         assert node_prompt, "DecisionNode requires a node_prompt to be set."
         assert choices, "DecisionNode requires choices to be set."
+        if llm is None:
+            raise ValueError("DecisionNode requires an llm — pass llm=... to the constructor.")
         super().__init__(name, choices, llm=llm, node_prompt=node_prompt,
                          input_field=input_field, reads=reads,
                          cache_ttl=cache_ttl, retry=retry)
