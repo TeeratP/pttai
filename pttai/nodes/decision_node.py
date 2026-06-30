@@ -57,8 +57,8 @@ class RouterNode(Node):
     """
 
     def __init__(self,
-                 name: str,
-                 choices: List[str],
+                 name: Optional[str] = None,
+                 choices: List[str] = None,
                  llm: Optional[Any] = None,
                  node_prompt: str = "",
                  input_field: str = "messages",
@@ -126,7 +126,7 @@ class DecisionNode(RouterNode):
     """
 
     def __init__(self,
-                 name: str = 'decision_node',
+                 name: Optional[str] = None,
                  llm: Optional[Any] = None,
                  node_prompt: str = "",
                  choices: List[str] = [],

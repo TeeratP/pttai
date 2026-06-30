@@ -9,7 +9,7 @@ from langgraph.types import interrupt
 
 class HumanNode(Node):
     def __init__(self,
-                 name: str = 'human_node',
+                 name: Optional[str] = None,
                  node_prompt: str = "Please review the following message and provide feedback.",
                  n: int = 1,
                  show: Optional[Union[str, Callable]] = None,

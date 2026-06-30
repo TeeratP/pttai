@@ -2,8 +2,46 @@
 Base node implementation for the Agentic Framework.
 """
 
+import ast
+import linecache
+import sys
 from abc import ABC, abstractmethod
 from typing import Any, Optional
+
+
+def _infer_name():
+    """Best-effort: the LHS variable of `x = SomeNode(...)` / `self.x = ...`.
+    Returns the name str, or None when it can't be determined (caller falls
+    back to build-time numbering). Never raises."""
+    try:
+        frame = sys._getframe(1)
+        # climb past pttai's own __init__ frames to the user's call site
+        while frame is not None and frame.f_globals.get("__name__", "").startswith("pttai"):
+            frame = frame.f_back
+        if frame is None:
+            return None
+        source = "".join(linecache.getlines(frame.f_code.co_filename, frame.f_globals))
+        if not source:
+            return None
+        lineno = frame.f_lineno
+        tree = ast.parse(source)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign) and getattr(node, "lineno", None) is not None \
+                    and node.lineno <= lineno <= (node.end_lineno or node.lineno) \
+                    and len(node.targets) == 1:
+                tgt = node.targets[0]
+                if isinstance(tgt, ast.Name):
+                    return tgt.id
+                if isinstance(tgt, ast.Attribute):
+                    return tgt.attr
+            if isinstance(node, ast.AnnAssign) and getattr(node, "lineno", None) is not None \
+                    and node.lineno <= lineno <= (node.end_lineno or node.lineno) \
+                    and isinstance(node.target, ast.Name):
+                return node.target.id
+    except Exception:
+        return None
+    return None
+
 
 class Node(ABC):
     """
@@ -13,19 +51,30 @@ class Node(ABC):
     providing core functionality for language model integration and prompt management.
     """
     
-    def __init__(self, name: str, llm: Optional[Any] = None, node_prompt: str = "",
+    def __init__(self, name: Optional[str] = None, llm: Optional[Any] = None, node_prompt: str = "",
                  cache_ttl: Optional[int] = None, retry: bool = False) -> None:
         """
         Initialize a new Node.
 
         Args:
-            name: Unique identifier for the node
+            name: Unique identifier for the node. OPTIONAL — when omitted, the
+                node's name is inferred from the assignment target at the call
+                site (`reviewer = AgentNode()` -> "reviewer"); the graph resolves
+                it (with collision suffixing) at build time. An explicit name
+                always wins. ``_name_base`` keeps the unresolved base so a rebuild
+                is idempotent; ``_auto_name`` flags an inferred/numbered name.
             llm: Language model instance to be used by this node
             node_prompt: System prompt/instructions for the language model
             cache_ttl: Seconds to cache this node's result (LangGraph CachePolicy).
             retry: When True, retry this node on exception (LangGraph RetryPolicy).
         """
-        self.name = name
+        if name is not None:
+            self._name_base = name
+            self._auto_name = False
+        else:
+            self._name_base = _infer_name()
+            self._auto_name = True
+        self.name = self._name_base  # may be None until the graph resolves it
         self.llm = llm
         self.node_prompt = node_prompt
         self.cache_ttl = cache_ttl

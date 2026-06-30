@@ -162,6 +162,8 @@ class AgenticGraph(StateGraph):
             state = AgenticState
         self.start_node = start_node
         self.end_nodes = end_nodes if isinstance(end_nodes, (list, tuple, set)) else [end_nodes]
+        # Resolve every node's name (inferred/numbered) before anything reads it.
+        self._resolve_names()
         # Forbid USER node declarations colliding with a reserved channel before
         # anything else (so a bad reserved write is never auto-registered).
         self._check_reserved()
@@ -470,10 +472,43 @@ class AgenticGraph(StateGraph):
 
     # --- validation / introspection -------------------------------------
 
+    def _resolve_names(self):
+        """Assign every node a unique name before the build reads them. Explicit
+        names win and a duplicate explicit name still errors; auto/inferred names
+        are used when free and suffixed _1/_2 on collision; inference-failed nodes
+        are numbered by traversal order. Resolves from each node's _name_base so a
+        rebuild is idempotent."""
+        nodes = list(self._collect_nodes(self.start_node).values())
+        taken = set()
+        # explicit first (reserve + detect real duplicates)
+        for n in nodes:
+            if getattr(n, "_auto_name", False):
+                continue
+            nm = n.name
+            if nm in taken:
+                raise ValueError(
+                    f"Duplicate node name {nm!r}: two distinct nodes share this "
+                    "name. Node names must be unique within a graph.")
+            taken.add(nm)
+        # auto/inferred next (suffix on collision)
+        for n in nodes:
+            if not getattr(n, "_auto_name", False):
+                continue
+            base = getattr(n, "_name_base", None) or type(n).__name__.lower()
+            nm = base
+            i = 1
+            while nm in taken:
+                nm = f"{base}_{i}"
+                i += 1
+            n.name = nm
+            taken.add(nm)
+
     def _collect_nodes(self, start) -> dict:
         """Walk the ``.children`` / choice / spread graph from ``start`` and
-        return ``{name: node}`` for every node, BEFORE the StateGraph is built
-        (so key auto-registration can run before ``super().__init__``)."""
+        return ``{id(node): node}`` for every node, BEFORE the StateGraph is
+        built (so key auto-registration and name resolution can run before
+        ``super().__init__``). Keyed by identity — names may still be unresolved
+        (``None``) here; callers use only ``.values()``."""
         seen: dict = {}
 
         def children_of(node):
@@ -484,17 +519,16 @@ class AgenticGraph(StateGraph):
         def walk(node):
             if isinstance(node, Spread):
                 worker = node.worker
-                if worker.name not in seen:
-                    seen[worker.name] = worker
+                if id(worker) not in seen:
+                    seen[id(worker)] = worker
                     for ch in children_of(worker):
                         walk(ch)
                 if node.collector is not None:
                     walk(node.collector)
                 return
-            name = node.name
-            if name in seen:
+            if id(node) in seen:
                 return
-            seen[name] = node
+            seen[id(node)] = node
             for ch in children_of(node):
                 walk(ch)
 
