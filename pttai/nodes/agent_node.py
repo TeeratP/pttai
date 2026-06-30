@@ -186,17 +186,34 @@ class AgentNode(Node):
                 iterations += 1
                 ai_message = new_messages[-1]
                 for tool_call in ai_message.tool_calls:
-                    tool_result = self.tools_by_name[tool_call["name"]].invoke(
-                        tool_call["args"]
-                    )
+                    name = tool_call["name"]
+                    tool = self.tools_by_name.get(name)
+                    if tool is None:
+                        # Hallucinated/unknown tool: surface the error to the model
+                        # (so it can self-correct) instead of crashing the run.
+                        new_messages.append(
+                            ToolMessage(
+                                content=f"Error: unknown tool '{name}'",
+                                name=name,
+                                tool_call_id=tool_call["id"],
+                            )
+                        )
+                        new_log.append(f'tools:{name}, args:{tool_call["args"]}, result:unknown tool')
+                        continue
+                    tool_result = tool.invoke(tool_call["args"])
+                    # A str result is used as-is (avoids double-quoting); anything
+                    # else is JSON-encoded with default=str so non-JSON returns
+                    # (datetime/dataclass/pydantic/set/...) don't crash.
+                    content = tool_result if isinstance(tool_result, str) \
+                        else json.dumps(tool_result, default=str)
                     new_messages.append(
                         ToolMessage(
-                            content=json.dumps(tool_result),
-                            name=tool_call["name"],
+                            content=content,
+                            name=name,
                             tool_call_id=tool_call["id"],
                         )
                     )
-                    new_log.append(f'tools:{tool_call["name"]}, args:{tool_call["args"]}, result:{tool_result}')
+                    new_log.append(f'tools:{name}, args:{tool_call["args"]}, result:{tool_result}')
                 prompt = [SystemMessage(content=sys)] + history + new_messages
                 response = self.llm.invoke(prompt, **invoke_kwargs)
                 new_messages.append(response)

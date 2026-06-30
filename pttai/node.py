@@ -9,6 +9,12 @@ from abc import ABC, abstractmethod
 from typing import Any, Optional
 
 
+# Memoized ast trees keyed by SOURCE CONTENT hash (not filename/length: a re-run
+# notebook cell / REPL reuses the same filename at the same line count with
+# changed content, so a length-based key would return a stale tree).
+_AST_CACHE: dict = {}
+
+
 def _infer_name():
     """Best-effort: the LHS variable of `x = SomeNode(...)` / `self.x = ...`.
     Returns the name str, or None when it can't be determined (caller falls
@@ -24,7 +30,11 @@ def _infer_name():
         if not source:
             return None
         lineno = frame.f_lineno
-        tree = ast.parse(source)
+        key = hash(source)
+        tree = _AST_CACHE.get(key)
+        if tree is None:
+            tree = ast.parse(source)
+            _AST_CACHE[key] = tree
         for node in ast.walk(tree):
             if isinstance(node, ast.Assign) and getattr(node, "lineno", None) is not None \
                     and node.lineno <= lineno <= (node.end_lineno or node.lineno) \
@@ -99,15 +109,6 @@ class Node(ABC):
         """
         pass
     
-    def set_llm(self, llm: Any) -> None:
-        """
-        Set the language model for this node.
-        
-        Args:
-            llm: Language model instance
-        """
-        self.llm = llm
-
     def __gt__(self, other):
         """
         Wire this node forward to one child, or fan out to several.

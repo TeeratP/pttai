@@ -44,7 +44,9 @@ class HumanNode(Node):
             raise ValueError("State must contain a 'messages' key")
         if self.show is not None:
             disp = self.show(state) if callable(self.show) else self.show
-        elif self.n <= 0:
+        elif self.n <= 0 or len(state["messages"]) < self.n:
+            # n<=0 shows nothing; clamp when fewer than n messages exist so
+            # indexing never raises IndexError.
             disp = ""
         else:
             disp = state["messages"][-self.n].content
