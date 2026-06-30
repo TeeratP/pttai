@@ -45,14 +45,86 @@ class Choice:
         self.child = other
         return other
         
-class DecisionNode(Node):
+class RouterNode(Node):
+    """
+    Base for routing nodes: owns the Choice list, ``route()``, and the
+    ``node["choice"] > handler`` wiring. Subclasses decide HOW the label is
+    chosen — ``DecisionNode`` via an LLM, ``ConditionNode`` via a Python callable.
+
+    Both write the chosen label to the dedicated ``decision`` state field (read
+    by ``route()``), never into ``messages``. Graph build/routing sites treat
+    every ``RouterNode`` identically (see graph.py).
+    """
+
+    def __init__(self,
+                 name: str,
+                 choices: List[str],
+                 llm: Optional[Any] = None,
+                 node_prompt: str = "",
+                 input_field: str = "messages",
+                 reads: Optional[List[str]] = None,
+                 cache_ttl: Optional[int] = None,
+                 retry: bool = False) -> None:
+        assert choices, "a router requires choices"
+        super().__init__(name, llm, node_prompt, cache_ttl=cache_ttl, retry=retry)
+        self.choices_name: List[str] = list(choices)
+        self.input_field = input_field
+        self.reads = reads if reads is not None else [input_field]
+        self.choices = [Choice(name) for name in self.choices_name]
+
+    def route(self, state):
+
+        decision_choice = state['decision']
+        for choice in self.choices:
+            if decision_choice == choice.name:
+                if choice.child is None:
+                    raise ValueError(
+                        f"Choice {decision_choice} does not have a child. "
+                        "Please create an edge from this choice to another node. "
+                        "For example: `decision_node['abc'] > other_node`"
+                    )
+                return choice.child.name
+        raise ValueError(f"Choice {decision_choice} not found in choices")
+
+    def __gt__(self, other) -> None:
+        """
+        Prevent direct edge creation from a routing node.
+
+        Raises:
+            ValueError: Always, since edges must be created from choices
+        """
+        raise ValueError(
+            "You must create edge from choices to other nodes. "
+            "For example: `decision_node['choice'] > other_node`"
+        )
+
+    def __getitem__(self, key: str) -> Choice:
+        """
+        Get a Choice object by its name.
+
+        Args:
+            key: Name of the choice to retrieve
+
+        Returns:
+            The Choice object
+
+        Raises:
+            ValueError: If the choice name is not found
+        """
+        for choice in self.choices:
+            if key == choice.name:
+                return choice
+        raise ValueError(f"Choice {key} not found in choices.")
+
+
+class DecisionNode(RouterNode):
     """
     A node that makes decisions based on LLM output to direct graph flow.
-    
+
     DecisionNode uses a language model to choose between predefined options,
     determining the next node in the graph based on the choice made.
     """
-    
+
     def __init__(self,
                  name: str = 'decision_node',
                  llm: Optional[Any] = None,
@@ -82,23 +154,14 @@ class DecisionNode(Node):
         """
         assert node_prompt, "DecisionNode requires a node_prompt to be set."
         assert choices, "DecisionNode requires choices to be set."
-        super().__init__(name, llm, node_prompt, cache_ttl=cache_ttl, retry=retry)
-        self.choices_name: List[str] = choices
-        self.input_field = input_field
-        self.reads = reads if reads is not None else [input_field]
-        self._create_choices()
-        
-    def _create_choices(self) -> None:
-        """
-        Initialize the choices and configure LLM for structured output.
-        """
+        super().__init__(name, choices, llm=llm, node_prompt=node_prompt,
+                         input_field=input_field, reads=reads,
+                         cache_ttl=cache_ttl, retry=retry)
+        # Force the model to return exactly one valid choice via structured output.
         class OutputModel(BaseModel):
             choice: Literal[tuple(self.choices_name)]
-            
         self.llm = self.llm.with_structured_output(OutputModel)
-        self.choices = [Choice(name) for name in self.choices_name]
-        self.choices_created = True
-        
+
     def __call__(self, state):
         """
         Process the current state and make a decision.
@@ -124,47 +187,3 @@ class DecisionNode(Node):
         # Routing label is written to the dedicated `decision` field, not injected
         # into `messages`, so it does not pollute the conversation history.
         return {"decision": choice, "log": [f'{self.name}:{choice}']}
-
-    def route(self, state):
-
-        decision_choice = state['decision']
-        for choice in self.choices:
-            if decision_choice == choice.name:
-                if choice.child is None:
-                    raise ValueError(
-                        f"Choice {decision_choice} does not have a child. "
-                        "Please create an edge from this choice to another node. "
-                        "For example: `decision_node['abc'] > other_node`"
-                    )
-                return choice.child.name
-        raise ValueError(f"Choice {decision_choice} not found in choices")
-        
-    def __gt__(self, other) -> None:
-        """
-        Prevent direct edge creation from DecisionNode.
-        
-        Raises:
-            ValueError: Always, since edges must be created from choices
-        """
-        raise ValueError(
-            "You must create edge from choices to other nodes. "
-            "For example: `decision_node['choice'] > other_node`"
-        )
-    
-    def __getitem__(self, key: str) -> Choice:
-        """
-        Get a Choice object by its name.
-        
-        Args:
-            key: Name of the choice to retrieve
-            
-        Returns:
-            The Choice object
-            
-        Raises:
-            ValueError: If the choice name is not found
-        """
-        for choice in self.choices:
-            if key == choice.name:
-                return choice
-        raise ValueError(f"Choice {key} not found in choices.")
