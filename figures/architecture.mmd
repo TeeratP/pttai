@@ -1,0 +1,37 @@
+%% pttai architecture: `>` DSL -> _build_graph -> validator gate -> LangGraph StateGraph
+%% Render:  mmdc -i architecture.mmd -o architecture.svg -b white
+%% Grayscale-legible: shapes + labels carry the meaning, not color.
+flowchart LR
+  subgraph AUTHOR["Author time — plain Python"]
+    direction TB
+    A["Node objects<br/>AgentNode · DecisionNode<br/>ConditionNode · HumanNode"]
+    B["<b>&gt; wiring</b><br/>a &gt; b &gt; c<br/>fanout(...) · .map(field)"]
+    A --> B
+  end
+
+  B -- "sets .children in memory<br/>(no edges yet)" --> C(["AgenticGraph(start, end_nodes)"])
+
+  subgraph BUILD["Build time — one walk, zero model calls"]
+    direction TB
+    D["<b>_build_graph</b><br/>walk .children →<br/>add_node / add_edge / Send"]
+    E{"<b>dataflow validator</b><br/>read-before-write ·<br/>dangling choice ·<br/>concurrent unreduced write"}
+    F["<b>GraphValidationError</b><br/>build FAILS — 0 model calls"]
+    G["compile()"]
+    D --> E
+    E -- "error" --> F
+    E -- "ok" --> G
+  end
+
+  C --> D
+
+  G --> H["<b>LangGraph StateGraph</b><br/>native compiled runtime"]
+
+  subgraph RUN["Run time — native LangGraph"]
+    direction TB
+    I["invoke · stream · ainvoke · astream<br/>streaming · async · checkpointers · LangSmith"]
+  end
+
+  H --> I
+
+  classDef fail stroke-width:3px,stroke-dasharray:5 3;
+  class F fail;

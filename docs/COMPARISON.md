@@ -110,6 +110,18 @@ measuring it in `eval/bugbench/`.)
 > raw LangGraph surfaces them at runtime (after wasting model calls) or not at
 > all. Duplicate names (d) is the one caught by both.
 
+Measured over the full `eval/bugbench/` corpus (15 buggy + 19 valid pipelines),
+pttai catches **13/13** pttai-only dataflow bugs at build with **0** false
+positives; raw LangGraph catches **0** of those at build (10 surface at runtime,
+3 silently) after burning **15** wasted model calls:
+
+<p align="center">
+  <img src="../figures/bug_catch.png" width="90%"
+       alt="pttai catches 13/13 pttai-only bugs at build with 0 wasted calls; raw LangGraph catches 0 at build (10 runtime, 3 silent) and wastes 15 LLM calls; 0 pttai false positives on 19 valid pipelines.">
+</p>
+
+<p align="center"><em>Regenerate from the committed data with <code>python figures/make_charts.py</code>.</em></p>
+
 ## 2. Lines of code, three architectures
 
 Same workflow, both ways, from the runnable side-by-side files in
@@ -125,6 +137,14 @@ not by hand.
 | ReAct tool loop   | `examples/architectures/react_agent.py`        |     5     |        14         |   ~64%    |
 | Prompt chaining   | `examples/architectures/prompt_chaining.py`    |    11     |        20         |   ~45%    |
 | Routing (gather→route) | `examples/architectures/routing.py`      |    15     |        35         |   ~57%    |
+
+Across all 12 measured pipelines (`eval/loc_results.csv`) the totals are **113
+vs 281 LOC — ~60% fewer lines**:
+
+<p align="center">
+  <img src="../figures/loc_comparison.png" width="90%"
+       alt="Grouped bar chart of lines of code per pipeline: pttai 113 LOC total vs raw LangGraph 281 LOC total across 12 pipelines, about 60% fewer lines.">
+</p>
 
 ### Cognitive-complexity notes (not just line count)
 
