@@ -8,12 +8,30 @@ version = "0.1.0"
 description = "Keras for LangGraph — parallel, typed agent graphs in Python, compiled to LangGraph"
 readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{name = "Teerat Pipitcharulerd", email = "teerat.pipitcharulerd@gmail.com"}]
 keywords = ["langgraph", "agent", "llm", "ai", "workflow", "dataflow", "agents", "langchain", "graph"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "langgraph>=1.0,<2",
     "langchain-core>=1.0,<2",
     "pydantic>=2,<3",
 ]
+
+[project.urls]
+Homepage = "https://github.com/TeeratP/pttai"
+Repository = "https://github.com/TeeratP/pttai"
+Documentation = "https://teeratp.github.io/pttai/"
 
 [project.optional-dependencies]
 # Convenience LLM provider used by the examples/notebook.
