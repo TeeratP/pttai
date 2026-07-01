@@ -12,7 +12,9 @@ Per-node knobs, passed straight through to LangGraph (or the model):
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_EX = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # examples/
+sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import pttai` works from a bare clone
+sys.path.insert(0, _EX)  # -> `from _llm import get_llm`
 from _llm import get_llm
 
 
