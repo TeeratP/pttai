@@ -14,11 +14,8 @@ catches read-before-written dataflow bugs before you ever invoke.
 
 ![Python](https://img.shields.io/badge/python-%E2%89%A53.10-blue)
 ![LangGraph](https://img.shields.io/badge/LangGraph-1.0-orange)
-![tests](https://img.shields.io/badge/tests-121%20passing-green)
+![tests](https://img.shields.io/badge/tests-164%20passing-green)
 ![License](https://img.shields.io/badge/license-MIT-green)
-
-<!-- TODO: 60-90s demo GIF: type the panel, run it, flash summary() -->
-![pttai demo](docs/demo.gif)
 
 ## pttai vs. raw LangGraph
 
@@ -31,8 +28,7 @@ it has the answer. Ask it *"What is 21 + 21, then times 3?"* and both print
 # pttai
 from pttai import AgentNode, AgenticGraph
 
-agent = AgentNode(name="agent", llm=llm)
-agent.bind_tools([add, multiply])
+agent = AgentNode(name="agent", llm=llm, tools=[add, multiply])
 graph = AgenticGraph(start_node=agent, end_nodes={agent})   # schema-free
 
 graph.invoke(message="What is 21 + 21, then times 3?")      # -> 126
@@ -65,12 +61,29 @@ node, the `ToolNode`, the `tools_condition` edge and the loop-back edge into
 for you. Both versions run side by side in
 [`examples/vs_langgraph.py`](examples/vs_langgraph.py).
 
+## Examples
+
+Two runnable galleries make the "pttai vs. LangGraph" story concrete:
+
+- **[`examples/basics/`](examples/basics/)** — one file per feature, each showing
+  the pttai version *and* the equivalent raw-LangGraph version side by side. The
+  fastest way to see exactly what plumbing pttai folds away — tool loops,
+  fan-out/join, map-reduce, structured-output routing, typed state IO,
+  human-in-the-loop — one concept at a time.
+- **[`examples/architectures/`](examples/architectures/)** — famous agent
+  patterns (router, evaluator-optimizer, orchestrator-workers, reflection, and
+  more) built end-to-end in pttai, so you can lift a whole topology instead of a
+  single node.
+
+Start with `basics/` to learn the primitives, then reach for `architectures/`
+when you're wiring a real system.
+
 ## Install
 
 Not on PyPI yet — install from source:
 
 ```bash
-git clone https://github.com/TeeratP/agentic-framework && cd agentic-framework
+git clone https://github.com/TeeratP/pttai && cd pttai
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[openai]"          # core + langchain-openai & python-dotenv
 ```
@@ -196,17 +209,22 @@ included), and you can drop down to it anytime. No lock-in.
 All nodes are callables (`__call__(state) -> delta`) invoked by LangGraph with
 the shared state. They return **only the keys they update**; reducers merge them.
 
+The two LLM-backed nodes (`AgentNode`, `DecisionNode`) share a common `LLMNode`
+base that owns the model binding and the tool-call loop.
+
 | Node | Purpose |
 |------|---------|
-| **`AgentNode`** | Prepends `node_prompt` as a `SystemMessage`, calls the LLM, returns a delta. `bind_tools(...)` wraps bare callables as `StructuredTool`s and runs an internal tool-call loop (capped by `max_tool_iterations`, default 25). `reads`/`writes` give typed multi-key IO. Optional `reasoning_effort` (`"low"`/`"medium"`/`"high"`) for gpt-5.x. |
-| **`DecisionNode`** | Branching only. Reads from `input_field`, writes its choice to `decision`, routes via conditional edges over a `Literal[*choices]` structured output — the model can only return a valid branch. Wired by indexing a choice (`decision["x"] > handler`); `decision > x` is an error. |
-| **`InputNode`** | Human-in-the-loop via LangGraph's `interrupt()`. Resumes when the graph is built with a `checkpointer` and invoked with a `thread_id`, via `Command(resume=value)`. |
+| **`AgentNode`** | Prepends `node_prompt` as a `SystemMessage`, calls the LLM, returns a delta. Pass `tools=[...]` in the constructor to wrap bare callables as `StructuredTool`s and run an internal tool-call loop (capped by `max_tool_iterations`, default 25). `reads`/`writes` give typed multi-key IO. Optional `reasoning_effort` (`"low"`/`"medium"`/`"high"`) for gpt-5.x. |
+| **`DecisionNode`** | LLM branching. Reads from `input_field`, writes its choice to `decision`, routes via conditional edges over a `Literal[*choices]` structured output — the model can only return a valid branch. Also accepts `tools=[...]`: it runs a tool-gathering loop first, *then* routes via structured output (the two never share a call). Wired by indexing a choice (`decision["x"] > handler`); `decision > x` is an error. |
+| **`ConditionNode`** | Deterministic branching with **no LLM**. A Python predicate `condition(state) -> str` returns one of `choices`; routing is free, deterministic, and prompt-less. Wired like `DecisionNode` (`cond["x"] > handler`). |
+| **`HumanNode`** | Resumable human-in-the-loop via LangGraph's `interrupt()`. Surfaces a message (or a custom `show`) for review; the human's reply lands `into` `messages` (or any key a router can gate on). Resumes when the graph is built with a `checkpointer` and invoked with a `thread_id`, via `Command(resume=value)`. |
 
 All node types also accept `cache_ttl` (LangGraph `CachePolicy`) and `retry`
 (`RetryPolicy`); `AgenticGraph` auto-provides an `InMemoryCache` when any node
 sets `cache_ttl`. An `AgenticGraph` can itself be embedded as a node in a larger
 graph (`graph_0 > graph_1`), and RAG helpers (`make_retriever_tool`, optional
-`ChromaRAG`) wrap any LangChain retriever as a bindable tool.
+`ChromaRAG`) wrap any LangChain retriever as a tool you hand to
+`AgentNode(tools=[...])`.
 
 ## State
 
@@ -249,7 +267,7 @@ python examples/panel.py               # live multi-agent panel (needs OPENAI_AP
 python examples/vs_langgraph.py        # the 3-vs-10 comparison, both ways (needs OPENAI_API_KEY)
 ```
 
-The **121-test** suite covers state reducers, graph construction, routing, the
+The **164-test** suite covers state reducers, graph construction, routing, the
 tool-call loop, interrupt/resume, RAG tool wiring, streaming/async, configurable
 fields, parallel fan-out/join, map-reduce, multi-key IO, static validation, and
 node caching/retry/`reasoning_effort`/`durability`.
