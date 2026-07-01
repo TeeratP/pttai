@@ -1,0 +1,56 @@
+site_name: pttai
+site_description: Keras for LangGraph — parallel, typed agent graphs in Python, compiled to LangGraph.
+site_url: https://teeratp.github.io/pttai/
+repo_url: https://github.com/TeeratP/pttai
+repo_name: TeeratP/pttai
+
+theme:
+  name: material
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - content.code.annotate
+    - search.suggest
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.details
+
+# Kept in the repo but deliberately out of the nav (see the issue).
+not_in_nav: |
+  /PRE_PUBLISH_CHECKLIST.md
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Node types: node-types.md
+  - Examples:
+      - Basics: examples/basics.md
+      - Architectures: examples/architectures.md
+  - API notes: api-notes.md

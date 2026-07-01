@@ -39,6 +39,8 @@ openai = ["langchain-openai>=1,<2", "python-dotenv>=1.0"]
 # Retrieval (ChromaRAG); the rag_tool core works with any retriever without this.
 rag = ["langchain-chroma>=0.2"]
 dev = ["pytest>=8"]
+# Documentation site (MkDocs Material) — see mkdocs.yml.
+docs = ["mkdocs-material>=9.5"]
 
 [tool.setuptools.packages.find]
 include = ["pttai*"]

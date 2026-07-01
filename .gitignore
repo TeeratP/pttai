@@ -7,6 +7,7 @@ __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
 .worktrees/
+site/
 example_full.ipynb
 
 # Personal AI-assistant working notes — kept local, not published.
