@@ -12,6 +12,7 @@ From the repo root, with the project virtualenv:
 ```bash
 PYTHONPATH=. .venv/bin/python eval/loc_compare.py    && \
 PYTHONPATH=. .venv/bin/python eval/validator_bugs.py && \
+PYTHONPATH=. .venv/bin/python eval/bugbench/run.py   && \
 PYTHONPATH=. .venv/bin/python eval/overhead.py
 ```
 
@@ -20,7 +21,8 @@ PYTHONPATH=. .venv/bin/python eval/overhead.py
 | Script | Output | Claim it backs |
 |---|---|---|
 | `loc_compare.py` | Markdown table + `loc_results.csv` | Lines-of-code / node-count reduction vs. raw LangGraph, across every `examples/architectures/*.py` and selected `examples/basics/*.py`. Reconciles the three numbers hardcoded in `docs/COMPARISON.md` (harness is source of truth). |
-| `validator_bugs.py` | Summary table + verbatim errors | The headline: build-time dataflow bugs pttai's validator catches. One buggy graph per class; each pttai build is asserted to fail at construction (with timing + verbatim message), then the equivalent raw-LangGraph graph is run to show whether it fails at build, only at runtime (after ≥1 wasted model call), or silently. |
+| `validator_bugs.py` | Summary table + verbatim errors | The headline demo: build-time dataflow bugs pttai's validator catches. One buggy graph per class; each pttai build is asserted to fail at construction (with timing + verbatim message), then the equivalent raw-LangGraph graph is run to show whether it fails at build, only at runtime (after ≥1 wasted model call), or silently. |
+| `bugbench/run.py` | `bugbench/results.{csv,json}` + tables | The full **labeled benchmark** that extends `validator_bugs.py`: 15 buggy pipelines across 6 classes + 19 clean/valid (the real `examples/`). Reports build-time **catch rate** (15/15), **false-positive rate** (0/19), and a **wasted-cost** table (LLM calls raw LangGraph burns before failing). Honestly labels `duplicate-node-names` as caught by *both* frameworks. See `bugbench/README.md`. |
 | `overhead.py` | Console report | pttai's build time is negligible and it compiles to a native LangGraph `CompiledStateGraph` with runtime parity (same model-call count, identical output). |
 
 ## Method notes

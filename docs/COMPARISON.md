@@ -79,7 +79,7 @@ Node 'b' has no children and is not an end node.
 Raw LangGraph: a node with no outgoing edge and no edge to `END` is a structural
 dead-end you must remember to wire yourself.
 
-### d. Duplicate node names
+### d. Duplicate node names — caught by BOTH frameworks (not a differentiator)
 
 ```python
 a = AgentNode(name="dup", llm=get_llm(), node_prompt="one")
@@ -95,14 +95,20 @@ Duplicate node name 'dup': two distinct nodes share this name. Node names must b
 unique within a graph.
 ```
 
-Raw LangGraph: `add_node("dup", ...)` twice silently merges/overwrites — the
-second registration wins and the first node vanishes from the graph.
+Raw LangGraph **also catches this at build**: `add_node("dup", ...)` a second
+time raises `ValueError('Node `dup` already present.')`. So this class is *not* a
+pttai-only advantage — both frameworks reject it at construction. pttai's message
+is friendlier, but the guarantee is the same. (This was previously described here
+as a silent overwrite; that was wrong for LangGraph 1.0 — corrected after
+measuring it in `eval/bugbench/`.)
 
-> There are more (`writes` to a key not in the schema; concurrent writes to a
-> reducer-less key across parallel branches; unreachable nodes) — all in
-> `pttai/validation.py::collect_issues`. The four above are the ones a LangGraph
-> user hits most and the validator's clearest "you can't get this from raw
-> LangGraph" hook.
+> There are more genuine pttai-only-at-build catches (concurrent writes to a
+> reducer-less key across parallel branches; a `node_prompt` placeholder with no
+> matching scalar read; unreachable nodes) — all in
+> `pttai/validation.py::collect_issues`, and all measured in `eval/bugbench/`. Of
+> the four classes above, **three (a, b, c) are caught only by pttai at build**;
+> raw LangGraph surfaces them at runtime (after wasting model calls) or not at
+> all. Duplicate names (d) is the one caught by both.
 
 ## 2. Lines of code, three architectures
 
