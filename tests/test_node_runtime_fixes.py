@@ -61,13 +61,12 @@ def test_unknown_tool_name_does_not_crash():
         tool_calls=[{"name": "no_such_tool", "args": {}, "id": "tc1"}],
     )
     final = AIMessage(content="done", id="a2")
-    node = AgentNode(name="agent", llm=ScriptedLLM([bad_call, final]))
 
     def real_tool(x: str) -> str:
         """a real tool"""
         return x
 
-    node.bind_tools([real_tool])
+    node = AgentNode(name="agent", llm=ScriptedLLM([bad_call, final]), tools=[real_tool])
     delta = node({"messages": [HumanMessage(content="hi")]})
 
     msgs = delta["messages"]
@@ -88,7 +87,6 @@ def test_non_json_tool_return_does_not_crash():
         tool_calls=[{"name": "now", "args": {}, "id": "tc1"}],
     )
     final = AIMessage(content="done", id="a2")
-    node = AgentNode(name="agent", llm=ScriptedLLM([call, final]))
 
     fixed = datetime.datetime(2026, 6, 30, 12, 0, 0)
 
@@ -96,7 +94,7 @@ def test_non_json_tool_return_does_not_crash():
         """returns a datetime (non-JSON-serializable)"""
         return fixed
 
-    node.bind_tools([now])
+    node = AgentNode(name="agent", llm=ScriptedLLM([call, final]), tools=[now])
     delta = node({"messages": [HumanMessage(content="hi")]})
 
     tool_msgs = [m for m in delta["messages"] if isinstance(m, ToolMessage)]

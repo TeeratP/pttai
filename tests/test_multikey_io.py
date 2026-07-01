@@ -61,10 +61,9 @@ def test_multi_write_e2e_through_graph(t):
 
 
 def test_multi_write_with_tools_raises(t):
-    node = AgentNode(name="n", llm=t.FakeLLM(responses=[t.ai("x")]),
-                     node_prompt="p", writes=["a", "b"])
-    with pytest.raises(ValueError, match="bind_tools"):
-        node.bind_tools([double])
+    with pytest.raises(ValueError, match="cannot be combined with tools"):
+        AgentNode(name="n", llm=t.FakeLLM(responses=[t.ai("x")]),
+                  node_prompt="p", writes=["a", "b"], tools=[double])
 
 
 def test_braces_prompt_without_reads_untouched(t):
@@ -141,7 +140,6 @@ def test_single_key_dict_uses_structured_mode(t):
 
 
 def test_typed_dict_write_with_tools_raises(t):
-    node = AgentNode(name="n", llm=t.FakeLLM(responses=[t.ai("x")]),
-                     node_prompt="p", writes={"x": int})
-    with pytest.raises(ValueError, match="bind_tools"):
-        node.bind_tools([double])
+    with pytest.raises(ValueError, match="cannot be combined with tools"):
+        AgentNode(name="n", llm=t.FakeLLM(responses=[t.ai("x")]),
+                  node_prompt="p", writes={"x": int}, tools=[double])

@@ -55,9 +55,8 @@ def pttai_version() -> str:
 
     llm = ChatOpenAI(model="gpt-5.4-nano")
 
-    # --- graph code (3 lines) ---
-    agent = AgentNode(name="agent", llm=llm)
-    agent.bind_tools([add, multiply])
+    # --- graph code (2 lines) ---
+    agent = AgentNode(name="agent", llm=llm, tools=[add, multiply])
     graph = AgenticGraph(start_node=agent, end_nodes={agent})  # schema-free
 
     return graph.invoke(message=QUESTION)["messages"][-1].content
@@ -106,9 +105,8 @@ if __name__ == "__main__":
 
 # -- Honest line count (graph-building code only) ---------------------------
 #
-# pttai_version() graph code — 3 lines:
-#     agent = AgentNode(name="agent", llm=llm)
-#     agent.bind_tools([add, multiply])
+# pttai_version() graph code — 2 lines:
+#     agent = AgentNode(name="agent", llm=llm, tools=[add, multiply])
 #     graph = AgenticGraph(start_node=agent, end_nodes={agent})
 #
 # langgraph_version() graph code — 10 lines:

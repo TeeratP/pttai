@@ -40,3 +40,33 @@ def test_route_childless_choice_raises(t):
     # no edges created from either choice
     with pytest.raises(ValueError, match="does not have a child"):
         d.route({"decision": "positive"})
+
+
+def _lookup(sentiment: str) -> str:
+    """Look up the sentiment of a subject."""
+    return sentiment
+
+
+def test_decision_with_tools_gathers_then_routes(t):
+    # Two-phase: the tool-bound model calls a tool (queued responses), then the
+    # route model returns the structured choice (structured_value). Tools and
+    # structured output never share a call.
+    llm = t.FakeLLM(
+        responses=[
+            t.tool_call_msg("_lookup", {"sentiment": "positive"}),
+            t.ai("the sentiment is positive"),
+        ],
+        structured_value="positive",
+    )
+    d = DecisionNode(name="clf", llm=llm, node_prompt="classify",
+                     choices=["positive", "negative"], tools=[_lookup])
+    delta = d({"messages": [HumanMessage(content="great job!")], "log": [], "decision": ""})
+
+    assert delta["decision"] == "positive"
+    assert "messages" not in delta  # routing label never pollutes the conversation
+    # the tool loop ran (its trace lines precede the decision line) and routing
+    # resolves to a real branch
+    assert any("tools:_lookup" in line for line in delta["log"])
+    assert delta["log"][-1] == "clf:positive"
+    d["positive"] > AgentNode(name="pos", llm=t.FakeLLM())
+    assert d.route({"decision": "positive"}) == "pos"

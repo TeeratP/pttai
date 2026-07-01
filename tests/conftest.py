@@ -18,9 +18,12 @@ class FakeLLM:
     """Scripted stand-in for a chat model.
 
     - `responses`: list of AIMessages returned one-per-`.invoke()` call.
-    - `structured_value`: if set, every `.invoke()` returns a structured object.
-      A scalar yields an object with `.choice` (DecisionNode); a dict yields an
-      object exposing those fields (multi-field structured writes).
+    - `structured_value`: if set, `.invoke()` returns a structured object once the
+      `responses` queue is exhausted. A scalar yields an object with `.choice`
+      (DecisionNode); a dict yields an object exposing those fields (multi-field
+      structured writes). Queuing `responses` (tool-call AIMessages) alongside a
+      `structured_value` scripts DecisionNode's two-phase tool use: the tool loop
+      drains the queue, then the route call gets the structured choice.
     `bind_tools`/`with_structured_output` return self so the scripted behaviour
     survives the wrapping that AgentNode/DecisionNode perform.
     """
@@ -45,12 +48,19 @@ class FakeLLM:
         if self._echo:
             last_human = messages[-1].content
             return ai(f"reply:{last_human}")
+        # The response queue (tool-loop AIMessages) takes precedence; a
+        # structured_value is returned once the queue is exhausted.
+        if self._responses:
+            if self._repeat and self._i >= len(self._responses):
+                return self._responses[-1]
+            if self._i < len(self._responses):
+                resp = self._responses[self._i]
+                self._i += 1
+                return resp
         if self._structured_value is not None:
             if isinstance(self._structured_value, dict):
                 return SimpleNamespace(**self._structured_value)
             return _Structured(self._structured_value)
-        if self._repeat and self._i >= len(self._responses):
-            return self._responses[-1]
         resp = self._responses[self._i]
         self._i += 1
         return resp

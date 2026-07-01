@@ -57,8 +57,7 @@ def test_tool_loop_deep_sums(t):
     first = t.ai(tool_calls=[{"name": "double", "args": {"x": 2}, "id": "c1", "type": "tool_call"}],
                  usage_metadata=usage(10, 5), model_name="m1")
     second = t.ai("done", usage_metadata=usage(20, 7), model_name="m1")
-    node = AgentNode(name="n", llm=t.FakeLLM(responses=[first, second]))
-    node.bind_tools([double])
+    node = AgentNode(name="n", llm=t.FakeLLM(responses=[first, second]), tools=[double])
     delta = node({"messages": [HumanMessage(content="hi")], "log": []})
     assert delta["token"]["m1"]["input_tokens"] == 30
     assert delta["token"]["m1"]["output_tokens"] == 12

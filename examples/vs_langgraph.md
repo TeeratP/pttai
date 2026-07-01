@@ -3,7 +3,7 @@
 The same tool-using agent — an LLM that calls `add` / `multiply` in a loop until
 it has the answer. Ask it *"What is 21 + 21, then times 3?"* and both print **126**.
 
-**Graph-building code: 3 lines vs. 10.**
+**Graph-building code: 2 lines vs. 10.**
 
 ---
 
@@ -12,8 +12,7 @@ it has the answer. Ask it *"What is 21 + 21, then times 3?"* and both print **12
 ```python
 from pttai import AgentNode, AgenticGraph
 
-agent = AgentNode(name="agent", llm=llm)
-agent.bind_tools([add, multiply])
+agent = AgentNode(name="agent", llm=llm, tools=[add, multiply])
 graph = AgenticGraph(start_node=agent, end_nodes={agent})   # schema-free
 
 graph.invoke(message="What is 21 + 21, then times 3?")      # -> 126

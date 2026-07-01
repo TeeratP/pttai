@@ -32,8 +32,7 @@ def test_retriever_tool_binds_and_runs_in_agent(t):
     node = AgentNode(name="agent", node_prompt="p", llm=t.FakeLLM(responses=[
         t.tool_call_msg("search_documents", {"query": "q"}),
         t.ai("answer"),
-    ]))
-    node.bind_tools([tool])
+    ]), tools=[tool])
     delta = node({"messages": [HumanMessage(content="ask")], "log": [], "decision": ""})
 
     tool_msgs = [m for m in delta["messages"] if isinstance(m, ToolMessage)]

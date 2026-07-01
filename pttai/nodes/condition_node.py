@@ -6,10 +6,11 @@ predicate over state instead of an LLM call — free, deterministic, no prompt.
 """
 
 from typing import Callable, List, Optional
+from pttai.node import Node
 from pttai.nodes.decision_node import RouterNode
 
 
-class ConditionNode(RouterNode):
+class ConditionNode(RouterNode, Node):
     """Routing by a Python predicate over state — no LLM, no prompt, free and
     deterministic. ``condition(state)`` must return one of ``choices``."""
 
@@ -38,8 +39,8 @@ class ConditionNode(RouterNode):
         """
         assert condition is not None, "ConditionNode requires a condition callable"
         assert choices, "ConditionNode requires choices to be set."
-        super().__init__(name, choices, reads=reads if reads is not None else [],
-                         cache_ttl=cache_ttl, retry=retry)
+        Node.__init__(self, name, cache_ttl=cache_ttl, retry=retry)
+        self._setup_choices(choices, reads=reads if reads is not None else [])
         self.condition = condition
 
     def __call__(self, state):

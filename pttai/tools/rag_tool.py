@@ -3,7 +3,7 @@ RAG (retrieval-augmented generation) tooling for the Agentic Framework.
 
 `make_retriever_tool` wraps any LangChain retriever (anything exposing
 `.invoke(query)` returning documents) as a StructuredTool that an AgentNode can
-bind via `agent.bind_tools([tool])`. `ChromaRAG` is a thin convenience around a
+use via `AgentNode(tools=[tool])`. `ChromaRAG` is a thin convenience around a
 Chroma vector store; its import of `langchain_chroma` is lazy so this module
 imports fine without the optional `rag` dependency installed.
 """
