@@ -17,6 +17,13 @@ catches read-before-written dataflow bugs before you ever invoke.
 ![tests](https://img.shields.io/badge/tests-164%20passing-green)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+<p align="center">
+  <img src="figures/architecture.png" width="100%"
+       alt="pttai architecture: the > DSL builds a linked node structure in memory; AgenticGraph's _build_graph walks it into add_node/add_edge/Send calls; a build-time dataflow validator gates the build (GraphValidationError on failure, before any model call); on success it compiles to a native LangGraph StateGraph run via invoke/stream/async.">
+</p>
+
+<p align="center"><em>The <code>&gt;</code> DSL → <code>_build_graph</code> → <strong>build-time validator gate</strong> → native LangGraph <code>StateGraph</code>. (<a href="figures/architecture.svg">SVG</a> · <a href="figures/architecture.mmd">source</a>)</em></p>
+
 ## pttai vs. raw LangGraph
 
 The same tool-using agent — an LLM that calls `add` / `multiply` in a loop until
@@ -61,6 +68,37 @@ node, the `ToolNode`, the `tools_condition` edge and the loop-back edge into
 for you. Both versions run side by side in
 [`examples/vs_langgraph.py`](examples/vs_langgraph.py).
 
+## The validator: bugs caught before you ever invoke
+
+The line count is the *secondary* win. The one you can't get from raw LangGraph
+or `create_react_agent` is a **build-time dataflow analysis** that *fails the
+build* on read-before-write, dangling branches, and concurrent unreduced writes
+— before a single model call. Raw LangGraph compiles the same bugs and only
+trips at runtime, after wasting LLM calls, or worse, silently.
+
+<p align="center">
+  <img src="figures/validator_before_after.png" width="100%"
+       alt="Two panels on the same buggy RAG pipeline. Left (pttai): the AgenticGraph constructor raises GraphValidationError at build time with 0 model calls. Right (raw LangGraph): compile() succeeds with no dataflow check, then a runtime KeyError on the first invoke; across 13 such bugs 10 fail at runtime, 3 are silently wrong, and 15 LLM calls are wasted.">
+</p>
+
+Measured on a 34-pipeline benchmark ([`eval/bugbench/`](eval/bugbench/)): pttai
+catches **13/13** pttai-only dataflow bugs at build with **0 false positives** on
+19 valid pipelines, while raw LangGraph catches **0** of those at build (10 fail
+at runtime, 3 silently wrong) and burns **15 wasted LLM calls**. And the DSL is
+~**60% less code** — 113 vs 281 LOC across 12 pipelines. (Duplicate node names
+are caught by *both* frameworks at build, so that class is excluded above.)
+
+<p align="center">
+  <img src="figures/bug_catch.png" width="49%"
+       alt="Bar chart: pttai catches 13/13 pttai-only bugs at build; raw LangGraph catches 0 at build (10 runtime, 3 silent) and wastes 15 LLM calls; pttai has 0 false positives on 19 valid pipelines.">
+  <img src="figures/loc_comparison.png" width="49%"
+       alt="Grouped bar chart of lines of code per pipeline: pttai 113 LOC vs raw LangGraph 281 LOC across 12 pipelines, about 60% fewer lines.">
+</p>
+
+Full methodology and per-class results are in
+[`docs/COMPARISON.md`](docs/COMPARISON.md); regenerate the charts from the
+committed CSV/JSON with `python figures/make_charts.py`.
+
 ## Examples
 
 Two runnable galleries make the "pttai vs. LangGraph" story concrete:
@@ -77,6 +115,19 @@ Two runnable galleries make the "pttai vs. LangGraph" story concrete:
 
 Start with `basics/` to learn the primitives, then reach for `architectures/`
 when you're wiring a real system.
+
+## Interactive playground
+
+`python demo/app.py` launches a local Gradio playground: paste a `>`-DSL snippet,
+click **Build + Validate**, and see the compiled LangGraph diagram and the
+build-time validator output side by side — no API key needed. See [`demo/`](demo/).
+
+<p align="center">
+  <img src="figures/demo_screenshot_mock.png" width="100%"
+       alt="pttai playground: a DSL editor on the left holds a RAG QA pipeline (retrieve > rerank > answer); the right shows the compiled LangGraph diagram and a green 'Validator: OK — 0 errors, 0 warnings' summary table.">
+</p>
+
+<p align="center"><em>The playground (mock — real compiled-graph render + real <code>summary()</code> output; a live capture drops in here).</em></p>
 
 ## Install
 
