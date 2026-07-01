@@ -42,15 +42,15 @@ def random_number(maximum: int) -> int:
 
 
 def build_graph(llm) -> AgenticGraph:
-    # An agent that can call the random_number tool. bind_tools wraps the bare
+    # An agent that can call the random_number tool. tools= wraps the bare
     # function as a StructuredTool and runs the tool-call loop automatically.
     randomizer = AgentNode(
         name="randomizer",
         llm=llm,
         node_prompt="Use the random_number tool to pick a number based on the "
                     "user's request, then state the number you got.",
+        tools=[random_number],
     )
-    randomizer.bind_tools([random_number])
 
     # A decision node returns one of `choices` (structured output) into the
     # `decision` state field; the framework routes on it.

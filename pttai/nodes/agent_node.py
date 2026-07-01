@@ -2,34 +2,13 @@
 Agent node implementation for the Agentic Framework.
 """
 from typing import Any, Optional, List, Dict, Union
-from pttai.node import Node
+from pttai.nodes.llm_node import LLMNode, _usage_delta, _is_openai
 from pttai.nodes._fields import partition_reads
-from pttai.state import merge_token_usage
-from langchain_core.messages import SystemMessage, AIMessage, ToolMessage
-from langchain_core.tools import StructuredTool, BaseTool
+from langchain_core.messages import SystemMessage
 from pydantic import create_model
-import json
 
 
-def _usage_delta(response):
-    """Return ``{model_name: usage_metadata}`` for one LLM response, or ``{}``
-    when it carries no ``usage_metadata`` (fakes / structured-output path)."""
-    usage = getattr(response, "usage_metadata", None)
-    if not usage:
-        return {}
-    model = (getattr(response, "response_metadata", None) or {}).get("model_name", "unknown")
-    return {model: usage}
-
-
-def _is_openai(llm) -> bool:
-    """Duck-type whether ``llm`` is a langchain_openai ChatOpenAI, WITHOUT
-    importing langchain_openai. Unwraps the RunnableBinding that ``bind_tools``
-    produces so detection still works after tools are bound."""
-    target = getattr(llm, "bound", llm)  # RunnableBinding -> underlying model
-    cls = type(target)
-    return cls.__name__ == "ChatOpenAI" or cls.__module__.startswith("langchain_openai")
-
-class AgentNode(Node):
+class AgentNode(LLMNode):
     """
     A node that represents an agent capable of processing messages and generating responses.
 
@@ -41,6 +20,7 @@ class AgentNode(Node):
                  name: Optional[str] = None,
                  llm: Optional[Any] = None,
                  node_prompt: str = "you are a helpful assistant",
+                 tools: Optional[list] = None,
                  max_tool_iterations: int = 25,
                  input_field: str = "messages",
                  output_field: str = "messages",
@@ -56,6 +36,11 @@ class AgentNode(Node):
             name: Unique identifier for the node
             llm: Language model instance to be used by this node
             node_prompt: System prompt/instructions for the language model
+            tools: Tools this agent can call. A ``StructuredTool``/``BaseTool`` is
+                used as-is; a plain callable is wrapped via
+                ``StructuredTool.from_function``. When set, the node runs an
+                internal tool-call loop (capped by ``max_tool_iterations``).
+                Cannot be combined with multi-field structured ``writes``.
             max_tool_iterations: Safety cap on the internal tool-call loop; a
                 model that keeps requesting tools beyond this raises RuntimeError.
             input_field: State key to read the message history from.
@@ -84,9 +69,9 @@ class AgentNode(Node):
                 effort conflicts with structured output on current OpenAI models.)
             cache_ttl/retry: see Node — node-level caching/retry.
         """
-        super().__init__(name, llm, node_prompt, cache_ttl=cache_ttl, retry=retry)
-        self.tool_available = False
-        self.max_tool_iterations = max_tool_iterations
+        super().__init__(name=name, llm=llm, node_prompt=node_prompt, tools=None,
+                         max_tool_iterations=max_tool_iterations,
+                         cache_ttl=cache_ttl, retry=retry)
         self.input_field = input_field
         self.output_field = output_field
         # reads/writes win if both forms are given (document: use one or the other).
@@ -101,11 +86,19 @@ class AgentNode(Node):
         self._writes_typed = isinstance(writes, dict)
         self.writes = dict(writes) if self._writes_typed else {k: str for k in writes}
         self.reasoning_effort = reasoning_effort
-        # Per-call kwarg (survives bind_tools, unlike a pre-bound reasoning_effort).
+        # Per-call kwarg (survives tool binding, unlike a pre-bound reasoning_effort).
         self._invoke_kwargs = {"reasoning_effort": reasoning_effort} if reasoning_effort else {}
-        # OpenAI prompt-cache routing — set by AgenticGraph when prompt_cache=True.
-        self._prompt_cache_enabled = False
-        self._prompt_cache_key = None
+
+        if tools is not None:
+            # Structured output preempts the free-form tool loop on OpenAI/LangGraph.
+            if self._is_structured([w for w in self.writes if w != "messages"]):
+                raise ValueError(
+                    "multi-field structured output (writes=[...]) cannot be "
+                    "combined with tools in v1")
+            self.tools = self._normalize_tools(tools)
+            self.tools_by_name = {tool.name: tool for tool in self.tools}
+            self.tool_available = True
+            self.llm = self.llm.bind_tools(self.tools)
 
     def _is_structured(self, scalar_writes) -> bool:
         """Whether this node uses structured/typed output for ``scalar_writes``.
@@ -120,7 +113,7 @@ class AgentNode(Node):
         """
         Process the current state and generate a response.
 
-        Runs the agent and, when tools are bound, its internal tool-call loop,
+        Runs the agent and, when tools are set, its internal tool-call loop,
         accumulating every message produced this turn (the AIMessage, any
         ToolMessages, and follow-up AIMessages) into a single delta. Returns
         only the delta — the state reducers append it to canonical state.
@@ -139,8 +132,6 @@ class AgentNode(Node):
 
         # Partition reads by value type: message lists -> history, rest -> scalars.
         history, scalars = partition_reads(state, self.reads)
-        new_messages = []
-        new_log = []
 
         # Only interpolate when there is a scalar read, so prompts containing
         # literal braces (e.g. JSON) with no scalars pass through verbatim.
@@ -170,55 +161,7 @@ class AgentNode(Node):
         if self._prompt_cache_enabled and _is_openai(self.llm):
             invoke_kwargs["prompt_cache_key"] = self._prompt_cache_key
 
-        response = self.llm.invoke(prompt, **invoke_kwargs)
-        new_messages.append(response)
-        new_log.append(f'{self.name}:{response.content}')
-        token = _usage_delta(response)
-
-        if self.tool_available:
-            iterations = 0
-            while isinstance(new_messages[-1], AIMessage) and getattr(new_messages[-1], "tool_calls", None):
-                if iterations >= self.max_tool_iterations:
-                    raise RuntimeError(
-                        f"{self.name} exceeded max_tool_iterations={self.max_tool_iterations}; "
-                        "the model kept requesting tools without finishing."
-                    )
-                iterations += 1
-                ai_message = new_messages[-1]
-                for tool_call in ai_message.tool_calls:
-                    name = tool_call["name"]
-                    tool = self.tools_by_name.get(name)
-                    if tool is None:
-                        # Hallucinated/unknown tool: surface the error to the model
-                        # (so it can self-correct) instead of crashing the run.
-                        new_messages.append(
-                            ToolMessage(
-                                content=f"Error: unknown tool '{name}'",
-                                name=name,
-                                tool_call_id=tool_call["id"],
-                            )
-                        )
-                        new_log.append(f'tools:{name}, args:{tool_call["args"]}, result:unknown tool')
-                        continue
-                    tool_result = tool.invoke(tool_call["args"])
-                    # A str result is used as-is (avoids double-quoting); anything
-                    # else is JSON-encoded with default=str so non-JSON returns
-                    # (datetime/dataclass/pydantic/set/...) don't crash.
-                    content = tool_result if isinstance(tool_result, str) \
-                        else json.dumps(tool_result, default=str)
-                    new_messages.append(
-                        ToolMessage(
-                            content=content,
-                            name=name,
-                            tool_call_id=tool_call["id"],
-                        )
-                    )
-                    new_log.append(f'tools:{name}, args:{tool_call["args"]}, result:{tool_result}')
-                prompt = [SystemMessage(content=sys)] + history + new_messages
-                response = self.llm.invoke(prompt, **invoke_kwargs)
-                new_messages.append(response)
-                new_log.append(f'{self.name}:{response.content}')
-                token = merge_token_usage(token, _usage_delta(response))
+        new_messages, new_log, token = self._run_tool_loop(self.llm, sys, history, invoke_kwargs)
 
         if not scalar_writes:  # writes == ["messages"] (default)
             delta = {"messages": new_messages, "log": new_log}
@@ -228,40 +171,3 @@ class AgentNode(Node):
         if token:  # only emit when at least one call reported usage_metadata
             delta["token"] = token
         return delta
-
-    def bind_tools(self, tools):
-        """
-        Bind a tool to the agent node.
-
-        Args:
-            tools: list of tools to bind to the agent node
-        """
-        # Structured output preempts the free-form tool loop on OpenAI/LangGraph.
-        if self._is_structured([w for w in self.writes if w != "messages"]):
-            raise ValueError(
-                "multi-field structured output (writes=[...]) cannot be combined "
-                "with bind_tools in v1")
-
-        self.tools = []
-
-        if not isinstance(tools, List):
-            tools = [tools]
-
-        for tool in tools:
-
-            # if tool is already a langgraph tool, use it as is
-            if isinstance(tool, StructuredTool) or isinstance(tool, BaseTool):
-                pass
-
-            # if tool is function, use StructuredTool to wrap it
-            elif callable(tool):
-                tool = StructuredTool.from_function(
-                        func = tool,
-                        name = tool.__name__,
-                        description = tool.__doc__)
-
-            self.tools.append(tool)
-
-        self.tools_by_name = {tool.name: tool for tool in self.tools}
-        self.tool_available = True
-        self.llm = self.llm.bind_tools(self.tools)

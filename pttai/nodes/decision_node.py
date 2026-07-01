@@ -2,8 +2,9 @@
 Decision node implementation for the Agentic Framework.
 """
 
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, List, Literal, Optional
 from pttai.node import Node, Branch, Spread
+from pttai.nodes.llm_node import LLMNode
 from pttai.nodes._fields import partition_reads
 from langchain_core.messages import SystemMessage
 from pydantic import BaseModel
@@ -11,27 +12,27 @@ from pydantic import BaseModel
 class Choice:
     """
     Represents a decision option in a DecisionNode.
-    
+
     Each Choice has a name and can be connected to another node in the graph.
     """
-    
+
     def __init__(self, name: str):
         """
         Initialize a Choice.
-        
+
         Args:
             name: Unique identifier for this choice
         """
         self.name = name
         self.child = None
-        
+
     def __gt__(self, other):
         """
         Create an edge from this choice to another node.
-        
+
         Args:
             other: The node to create an edge to
-            
+
         Returns:
             The other node to allow for chain building
         """
@@ -44,29 +45,30 @@ class Choice:
                 "wrap it in an AgenticGraph and route to that.")
         self.child = other
         return other
-        
-class RouterNode(Node):
-    """
-    Base for routing nodes: owns the Choice list, ``route()``, and the
-    ``node["choice"] > handler`` wiring. Subclasses decide HOW the label is
-    chosen — ``DecisionNode`` via an LLM, ``ConditionNode`` via a Python callable.
 
-    Both write the chosen label to the dedicated ``decision`` state field (read
-    by ``route()``), never into ``messages``. Graph build/routing sites treat
-    every ``RouterNode`` identically (see graph.py).
+class RouterNode:
+    """
+    Routing mixin for nodes that pick the next node instead of appending to the
+    conversation. Owns the ``Choice`` list, ``route()``, the ``node["choice"] >
+    handler`` wiring (``__getitem__``), and the ``__gt__`` override that forbids a
+    direct edge off the router.
+
+    It is a MIXIN (not a Node subclass): concrete routers combine it with their
+    real base — ``ConditionNode(RouterNode, Node)`` and
+    ``DecisionNode(RouterNode, LLMNode)`` — and call ``_setup_choices`` explicitly
+    from their own ``__init__``. Subclasses decide HOW the label is chosen
+    (``DecisionNode`` via an LLM, ``ConditionNode`` via a Python callable) and
+    both write it to the dedicated ``decision`` state field (read by ``route()``),
+    never into ``messages``. Because ``RouterNode`` stays in the MRO of both,
+    ``graph.py``'s ``isinstance(node, RouterNode)`` conditional-edge handling
+    treats them identically.
     """
 
-    def __init__(self,
-                 name: Optional[str] = None,
-                 choices: List[str] = None,
-                 llm: Optional[Any] = None,
-                 node_prompt: str = "",
-                 input_field: str = "messages",
-                 reads: Optional[List[str]] = None,
-                 cache_ttl: Optional[int] = None,
-                 retry: bool = False) -> None:
+    def _setup_choices(self,
+                       choices: List[str],
+                       input_field: str = "messages",
+                       reads: Optional[List[str]] = None) -> None:
         assert choices, "a router requires choices"
-        super().__init__(name, llm, node_prompt, cache_ttl=cache_ttl, retry=retry)
         self.choices_name: List[str] = list(choices)
         self.input_field = input_field
         self.reads = reads if reads is not None else [input_field]
@@ -117,12 +119,17 @@ class RouterNode(Node):
         raise ValueError(f"Choice {key} not found in choices.")
 
 
-class DecisionNode(RouterNode):
+class DecisionNode(RouterNode, LLMNode):
     """
     A node that makes decisions based on LLM output to direct graph flow.
 
     DecisionNode uses a language model to choose between predefined options,
     determining the next node in the graph based on the choice made.
+
+    Tool use is two-phase so tools NEVER share a call with structured output: the
+    base model is bound as a separate ``_tool_llm`` (used to gather context via
+    the shared tool-call loop) and ``_route_llm`` is the structured-output model
+    that returns the forced ``choice``.
     """
 
     def __init__(self,
@@ -130,6 +137,7 @@ class DecisionNode(RouterNode):
                  llm: Optional[Any] = None,
                  node_prompt: str = "",
                  choices: List[str] = [],
+                 tools: Optional[list] = None,
                  input_field: str = "messages",
                  reads: Optional[List[str]] = None,
                  cache_ttl: Optional[int] = None,
@@ -142,6 +150,11 @@ class DecisionNode(RouterNode):
             llm: Language model instance to be used by this node
             node_prompt: System prompt/instructions for the language model
             choices: List of possible decision options
+            tools: Optional tools the node may call to gather context BEFORE
+                routing. Same normalization as AgentNode. Tools run in a first
+                phase (a tool-call loop on a tool-bound copy of the model); the
+                gathered messages then feed the structured-output routing call.
+                Tools and structured output never happen in one call.
             input_field: State key to read the message history from.
             reads: State keys this node reads (multi-key form; back-compat
                 generalization of input_field). Reads are dispatched by VALUE
@@ -156,21 +169,25 @@ class DecisionNode(RouterNode):
         assert choices, "DecisionNode requires choices to be set."
         if llm is None:
             raise ValueError("DecisionNode requires an llm — pass llm=... to the constructor.")
-        super().__init__(name, choices, llm=llm, node_prompt=node_prompt,
-                         input_field=input_field, reads=reads,
+        LLMNode.__init__(self, name=name, llm=llm, node_prompt=node_prompt, tools=tools,
                          cache_ttl=cache_ttl, retry=retry)
+        self._setup_choices(choices, input_field=input_field, reads=reads)
         # Force the model to return exactly one valid choice via structured output.
         class OutputModel(BaseModel):
             choice: Literal[tuple(self.choices_name)]
-        self.llm = self.llm.with_structured_output(OutputModel)
+        # Keep the base llm; derive the two single-purpose models. `_tool_llm`
+        # gathers context (tools only); `_route_llm` returns the forced choice
+        # (structured output only). No single call combines tools + structure.
+        self._route_llm = self.llm.with_structured_output(OutputModel)
+        self._tool_llm = self.llm.bind_tools(self.tools) if self.tools else None
 
     def __call__(self, state):
         """
         Process the current state and make a decision.
-        
+
         Args:
             state: Current conversation state containing message history
-            
+
         Returns:
             A state delta: {"decision": <chosen label>, "log": [...]}
 
@@ -183,8 +200,17 @@ class DecisionNode(RouterNode):
         # Partition reads by value type: message lists -> history, rest -> scalars.
         history, scalars = partition_reads(state, self.reads)
         sys = self.node_prompt.format_map(scalars) if scalars else self.node_prompt
+
+        if self.tools:
+            # Phase 1: gather context by running the tool-call loop on the
+            # tool-bound model. Phase 2: route on the gathered context.
+            gathered, tool_log, _ = self._run_tool_loop(self._tool_llm, sys, history)
+            prompt = [SystemMessage(content=sys)] + history + gathered
+            choice = self._route_llm.invoke(prompt).choice
+            return {"decision": choice, "log": tool_log + [f'{self.name}:{choice}']}
+
         message_w_prompt = [SystemMessage(content=sys)] + history
-        response = self.llm.invoke(message_w_prompt)  # use llm to decide which choice to make
+        response = self._route_llm.invoke(message_w_prompt)  # use llm to decide which choice to make
         choice = response.choice
         # Routing label is written to the dedicated `decision` field, not injected
         # into `messages`, so it does not pollute the conversation history.

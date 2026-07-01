@@ -14,8 +14,8 @@ def double(x: int) -> int:
 def test_tool_loop_accumulates_single_delta(t):
     tc = t.tool_call_msg("double", {"x": 3})
     final = t.ai("the answer is 6")
-    node = AgentNode(name="agent", llm=t.FakeLLM(responses=[tc, final]), node_prompt="p")
-    node.bind_tools([double])
+    node = AgentNode(name="agent", llm=t.FakeLLM(responses=[tc, final]), node_prompt="p",
+                     tools=[double])
 
     state = {"messages": [HumanMessage(content="double 3")], "log": [], "decision": ""}
     delta = node(state)
@@ -42,8 +42,7 @@ def test_no_tools_returns_single_message_delta(t):
 def test_tool_loop_respects_max_iterations(t):
     tc = t.tool_call_msg("double", {"x": 1})
     node = AgentNode(name="agent", llm=t.FakeLLM(responses=[tc], repeat=True),
-                     node_prompt="p", max_tool_iterations=3)
-    node.bind_tools([double])
+                     node_prompt="p", max_tool_iterations=3, tools=[double])
     state = {"messages": [HumanMessage(content="go")], "log": [], "decision": ""}
     with pytest.raises(RuntimeError, match="max_tool_iterations"):
         node(state)
