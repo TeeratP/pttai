@@ -254,8 +254,6 @@ tool-call loop, interrupt/resume, RAG tool wiring, streaming/async, configurable
 fields, parallel fan-out/join, map-reduce, multi-key IO, static validation, and
 node caching/retry/`reasoning_effort`/`durability`.
 
-See [`docs/project.md`](docs/project.md) for setup, status, and roadmap.
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
