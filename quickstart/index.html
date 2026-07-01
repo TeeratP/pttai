@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://teeratp.github.io/pttai/node-types/">
+        <link rel="canonical" href="https://teeratp.github.io/pttai/quickstart/">
       
       
-        <link rel="prev" href="../coming-from-langgraph/">
+        <link rel="prev" href="../validator/">
       
       
-        <link rel="next" href="../examples/basics/">
+        <link rel="next" href="../getting-started/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Node types - pttai</title>
+        <title>Quickstart - pttai</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#node-types" class="md-skip">
+        <a href="#quickstart-build-validate-a-rag-pipeline-in-5-minutes" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Node types
+              Quickstart
             
           </span>
         </div>
@@ -313,10 +313,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../quickstart/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -332,6 +359,92 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-install-1-min" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Install (1 min)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-wrap-a-retriever-as-a-tool-1-min" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Wrap a retriever as a tool (1 min)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-build-the-graph-1-min" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Build the graph (1 min)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-validate-before-you-spend-a-token-1-min" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Validate before you spend a token (1 min)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-run-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Run it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-to-go-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where to go next
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -394,37 +507,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Node types
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../node-types/" class="md-nav__link">
         
   
   
@@ -440,103 +526,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#the-llmnode-base" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The LLMNode base
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#agentnode" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AgentNode
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#decisionnode" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        DecisionNode
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#conditionnode" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ConditionNode
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#humannode" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        HumanNode
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#shared-knobs-and-composition" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Shared knobs and composition
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -710,10 +699,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-llmnode-base" class="md-nav__link">
+  <a href="#1-install-1-min" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The LLMNode base
+        1. Install (1 min)
       
     </span>
   </a>
@@ -721,10 +710,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#2-wrap-a-retriever-as-a-tool-1-min" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
+        2. Wrap a retriever as a tool (1 min)
       
     </span>
   </a>
@@ -732,10 +721,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#agentnode" class="md-nav__link">
+  <a href="#3-build-the-graph-1-min" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AgentNode
+        3. Build the graph (1 min)
       
     </span>
   </a>
@@ -743,10 +732,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#decisionnode" class="md-nav__link">
+  <a href="#4-validate-before-you-spend-a-token-1-min" class="md-nav__link">
     <span class="md-ellipsis">
       
-        DecisionNode
+        4. Validate before you spend a token (1 min)
       
     </span>
   </a>
@@ -754,10 +743,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#conditionnode" class="md-nav__link">
+  <a href="#5-run-it" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ConditionNode
+        5. Run it
       
     </span>
   </a>
@@ -765,21 +754,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#humannode" class="md-nav__link">
+  <a href="#where-to-go-next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        HumanNode
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#shared-knobs-and-composition" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Shared knobs and composition
+        Where to go next
       
     </span>
   </a>
@@ -806,137 +784,108 @@
   
 
 
-<h1 id="node-types">Node types<a class="headerlink" href="#node-types" title="Permanent link">&para;</a></h1>
-<p>All nodes are callables (<code>__call__(state) -&gt; delta</code>) invoked by LangGraph with
-the shared state. They return <strong>only the keys they update</strong>; the reducers merge
-them. Nodes never mutate state in place — that is what keeps checkpointing,
-parallel-branch merges, and subgraph composition correct rather than racy.</p>
-<h2 id="the-llmnode-base">The <code>LLMNode</code> base<a class="headerlink" href="#the-llmnode-base" title="Permanent link">&para;</a></h2>
-<p>The two LLM-backed nodes — <code>AgentNode</code> and <code>DecisionNode</code> — share a common
-<code>LLMNode</code> base that owns the <strong>model binding</strong> and the <strong>tool-call loop</strong>.
-Constructing an <code>LLMNode</code> subclass normalizes <code>tools</code> (a <code>StructuredTool</code> /
-<code>BaseTool</code> is used as-is; a plain callable is wrapped via
-<code>StructuredTool.from_function</code>) and wires the internal loop capped by
-<code>max_tool_iterations</code> (default 25). <code>ConditionNode</code> and <code>HumanNode</code> do not use
-an LLM and subclass <code>Node</code> directly.</p>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Node</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong><code>AgentNode</code></strong></td>
-<td>Prepends <code>node_prompt</code> as a <code>SystemMessage</code>, calls the LLM, returns a delta. Pass <code>tools=[...]</code> to wrap bare callables as <code>StructuredTool</code>s and run an internal tool-call loop. <code>reads</code> / <code>writes</code> give typed multi-key IO. Optional <code>reasoning_effort</code> for gpt-5.x.</td>
-</tr>
-<tr>
-<td><strong><code>DecisionNode</code></strong></td>
-<td>LLM branching. Reads from <code>input_field</code>, writes its choice to <code>decision</code>, routes via conditional edges over a <code>Literal[*choices]</code> structured output — the model can only return a valid branch. Also accepts <code>tools=[...]</code> (gathers context first, <em>then</em> routes).</td>
-</tr>
-<tr>
-<td><strong><code>ConditionNode</code></strong></td>
-<td>Deterministic branching with <strong>no LLM</strong>. A Python predicate <code>condition(state) -&gt; str</code> returns one of <code>choices</code>; routing is free, deterministic, and prompt-less.</td>
-</tr>
-<tr>
-<td><strong><code>HumanNode</code></strong></td>
-<td>Resumable human-in-the-loop via LangGraph's <code>interrupt()</code>. Surfaces a message for review; the human's reply lands <code>into</code> <code>messages</code> (or any key a router can gate on).</td>
-</tr>
-</tbody>
-</table>
-<h2 id="agentnode"><code>AgentNode</code><a class="headerlink" href="#agentnode" title="Permanent link">&para;</a></h2>
-<p>The workhorse. Prepends <code>node_prompt</code> as a <code>SystemMessage</code> to the history (read
-from <code>input_field</code>, default <code>messages</code>), calls the LLM, and returns a delta.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">AgentNode</span><span class="p">(</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">llm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">node_prompt</span><span class="o">=</span><span class="s2">&quot;you are a helpful assistant&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">tools</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                 <span class="c1"># bare callables or BaseTool/StructuredTool</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">max_tool_iterations</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>     <span class="c1"># cap on the internal tool-call loop</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">input_field</span><span class="o">=</span><span class="s2">&quot;messages&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">output_field</span><span class="o">=</span><span class="s2">&quot;messages&quot;</span><span class="p">,</span>    <span class="c1"># a non-default key writes final content there</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">reads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                 <span class="c1"># typed multi-key inputs</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">writes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                <span class="c1"># list[str] (str-only) or {&quot;key&quot;: type} (typed)</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">reasoning_effort</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>      <span class="c1"># &quot;low&quot; / &quot;medium&quot; / &quot;high&quot; (gpt-5.x)</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">cache_ttl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">retry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="p">)</span>
+<h1 id="quickstart-build-validate-a-rag-pipeline-in-5-minutes">Quickstart: build + validate a RAG pipeline in 5 minutes<a class="headerlink" href="#quickstart-build-validate-a-rag-pipeline-in-5-minutes" title="Permanent link">&para;</a></h1>
+<p>This walkthrough builds a small <strong>retrieval-augmented generation</strong> agent, has
+pttai <strong>validate</strong> it at build time, then runs it. By the end you'll have seen
+the three things that make pttai worth using: the <code>&gt;</code> wiring, <code>AgentNode</code> with a
+retriever tool, and the compile-time validator.</p>
+<h2 id="1-install-1-min">1. Install (1 min)<a class="headerlink" href="#1-install-1-min" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/TeeratP/pttai<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>pttai
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[openai]&quot;</span><span class="w">          </span><span class="c1"># core + langchain-openai &amp; python-dotenv</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>sk-...<span class="w">         </span><span class="c1"># or put it in a .env file</span>
 </code></pre></div>
+<h2 id="2-wrap-a-retriever-as-a-tool-1-min">2. Wrap a retriever as a tool (1 min)<a class="headerlink" href="#2-wrap-a-retriever-as-a-tool-1-min" title="Permanent link">&para;</a></h2>
+<p>pttai ships <code>make_retriever_tool</code>, which wraps <strong>any</strong> LangChain retriever
+(anything with <code>.invoke(query) -&gt; docs</code>) as a tool an <code>AgentNode</code> can call. Here
+we use a tiny in-memory retriever so the example is self-contained — swap in
+Chroma, FAISS, or a managed vector store unchanged.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langchain_core.documents</span><span class="w"> </span><span class="kn">import</span> <span class="n">Document</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langchain_core.retrievers</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseRetriever</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pttai.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_retriever_tool</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">DOCS</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">Document</span><span class="p">(</span><span class="n">page_content</span><span class="o">=</span><span class="s2">&quot;pttai compiles a `&gt;`-wired node graph to a LangGraph StateGraph.&quot;</span><span class="p">),</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">Document</span><span class="p">(</span><span class="n">page_content</span><span class="o">=</span><span class="s2">&quot;AgenticGraph validates dataflow at build time and fails on read-before-write.&quot;</span><span class="p">),</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">Document</span><span class="p">(</span><span class="n">page_content</span><span class="o">=</span><span class="s2">&quot;fanout(...) runs branches in parallel and joins once after all finish.&quot;</span><span class="p">),</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">]</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">class</span><span class="w"> </span><span class="nc">TinyRetriever</span><span class="p">(</span><span class="n">BaseRetriever</span><span class="p">):</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_get_relevant_documents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">run_manager</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        <span class="c1"># naive keyword match — stand-in for a real vector store</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        <span class="k">return</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">DOCS</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">w</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">page_content</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>                                       <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">query</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())]</span> <span class="ow">or</span> <span class="n">DOCS</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="n">search</span> <span class="o">=</span> <span class="n">make_retriever_tool</span><span class="p">(</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    <span class="n">TinyRetriever</span><span class="p">(),</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;search_docs&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Search the pttai knowledge base for relevant context.&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="p">)</span>
+</code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Using Chroma instead</p>
+<p>With the <code>[rag]</code> extra installed, use the bundled convenience wrapper:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pttai.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChromaRAG</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">rag</span> <span class="o">=</span> <span class="n">ChromaRAG</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>          <span class="c1"># any LangChain embeddings</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">rag</span><span class="o">.</span><span class="n">add_texts</span><span class="p">([</span><span class="s2">&quot;...&quot;</span><span class="p">,</span> <span class="s2">&quot;...&quot;</span><span class="p">])</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">search</span> <span class="o">=</span> <span class="n">rag</span><span class="o">.</span><span class="n">as_tool</span><span class="p">()</span>               <span class="c1"># same StructuredTool</span>
+</code></pre></div></p>
+</div>
+<h2 id="3-build-the-graph-1-min">3. Build the graph (1 min)<a class="headerlink" href="#3-build-the-graph-1-min" title="Permanent link">&para;</a></h2>
+<p>A single <code>AgentNode</code> with the retriever tool bound is a complete RAG loop: the
+model decides when to search, reads the results, and answers. <code>AgenticGraph</code>
+compiles it — and runs the validator as it does.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langchain_openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChatOpenAI</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pttai</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentNode</span><span class="p">,</span> <span class="n">AgenticGraph</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">ChatOpenAI</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-5.4-nano&quot;</span><span class="p">)</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">rag</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rag&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">search</span><span class="p">],</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">node_prompt</span><span class="o">=</span><span class="p">(</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>        <span class="s2">&quot;Answer the user&#39;s question. ALWAYS call search_docs first to ground &quot;</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>        <span class="s2">&quot;your answer in the knowledge base, then cite what you found.&quot;</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    <span class="p">),</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="p">)</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="n">graph</span> <span class="o">=</span> <span class="n">AgenticGraph</span><span class="p">(</span><span class="n">start_node</span><span class="o">=</span><span class="n">rag</span><span class="p">,</span> <span class="n">end_nodes</span><span class="o">=</span><span class="p">{</span><span class="n">rag</span><span class="p">})</span>   <span class="c1"># schema-free; validates here</span>
+</code></pre></div>
+<p>The <code>AgentNode</code> folds the model call, the tool execution, and the loop-back into
+one node — no <code>ToolNode</code>, no <code>tools_condition</code>, no manual edges.</p>
+<h2 id="4-validate-before-you-spend-a-token-1-min">4. Validate before you spend a token (1 min)<a class="headerlink" href="#4-validate-before-you-spend-a-token-1-min" title="Permanent link">&para;</a></h2>
+<p>Validation already ran inside the constructor above (it raises
+<code>GraphValidationError</code> on a hard error). Inspect the topology and any warnings
+explicitly with <code>summary()</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">graph</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>AgenticGraph &#39;graph&#39;   state=AgenticState
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>initial: decision, log, messages, token
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>------------------------------------------------
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>node  type       reads     writes        available
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>rag   AgentNode  messages  log,messages  log,messages
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>------------------------------------------------
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>1 nodes · 0 errors · 0 warning(s)
+</code></pre></div>
+<p>To see the validator <em>catch</em> a bug, add a downstream node that reads a key
+nothing produces — the build fails immediately with a message naming the node
+and key (see the <a href="../validator/">validator page</a> for every bug class it catches).</p>
+<h2 id="5-run-it">5. Run it<a class="headerlink" href="#5-run-it" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">out</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot;How does pttai handle parallel branches?&quot;</span><span class="p">)</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s2">&quot;messages&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>   <span class="c1"># grounded answer, citing the fanout doc</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s2">&quot;token&quot;</span><span class="p">])</span>                  <span class="c1"># per-model token usage for the whole run</span>
+</code></pre></div>
+<h2 id="where-to-go-next">Where to go next<a class="headerlink" href="#where-to-go-next" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Tools.</strong> When <code>tools=[...]</code> is set, the node runs an internal tool-call loop:
-  it executes every requested tool, appends <code>ToolMessage</code>s, and re-invokes the
-  model until it stops requesting tools (or hits <code>max_tool_iterations</code>, which
-  then raises). Tools cannot be combined with multi-field structured <code>writes</code>.</li>
-<li><strong>Typed IO.</strong> <code>reads=[...]</code> / <code>writes=[...]</code> give one node multi-key IO
-  dispatched <strong>by value type</strong> — a message-list read is treated as history, a
-  scalar read is interpolated into the prompt. <code>writes={"score": int}</code> returns
-  native-typed structured output (a real <code>int</code>, not a string).</li>
-<li><strong><code>output_field</code>.</strong> When it is the default <code>messages</code>, produced messages are
-  appended to the conversation; any other key writes the final response there
-  instead (a transform node).</li>
+<li><strong><a href="../validator/">The validator</a></strong> — every dataflow bug it catches, with the
+  verbatim error. This is the reason to build on pttai.</li>
+<li><strong><a href="../node-types/">Node types</a></strong> — <code>DecisionNode</code> routing, <code>HumanNode</code>
+  interrupt/resume, typed multi-key <code>reads</code>/<code>writes</code>.</li>
+<li><strong><a href="../examples/architectures/">Examples → Architectures</a></strong> — ReAct, routing,
+  orchestrator-workers, reflection, and more, each runnable offline.</li>
+<li><strong><a href="../coming-from-langgraph/">Coming from LangGraph</a></strong> — a direct API mapping.</li>
 </ul>
-<h2 id="decisionnode"><code>DecisionNode</code><a class="headerlink" href="#decisionnode" title="Permanent link">&para;</a></h2>
-<p>LLM branching only. Reads from <code>input_field</code>, writes its choice to the dedicated
-<code>decision</code> state field (never into <code>messages</code>), and routes via LangGraph
-conditional edges. The LLM is wrapped with <code>with_structured_output</code> over a
-<code>Literal[*choices]</code>, so the model <strong>can only return a valid branch</strong>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">DecisionNode</span><span class="p">(</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">llm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">node_prompt</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>     <span class="c1"># required, non-empty</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">choices</span><span class="o">=</span><span class="p">[],</span>         <span class="c1"># required, non-empty</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">tools</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>         <span class="c1"># optional: gather context BEFORE routing</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">input_field</span><span class="o">=</span><span class="s2">&quot;messages&quot;</span><span class="p">,</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">reads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">cache_ttl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="n">retry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="p">)</span>
-</code></pre></div>
-<p>Wire a <code>DecisionNode</code> by <strong>indexing a choice</strong> — <code>decision["positive"] &gt; handler</code>
-sets that choice's child. <code>decision &gt; x</code> is an error. If <code>tools=[...]</code> is passed,
-the node runs a tool-gathering loop first and <em>then</em> routes via structured output
-(the two never share a call). <code>reasoning_effort</code> is not accepted — it conflicts
-with structured output on current OpenAI models.</p>
-<h2 id="conditionnode"><code>ConditionNode</code><a class="headerlink" href="#conditionnode" title="Permanent link">&para;</a></h2>
-<p>Deterministic branching with <strong>no LLM</strong>: a Python predicate decides the branch,
-so routing is free, deterministic, and prompt-less. Handy for capping loops.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">ConditionNode</span><span class="p">(</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>     <span class="c1"># condition(state) -&gt; str, returns one of `choices`</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">choices</span><span class="o">=</span><span class="p">[],</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">reads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>         <span class="c1"># declare keys so the validator can check availability</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">cache_ttl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">retry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">)</span>
-</code></pre></div>
-<p>Wired like a <code>DecisionNode</code> — index the choice: <code>cond["retry"] &gt; worker</code>.</p>
-<h2 id="humannode"><code>HumanNode</code><a class="headerlink" href="#humannode" title="Permanent link">&para;</a></h2>
-<p>Resumable human-in-the-loop via LangGraph's <code>interrupt()</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">HumanNode</span><span class="p">(</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">node_prompt</span><span class="o">=</span><span class="s2">&quot;Please review the following message and provide feedback.&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                <span class="c1"># surface state[&quot;messages&quot;][-n]; n&lt;=0 shows nothing</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">show</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>          <span class="c1"># None =&gt; the n-th message; a str =&gt; literal; a callable =&gt; show(state)</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">into</span><span class="o">=</span><span class="s2">&quot;messages&quot;</span><span class="p">,</span>    <span class="c1"># where the human reply lands (&quot;messages&quot; wraps a HumanMessage)</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">cache_ttl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">retry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">)</span>
-</code></pre></div>
-<p>Resume works when the graph is built with a <code>checkpointer</code> and invoked with a
-<code>thread_id</code>: build <code>AgenticGraph(..., checkpointer=InMemorySaver())</code>, then resume
-via <code>Command(resume=value)</code>. Routing <code>into</code> a non-<code>messages</code> key lets a router
-gate on the human's answer.</p>
-<h2 id="shared-knobs-and-composition">Shared knobs and composition<a class="headerlink" href="#shared-knobs-and-composition" title="Permanent link">&para;</a></h2>
-<p>All node types also accept <code>cache_ttl</code> (LangGraph <code>CachePolicy</code> — caches the
-node's result) and <code>retry</code> (LangGraph <code>RetryPolicy</code> — retries on exception);
-<code>AgenticGraph</code> auto-provides an <code>InMemoryCache</code> when any node sets <code>cache_ttl</code>.</p>
-<p>An <code>AgenticGraph</code> can itself be embedded as a node in a larger graph
-(<code>graph_0 &gt; graph_1</code>), and RAG helpers (<code>make_retriever_tool</code>, optional
-<code>ChromaRAG</code>) wrap any LangChain retriever as a tool you hand to
-<code>AgentNode(tools=[...])</code>.</p>
-<p>See these nodes in action, one at a time, in the <a href="../examples/basics/">Basics gallery</a>.</p>
 
 
 
