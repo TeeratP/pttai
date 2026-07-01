@@ -48,7 +48,10 @@ not_in_nav: |
 
 nav:
   - Home: index.md
+  - The validator: validator.md
+  - Quickstart: quickstart.md
   - Getting started: getting-started.md
+  - Coming from LangGraph: coming-from-langgraph.md
   - Node types: node-types.md
   - Examples:
       - Basics: examples/basics.md

@@ -1,0 +1,231 @@
+# The compile-time validator
+
+**This is pttai's differentiator.** When you construct an `AgenticGraph`, it runs
+a static **dataflow analysis** over the wired nodes *before compiling*, and
+**fails the build** on a hard error. You find out a node reads a key nothing
+produces — or a decision branch is unwired — at construction time, not three LLM
+calls into a run.
+
+```python
+graph = AgenticGraph(start_node=a, end_nodes={z})   # validate() runs HERE
+```
+
+If validation finds an error, the constructor raises `GraphValidationError`; if
+it finds only warnings, the graph builds but you can inspect them with
+[`summary()`](api-notes.md). Pass `validate=False` to skip the check (escape
+hatch), or call `graph.validate(strict=True)` to promote warnings to errors.
+
+## Why this matters for LLM pipelines
+
+Agent graphs fail differently from ordinary programs: a broken edge or a
+misspelled state key doesn't crash immediately — it surfaces *after* the model
+has already run, once execution reaches the broken node. By then you've spent
+tokens, latency, and (with tools) real side effects on a run that was doomed at
+build time.
+
+The validator turns those runtime `KeyError`s and `InvalidUpdateError`s into a
+**build-time exception with zero token cost**. The whole point of the "Keras
+compiler" promise is: if the graph compiles, its dataflow is sound.
+
+## What it checks
+
+The core is a **forward dataflow fixpoint** over a tagged edge list recorded
+during the build. It computes, per node:
+
+- `may` — keys available on *some* path into the node (drives hard **errors**;
+  zero false positives).
+- `must` — keys guaranteed on *all* paths (drives **warnings**).
+
+`may`/`must` union across AND-parallel joins (`fanout`) and intersect within an
+exclusive `DecisionNode` choice-group, so the analysis understands your
+branching. On top of that dataflow it runs a handful of structural checks.
+
+Each bug class below shows a minimal snippet and the **verbatim** message pttai
+raises.
+
+### 1. Read before write (the headline check)
+
+A node reads a state key that no upstream node has produced yet — the producer
+runs downstream or on a sibling branch. This is the classic ordering bug.
+
+```python
+from pttai import AgentNode, AgenticGraph
+
+# `writer` produces `summary`; `reader` needs it — but reader runs FIRST.
+reader = AgentNode(name="reader", llm=llm, reads=["summary"],
+                   node_prompt="Use this: {summary}")
+writer = AgentNode(name="writer", llm=llm, writes={"summary": str})
+
+reader > writer
+AgenticGraph(start_node=reader, end_nodes={writer})
+```
+
+```
+pttai.validation.GraphValidationError: AgenticGraph 'graph': 1 error(s), 0 warning(s)
+  [error] reader: reads computed key 'summary' but no upstream node produces it before this node (produced by: ['writer'], none of which are upstream); available keys here: ['log', 'messages']
+```
+
+If the key is declared in the schema but **no node writes it at all** (and it
+isn't an input), the message instead points you to `inputs=`:
+
+```
+  [error] reader: reads 'summary' but no node produces it and it is not an input key; produce it upstream or declare it in inputs=... if you supply it at invoke(); available keys here: ['log', 'messages']
+```
+
+### 2. Undeclared key (typo)
+
+A node reads or writes a key the state schema doesn't declare. LangGraph would
+**silently** read nothing / drop the write; pttai catches it.
+
+Read side:
+
+```
+  [error] reader: reads 'sumary' which is not declared in the state schema ['decision', 'log', 'messages', 'token']; available keys here: ['log', 'messages']
+```
+
+Write side:
+
+```
+  [error] writer: writes key 'sumary' which is not declared in the state schema ['decision', 'log', 'messages', 'token']; LangGraph silently drops unknown-key writes
+```
+
+(Note: in the *schema-free* default, an undeclared key a node writes is
+auto-registered as a plain channel, so this error is what you get when you pass
+an explicit `state=` schema that omits the key.)
+
+### 3. Concurrent write with no reducer
+
+Two nodes on parallel branches (`fanout`) write the same plain key. At runtime
+LangGraph raises `InvalidUpdateError`; pttai catches it at build time.
+
+```python
+from pttai import AgentNode, AgenticGraph, fanout
+
+class S(TypedDict):
+    messages: Annotated[list, add_messages]
+    result: str                    # plain — no reducer
+
+a = AgentNode(name="a", llm=llm, writes=["result"])
+b = AgentNode(name="b", llm=llm, writes=["result"])
+join = AgentNode(name="join", llm=llm)
+
+start > fanout(a, b) > join        # a and b write `result` concurrently
+```
+
+```
+  [error] a: concurrently writes 'result' with node 'b', but 'result' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+```
+
+Fix: give `result` a reducer in the schema (`Annotated[list, operator.add]`),
+or have only one branch write it.
+
+### 4. Dangling decision choice
+
+A `DecisionNode` (or `ConditionNode`) declares a choice you never wired to a
+handler. The model could route to a branch that goes nowhere.
+
+```python
+from pttai import DecisionNode, AgentNode, AgenticGraph
+
+decide = DecisionNode(name="decide", llm=llm,
+                      node_prompt="Is the sentiment positive or negative?",
+                      choices=["positive", "negative"])
+happy = AgentNode(name="happy", llm=llm)
+
+decide["positive"] > happy         # "negative" is never wired
+AgenticGraph(start_node=decide, end_nodes={happy})
+```
+
+```
+  [error] decide: choice 'negative' has no connected node; wire it, e.g. `decide['negative'] > some_node`
+```
+
+### 5. Non-end node with no child (dead end)
+
+Every node that isn't in `end_nodes` must lead somewhere. A node with no child
+that isn't declared terminal would leave the graph with nowhere to go. This is a
+**build-time `ValueError`** (raised as the graph is wired, before the dataflow
+pass):
+
+```python
+a = AgentNode(name="a", llm=llm)
+b = AgentNode(name="b", llm=llm)
+a > b
+AgenticGraph(start_node=a, end_nodes={a})   # b has no child and isn't an end node
+```
+
+```
+ValueError: Node 'b' has no children and is not an end node.
+```
+
+Fix: add `b` to `end_nodes`, or wire `b` onward.
+
+### 6. Duplicate node names
+
+Node names must be unique within a graph (the build keys nodes by name, so a
+collision would silently merge two distinct nodes). Detected during name
+resolution / the build walk as a **`ValueError`**:
+
+```python
+a = AgentNode(name="worker", llm=llm)
+b = AgentNode(name="worker", llm=llm)   # same explicit name, different node
+a > b
+```
+
+```
+ValueError: Duplicate node name 'worker': two distinct nodes share this name. Node names must be unique within a graph.
+```
+
+(Auto/inferred names never collide — they get suffixed `_1`, `_2`. Only two
+*explicit* identical names, or an explicit name clashing with a distinct node,
+raise.)
+
+### 7. Prompt-placeholder / scalar-read mismatch
+
+A `node_prompt` with a `{placeholder}` that isn't a declared scalar read is a
+guaranteed runtime `KeyError` when the prompt is interpolated — a hard error:
+
+```python
+AgentNode(name="n", llm=llm, reads=["topic"],
+          node_prompt="Write about {topic} in {style}.")   # {style} not read
+```
+
+```
+  [error] n: node_prompt references placeholder {style} but 'style' is not a declared scalar read ['topic']; this raises KeyError when the prompt is interpolated
+```
+
+The reverse — a declared scalar read the prompt never interpolates — is a
+**warning** (a dead read, fetched and silently ignored).
+
+## Warnings (build succeeds)
+
+These don't fail the build; they surface via `graph.validate()` /
+`summary()`, and `strict=True` promotes them to errors:
+
+- **Some-paths read** — a key produced on some branches but not all (`may` but
+  not `must`): `reads 'x' which is only produced on SOME paths; guaranteed on
+  all paths: [...]`.
+- **Optional read** (`reads=["x?"]`) never produced — explicit opt-out, at most
+  a warning.
+- **Unreachable node** — `is unreachable from the start node`.
+- **End node with children** — `is an end node but still has children; the
+  children are unreachable from it`.
+
+## Inspecting the analysis: `summary()`
+
+`graph.summary()` prints a Keras-`model.summary()`-style table of every node's
+`reads`, `writes`, and available keys, plus the error/warning counts — the same
+`may`/`must` sets the validator computes:
+
+```
+AgenticGraph 'graph'   state=AgenticState
+initial: decision, log, messages, token
+------------------------------------------------------------
+node    type       reads     writes         available
+frame   AgentNode  messages  log,messages   log,messages
+...
+------------------------------------------------------------
+5 nodes · 0 errors · 0 warning(s)
+```
+
+See [API notes](api-notes.md) for the full state-channel model.
