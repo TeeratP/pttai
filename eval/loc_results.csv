@@ -1,0 +1,13 @@
+file,category,pttai_loc,lg_loc,reduction_pct,pttai_nodes,lg_nodes
+evaluator_optimizer.py,architecture,10,30,67,4,3
+orchestrator_workers.py,architecture,8,25,68,3,3
+parallelization.py,architecture,9,21,57,5,5
+prompt_chaining.py,architecture,11,20,45,5,4
+react_agent.py,architecture,5,14,64,1,2
+reflection.py,architecture,7,18,61,3,3
+routing.py,architecture,15,35,57,4,6
+supervisor.py,architecture,16,33,52,5,3
+01_single_agent.py,basic,4,13,69,1,1
+03_sequential.py,basic,7,18,61,3,3
+04_decision_routing.py,basic,13,29,55,3,3
+06_parallel_fanout.py,basic,8,25,68,4,4
