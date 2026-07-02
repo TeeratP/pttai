@@ -9,4 +9,4 @@ langchain-core>=1,<2
 pydantic>=2,<3
 
 # --- Hugging Face Space only: install pttai from git (uncomment on the Space) ---
-# pttai @ git+https://github.com/TeeratP/agentic-framework.git
+# pttai @ git+https://github.com/TeeratP/pttai.git

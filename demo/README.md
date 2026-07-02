@@ -101,7 +101,7 @@ huggingface-cli repo create pttai-playground --type space --space_sdk gradio
 git clone https://huggingface.co/spaces/<you>/pttai-playground && cd pttai-playground
 
 # 2. copy the demo files in (this README carries the Space metadata header)
-cp /path/to/agentic-framework/demo/{app.py,requirements.txt,README.md} .
+cp /path/to/pttai/demo/{app.py,requirements.txt,README.md} .
 
 # 3. push
 git add -A && git commit -m "pttai playground" && git push

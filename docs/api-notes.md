@@ -74,7 +74,7 @@ no custom reducer**; every LLM call (including tool-loop and parallel-branch
 calls) is deep-summed into the total. Offline (no `OPENAI_API_KEY`) the fake
 model reports no usage, so `token` is an empty `{}`; a real model fills it.
 Side-by-side vs. the hand-wired raw-LangGraph equivalent:
-[`examples/basics/13_token_and_log.py`](https://github.com/TeeratP/agentic-framework/blob/main/examples/basics/13_token_and_log.py).
+[`examples/basics/13_token_and_log.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/13_token_and_log.py).
 
 ## Prompt caching
 

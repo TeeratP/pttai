@@ -11,8 +11,8 @@ abstract: >-
   corpus (the analysis is may/must-based and sound-for-errors, not complete).
 type: software
 license: MIT
-repository-code: "https://github.com/TeeratP/agentic-framework"
-url: "https://github.com/TeeratP/agentic-framework"
+repository-code: "https://github.com/TeeratP/pttai"
+url: "https://github.com/TeeratP/pttai"
 keywords:
   - large language models
   - agent frameworks
