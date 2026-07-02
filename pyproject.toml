@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pttai"
-version = "0.1.1"
+version = "0.1.2"
 description = "Pythonic Topology Tools for AI — a declarative >-DSL over LangGraph with a build-time dataflow validator, compiled to native LangGraph"
 readme = "README.md"
 requires-python = ">=3.10"
