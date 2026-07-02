@@ -44,9 +44,13 @@ DOC_FILES = [
 ]
 
 # Short, natural NLP task specs. Deliberately terse and bug-agnostic -- the model
-# gets a goal, not a graph. Repeated ``--per-spec`` times (the model's own
-# variation across samples supplies the bug distribution).
+# gets a goal, NEVER a graph, keys, or any mention of bugs/the validator. The set
+# is spread across structural shapes (chains, multi-branch routing, parallel
+# fan-out/join, map-reduce, reflection loops, tool use, human-in-the-loop) so the
+# model's own dataflow mistakes can land in many bug classes, not just one.
+# Repeated ``--per-spec`` times (the model's variation supplies the distribution).
 SPECS = [
+    # --- retrieval / multi-stage chains -----------------------------------
     ("rag_qa",
      "Answer a user question grounded in a small document corpus: retrieve "
      "relevant passages with a search tool, then answer using only those passages."),
@@ -56,28 +60,120 @@ SPECS = [
     ("extract_summarize",
      "Extract the key entities and claims from a document, then write a short "
      "summary that uses the extracted information."),
-    ("triage",
-     "Triage an incoming support message: classify it as billing, technical, or "
-     "other, then route it to a handler that drafts the appropriate reply."),
     ("rerank",
      "Given a query, retrieve candidate passages, rerank them by relevance, then "
      "answer the query using the top reranked passage."),
-    ("tool_use_math",
-     "Build a calculator agent that answers arithmetic word problems by calling "
-     "add and multiply tools in a loop until it has the final number."),
-    ("reflect_revise",
-     "Draft an answer, then critique the draft, then revise the answer using the "
-     "critique before returning it."),
     ("plan_execute",
      "Make a short plan for a research question, then execute the plan step by "
      "step and synthesize the findings into one answer."),
+    ("translate_glossary",
+     "Detect the language of a passage, translate it into English, then build a "
+     "short glossary of the key terms that appear in the translation."),
+    ("fact_check",
+     "Given a factual claim, gather supporting and contradicting evidence, then "
+     "issue a verdict with a short rationale."),
+    ("dialogue_next_turn",
+     "From a customer conversation, work out the requested action and the details "
+     "still needed, then write the next agent turn."),
+    # --- multi-branch routing / triage ------------------------------------
+    ("triage",
+     "Triage an incoming support message: classify it as billing, technical, or "
+     "other, then route it to a handler that drafts the appropriate reply."),
     ("sentiment_route",
      "Classify the sentiment of a product review as positive or negative, then "
      "route to a handler that writes an appropriate response."),
+    ("intent_router",
+     "Classify a chat message into one of several intents -- weather, news, "
+     "reminder, small talk, or unknown -- and route it to a matching responder."),
+    ("change_review_route",
+     "Read a description of a code change, decide whether it is a bug fix, a new "
+     "feature, or a refactor, and route to a reviewer that writes fitting feedback."),
+    ("escalation",
+     "Read a support thread, judge how severe it is, then either auto-resolve it, "
+     "ask the customer a clarifying question, or escalate it to a human agent."),
+    # --- parallel fan-out / join ------------------------------------------
     ("map_reduce_summ",
      "Summarize each of several documents independently in parallel, then reduce "
      "the per-document summaries into one combined summary."),
+    ("aspect_review",
+     "Review a short piece of writing along several aspects at once -- clarity, "
+     "grammar, and tone -- then merge the notes into one consolidated critique."),
+    ("entity_dedup",
+     "Extract the named entities from several documents in parallel, then "
+     "reconcile and deduplicate them into one canonical list."),
+    # --- reflection / evaluator-optimizer loops ---------------------------
+    ("reflect_revise",
+     "Draft an answer, then critique the draft, then revise the answer using the "
+     "critique before returning it."),
+    ("refine_until_good",
+     "Draft a summary, score its quality, and keep refining it until the score is "
+     "good enough or a few rounds have passed, then return the best version."),
+    # --- tool use / ReAct -------------------------------------------------
+    ("tool_use_math",
+     "Build a calculator agent that answers arithmetic word problems by calling "
+     "add and multiply tools in a loop until it has the final number."),
+    # --- structured scoring -----------------------------------------------
+    ("interview_grader",
+     "Grade a candidate's interview answer on several rubric dimensions and give "
+     "an overall hire / no-hire recommendation."),
 ]
+
+# A COMPACT, ACCURATE API surface handed to the model alongside the prose docs so
+# it stops hallucinating pttai's API (wrong kwargs, non-existent imports, misused
+# internals). Every signature/kwarg/rule below is verified against the pttai
+# source. This is API SURFACE + 1-2 line snippets ONLY -- deliberately NOT
+# complete, copyable, bug-free pipelines, so the model's own dataflow mistakes are
+# preserved for the study. It contains NO advice about avoiding validator errors.
+API_CHEATSHEET = '''\
+===== pttai API cheatsheet (authoritative -- prefer this over guesses) =====
+
+Imports (these are the ONLY public names):
+    from pttai import (AgentNode, DecisionNode, ConditionNode, HumanNode,
+                       AgenticGraph, fanout, AgenticState)
+    from pttai.tools import make_retriever_tool   # (optional; wraps a retriever)
+There is no `pttai.tools.add`/`multiply` etc. -- define your own plain functions
+and pass them as `tools=[...]`.
+
+Node constructors (only these kwargs exist):
+  AgentNode(name=None, llm=None, node_prompt="...", tools=None,
+            max_tool_iterations=25, input_field="messages",
+            output_field="messages", reads=None, writes=None,
+            reasoning_effort=None, cache_ttl=None, retry=False)
+  DecisionNode(name=None, llm=None, node_prompt="<required, non-empty>",
+               choices=["a","b",...] <required>, tools=None,
+               input_field="messages", reads=None, cache_ttl=None, retry=False)
+      # DecisionNode does NOT accept writes/output_field/reasoning_effort.
+      # It needs an llm; it writes its pick to the built-in `decision` field.
+  ConditionNode(name=None, condition=<fn(state)->str>, choices=[...],
+                reads=None, cache_ttl=None, retry=False)   # no llm, no prompt
+  HumanNode(name=None, node_prompt="...", n=1, show=None, into="messages",
+            cache_ttl=None, retry=False)                   # no llm, no tools
+  AgenticGraph(start_node=<node>, end_nodes={<terminal nodes>}, ...)
+
+LLM: use the injected `llm` argument for every node's `llm=` -- do NOT construct
+your own model (no `ChatOpenAI(...)`, no api keys).
+
+Wiring with `>` (deferred until AgenticGraph builds it):
+  a > b > c                      # sequential chain
+  a > fanout(b, c) > d           # parallel fan-out then join at d (also: a > [b,c] > d)
+  worker.map("field") > collect  # map worker over state["field"], join into collect
+  router["choice"] > handler     # DecisionNode/ConditionNode: wire EACH choice by name
+      # `router > x` raises; a choice cannot route straight into fanout/.map.
+
+reads / writes (AgentNode multi-key IO; use reads OR input_field, writes OR output_field):
+  reads=["topic"]                # scalar -> interpolated into node_prompt via {topic}
+  reads=["messages"]             # a message list -> used as conversation history
+  writes=["messages"]            # (default) append the reply to the conversation
+  writes=["answer"]              # one scalar key -> writes the reply's text there
+  writes={"score": int}          # typed structured output -> a real int in state["score"]
+      # tools=[...] CANNOT be combined with multi-field structured writes.
+  A scalar key you read must be produced by an upstream node or seeded at invoke.
+
+DecisionNode routing snippet:
+    d = DecisionNode(llm=llm, node_prompt="Classify.", choices=["x","y"])
+    d["x"] > handler_x;  d["y"] > handler_y
+'''
+
 
 CONTRACT = '''\
 You are writing a Python module that defines ONE pttai pipeline for the task below.
@@ -163,8 +259,9 @@ def main():
     docs = _read_docs()
     system = SystemMessage(
         "You write pttai pipelines. pttai is a declarative DSL over LangGraph; "
-        "wire nodes with `>` and compile with AgenticGraph. Here are the docs, "
-        "your ONLY reference:\n\n" + docs)
+        "wire nodes with `>` and compile with AgenticGraph. Below is a compact "
+        "API cheatsheet (authoritative) followed by the full docs, your reference:"
+        "\n\n" + API_CHEATSHEET + "\n\n" + docs)
 
     specs = [(sid, txt) for sid, txt in SPECS
              if args.only is None or sid in args.only]
