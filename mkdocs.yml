@@ -30,6 +30,10 @@ theme:
         icon: material/weather-sunny
         name: Switch to light mode
 
+# Never build these internal, untracked files into the public site.
+exclude_docs: |
+  project.md
+
 markdown_extensions:
   - admonition
   - attr_list
@@ -41,10 +45,6 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.inlinehilite
   - pymdownx.details
-
-# Kept in the repo but deliberately out of the nav (see the issue).
-not_in_nav: |
-  /PRE_PUBLISH_CHECKLIST.md
 
 nav:
   - Home: index.md

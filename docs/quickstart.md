@@ -8,10 +8,17 @@ retriever tool, and the compile-time validator.
 ## 1. Install (1 min)
 
 ```bash
+pip install pttai              # core
+pip install "pttai[openai]"    # + langchain-openai & python-dotenv (for live model calls)
+export OPENAI_API_KEY=sk-...   # or put it in a .env file
+```
+
+Or from source for development:
+
+```bash
 git clone https://github.com/TeeratP/pttai && cd pttai
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[openai]"          # core + langchain-openai & python-dotenv
-export OPENAI_API_KEY=sk-...         # or put it in a .env file
+pip install -e ".[openai]"
 ```
 
 ## 2. Wrap a retriever as a tool (1 min)

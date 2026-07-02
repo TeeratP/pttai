@@ -10,6 +10,9 @@ __pycache__/
 site/
 example_full.ipynb
 
+# Internal pre-publish checklist — kept locally, not published.
+/PRE_PUBLISH_CHECKLIST.md
+
 # Personal AI-assistant working notes — kept local, not published.
 CLAUDE.md
 .gitignore
