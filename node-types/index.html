@@ -834,7 +834,7 @@ an LLM and subclass <code>Node</code> directly.</p>
 </tr>
 <tr>
 <td><strong><code>DecisionNode</code></strong></td>
-<td>LLM branching. Reads from <code>input_field</code>, writes its choice to <code>decision</code>, routes via conditional edges over a <code>Literal[*choices]</code> structured output — the model can only return a valid branch. Also accepts <code>tools=[...]</code> (gathers context first, <em>then</em> routes).</td>
+<td>LLM branching. Reads from <code>input_field</code>, writes its choice to its per-node <code>decision_{name}</code> channel, routes via conditional edges over a <code>Literal[*choices]</code> structured output — the model can only return a valid branch. Also accepts <code>tools=[...]</code> (gathers context first, <em>then</em> routes).</td>
 </tr>
 <tr>
 <td><strong><code>ConditionNode</code></strong></td>
@@ -878,8 +878,8 @@ from <code>input_field</code>, default <code>messages</code>), calls the LLM, an
   instead (a transform node).</li>
 </ul>
 <h2 id="decisionnode"><code>DecisionNode</code><a class="headerlink" href="#decisionnode" title="Permanent link">&para;</a></h2>
-<p>LLM branching only. Reads from <code>input_field</code>, writes its choice to the dedicated
-<code>decision</code> state field (never into <code>messages</code>), and routes via LangGraph
+<p>LLM branching only. Reads from <code>input_field</code>, writes its choice to its dedicated
+per-node <code>decision_{name}</code> state field (never into <code>messages</code>), and routes via LangGraph
 conditional edges. The LLM is wrapped with <code>with_structured_output</code> over a
 <code>Literal[*choices]</code>, so the model <strong>can only return a valid branch</strong>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">DecisionNode</span><span class="p">(</span>

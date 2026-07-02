@@ -972,10 +972,10 @@ isn't an input), the message instead points you to <code>inputs=</code>:</p>
 <p>A node reads or writes a key the state schema doesn't declare. LangGraph would
 <strong>silently</strong> read nothing / drop the write; pttai catches it.</p>
 <p>Read side:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>  [error] reader: reads &#39;sumary&#39; which is not declared in the state schema [&#39;decision&#39;, &#39;log&#39;, &#39;messages&#39;, &#39;token&#39;]; available keys here: [&#39;log&#39;, &#39;messages&#39;]
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>  [error] reader: reads &#39;sumary&#39; which is not declared in the state schema [&#39;log&#39;, &#39;messages&#39;, &#39;token&#39;]; available keys here: [&#39;log&#39;, &#39;messages&#39;]
 </code></pre></div>
 <p>Write side:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>  [error] writer: writes key &#39;sumary&#39; which is not declared in the state schema [&#39;decision&#39;, &#39;log&#39;, &#39;messages&#39;, &#39;token&#39;]; LangGraph silently drops unknown-key writes
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>  [error] writer: writes key &#39;sumary&#39; which is not declared in the state schema [&#39;log&#39;, &#39;messages&#39;, &#39;token&#39;]; LangGraph silently drops unknown-key writes
 </code></pre></div>
 <p>(Note: in the <em>schema-free</em> default, an undeclared key a node writes is
 auto-registered as a plain channel, so this error is what you get when you pass
@@ -1068,7 +1068,7 @@ guaranteed runtime <code>KeyError</code> when the prompt is interpolated — a h
 <code>reads</code>, <code>writes</code>, and available keys, plus the error/warning counts — the same
 <code>may</code>/<code>must</code> sets the validator computes:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>AgenticGraph &#39;graph&#39;   state=AgenticState
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>initial: decision, log, messages, token
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>initial: log, messages, token
 <a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>------------------------------------------------------------
 <a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>node    type       reads     writes         available
 <a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>frame   AgentNode  messages  log,messages   log,messages

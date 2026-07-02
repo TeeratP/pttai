@@ -814,7 +814,7 @@ the LangGraph API you already use to its pttai equivalent.</p>
 <tr>
 <td><code>MessagesState</code></td>
 <td><code>AgenticState</code> (the default)</td>
-<td><code>messages</code> + reduced <code>log</code> / <code>decision</code> / <code>token</code> channels. Schema-free by default; nodes auto-register keys.</td>
+<td><code>messages</code> + reduced <code>log</code> / <code>token</code> channels; routers auto-register a per-node <code>decision_{name}</code> key. Schema-free by default; nodes auto-register keys.</td>
 </tr>
 <tr>
 <td>— (runtime <code>KeyError</code> when you get it wrong)</td>

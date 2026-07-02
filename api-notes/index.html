@@ -864,9 +864,11 @@ composition correct rather than racy.</p>
 <li><strong><code>log</code></strong> — <code>operator.add</code>: every node appends a trace line
   (<code>"{name}:{content}"</code>, tool calls, decisions). Seed it with <code>[]</code> on invoke to
   capture the trace.</li>
-<li><strong><code>decision</code></strong> — transient routing key written by <code>DecisionNode</code>, read by its
-  <code>route()</code>. Plain last-writer-wins, which is correct because <code>route</code> runs
-  immediately after the same node writes it.</li>
+<li><strong><code>decision_{name}</code></strong> — each router (<code>DecisionNode</code>/<code>ConditionNode</code>) writes its
+  choice to its OWN per-node channel <code>decision_{node_name}</code> (auto-registered as a
+  plain last-writer-wins key), read by that node's <code>route()</code>. Per-node isolation
+  means multiple routers in one graph never clobber each other; there is no shared
+  <code>decision</code> channel.</li>
 <li><strong><code>token</code></strong> — per-model usage totals accumulated across every node.</li>
 </ul>
 <h2 id="invoking-a-graph">Invoking a graph<a class="headerlink" href="#invoking-a-graph" title="Permanent link">&para;</a></h2>
@@ -892,15 +894,15 @@ rather than at runtime. You can also call <code>graph.validate()</code> directly
 <p><code>summary()</code> prints a Keras-<code>model.summary()</code>-style topology table — a static
 view of the DAG (per-node reads / writes / available keys):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>AgenticGraph &#39;graph&#39;   state=AgenticState
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>initial: decision, log, messages, token
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>--------------------------------------------------------------------------
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>initial: log, messages, token
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>-----------------------------------------------------------------
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>node        type       reads     writes        available
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>frame       AgentNode  messages  log,messages  decision,log,messages,token
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>optimist    AgentNode  messages  log,messages  decision,log,messages,token
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>verdict     AgentNode  messages  log,messages  decision,log,messages,token
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>skeptic     AgentNode  messages  log,messages  decision,log,messages,token
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>pragmatist  AgentNode  messages  log,messages  decision,log,messages,token
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>--------------------------------------------------------------------------
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>frame       AgentNode  messages  log,messages  log,messages,token
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>optimist    AgentNode  messages  log,messages  log,messages,token
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>verdict     AgentNode  messages  log,messages  log,messages,token
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>skeptic     AgentNode  messages  log,messages  log,messages,token
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>pragmatist  AgentNode  messages  log,messages  log,messages,token
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>-----------------------------------------------------------------
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>5 nodes · 0 errors · 0 warning(s)
 </code></pre></div>
 <h2 id="token-usage">Token usage<a class="headerlink" href="#token-usage" title="Permanent link">&para;</a></h2>
@@ -911,7 +913,7 @@ no custom reducer</strong>; every LLM call (including tool-loop and parallel-bra
 calls) is deep-summed into the total. Offline (no <code>OPENAI_API_KEY</code>) the fake
 model reports no usage, so <code>token</code> is an empty <code>{}</code>; a real model fills it.
 Side-by-side vs. the hand-wired raw-LangGraph equivalent:
-<a href="https://github.com/TeeratP/agentic-framework/blob/main/examples/basics/13_token_and_log.py"><code>examples/basics/13_token_and_log.py</code></a>.</p>
+<a href="https://github.com/TeeratP/pttai/blob/main/examples/basics/13_token_and_log.py"><code>examples/basics/13_token_and_log.py</code></a>.</p>
 <h2 id="prompt-caching">Prompt caching<a class="headerlink" href="#prompt-caching" title="Permanent link">&para;</a></h2>
 <p>Opt-in OpenAI prompt caching: <code>AgenticGraph(..., prompt_cache=True)</code> threads one
 cache key through every OpenAI <code>AgentNode</code> call in the graph.</p>
