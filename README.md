@@ -28,11 +28,22 @@ it has the answer. Ask it *"What is 21 + 21, then times 3?"* and both print
 **126**. The only thing that differs is how much graph plumbing you write:
 **3 lines vs. 10.**
 
+Shared setup for both versions — the model and the two tools:
+
+```python
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-5.4-nano")
+
+def add(a: int, b: int) -> int:      return a + b
+def multiply(a: int, b: int) -> int: return a * b
+```
+
 ```python
 # pttai
 from pttai import AgentNode, AgenticGraph
 
-agent = AgentNode(name="agent", llm=llm, tools=[add, multiply])
+agent = AgentNode(llm=llm, tools=[add, multiply])   # name inferred from the variable -> "agent"
 graph = AgenticGraph(start_node=agent, end_nodes={agent})   # schema-free
 
 graph.invoke(message="What is 21 + 21, then times 3?")      # -> 126
@@ -74,8 +85,8 @@ single model call — if a node reads a state key that nothing upstream produces
 ```python
 from pttai import AgentNode, AgenticGraph
 
-early = AgentNode(name="early", llm=llm, reads=["summary"])    # reads 'summary'...
-late  = AgentNode(name="late",  llm=llm, writes=["summary"])   # ...but it's produced downstream
+early = AgentNode(llm=llm, reads=["summary"])    # name inferred -> "early"; reads 'summary'...
+late  = AgentNode(llm=llm, writes=["summary"])   # ...-> "late"; but it's produced downstream
 early > late
 
 AgenticGraph(start_node=early, end_nodes={late})
@@ -142,15 +153,16 @@ from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(model="gpt-5.4-nano")
 
-frame = AgentNode(name="frame", llm=llm, node_prompt=(
+# names are inferred from the variables (frame, optimist, ...) — no name= needed
+frame = AgentNode(llm=llm, node_prompt=(
     "Restate the user's question as ONE sharp, concrete decision. One sentence."))
-optimist = AgentNode(name="optimist", llm=llm, node_prompt=(
+optimist = AgentNode(llm=llm, node_prompt=(
     "Relentless optimist. Argue FOR the bold move — two strongest upsides."))
-skeptic = AgentNode(name="skeptic", llm=llm, node_prompt=(
+skeptic = AgentNode(llm=llm, node_prompt=(
     "Hard-nosed skeptic. Argue AGAINST — the two biggest risks."))
-pragmatist = AgentNode(name="pragmatist", llm=llm, node_prompt=(
+pragmatist = AgentNode(llm=llm, node_prompt=(
     "Pragmatist. Propose the smallest concrete next step that de-risks it."))
-verdict = AgentNode(name="verdict", llm=llm, node_prompt=(
+verdict = AgentNode(llm=llm, node_prompt=(
     "You are the chair. Weigh all three above into a balanced one-paragraph verdict."))
 
 # The line that matters: the three personas run IN PARALLEL, then join at `verdict`.
