@@ -24,6 +24,8 @@ from pttai.node import fanout
 from pttai.nodes import AgentNode, DecisionNode, ConditionNode, HumanNode
 from pttai.state import AgenticState
 
+__version__ = "0.1.0"
+
 __all__ = [
     "AgenticGraph",
     "AgentNode",
