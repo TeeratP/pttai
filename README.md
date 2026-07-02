@@ -123,11 +123,11 @@ click **Build + Validate**, and see the compiled LangGraph diagram and the
 build-time validator output side by side — no API key needed. See [`demo/`](demo/).
 
 <p align="center">
-  <img src="figures/demo_screenshot_mock.png" width="100%"
-       alt="pttai playground: a DSL editor on the left holds a RAG QA pipeline (retrieve > rerank > answer); the right shows the compiled LangGraph diagram and a green 'Validator: OK — 0 errors, 0 warnings' summary table.">
+  <img src="figures/demo_screenshot.png" width="100%"
+       alt="pttai playground: (a) a working RAG QA pipeline (retrieve > rerank > answer) compiles clean with a rendered LangGraph diagram and a green validator; (b) a broken pipeline (rerank wired before retrieve) fails the build — the offending 'rerank' node is painted red and the read-before-write error is shown, before the graph is ever invoked.">
 </p>
 
-<p align="center"><em>The playground (mock — real compiled-graph render + real <code>summary()</code> output; a live capture drops in here).</em></p>
+<p align="center"><em>The playground: (a) a working pipeline compiles clean; (b) a broken one fails the build with the offending node painted <strong>red</strong> and the error attached.</em></p>
 
 ## Install
 
