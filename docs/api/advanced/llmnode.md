@@ -1,1 +1,1 @@
-::: pttai.nodes.llm_node.LLMNode
+::: nae.nodes.llm_node.LLMNode

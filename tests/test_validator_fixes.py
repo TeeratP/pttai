@@ -13,9 +13,9 @@ nodes' LLMs are never invoked (a bare FakeLLM suffices). Covers:
 
 import pytest
 
-from pttai import AgentNode, AgenticGraph, fanout
-from pttai.nodes import ConditionNode
-from pttai.validation import GraphValidationError
+from nae import AgentNode, AgenticGraph, fanout
+from nae.nodes import ConditionNode
+from nae.validation import GraphValidationError
 
 
 # --- Fix 1: convergence cap -------------------------------------------------

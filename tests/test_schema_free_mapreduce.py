@@ -11,10 +11,10 @@ from typing import Annotated
 
 import pytest
 
-from pttai.graph import AgenticGraph
-from pttai.nodes import AgentNode
-from pttai.state import AgenticState, accumulate as append
-from pttai.validation import schema_keys
+from nae.graph import AgenticGraph
+from nae.nodes import AgentNode
+from nae.state import AgenticState, accumulate as append
+from nae.validation import schema_keys
 
 
 def _agent(t, name, content=None, **kw):

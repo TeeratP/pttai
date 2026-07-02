@@ -1,6 +1,6 @@
 """12 · Introspection — ``graph.validate()`` + ``graph.summary()``.
 
-pttai statically checks the graph's dataflow at build time (every key a node
+nae statically checks the graph's dataflow at build time (every key a node
 reads is produced upstream; every key it writes is declared) and can print a
 Keras-``model.summary()``-style table of each node's reads / writes / available
 keys. ``validate()`` returns a report; the build itself raises on hard errors.
@@ -12,13 +12,13 @@ import os
 import sys
 
 _EX = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # examples/
-sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import pttai` works from a bare clone
+sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import nae` works from a bare clone
 sys.path.insert(0, _EX)  # -> `from _llm import get_llm`
 from _llm import get_llm
 
 
-def pttai_version() -> bool:
-    from pttai import AgentNode, AgenticGraph
+def nae_version() -> bool:
+    from nae import AgentNode, AgenticGraph
 
     outline = AgentNode(llm=get_llm(), node_prompt="Outline the answer.")
     write = AgentNode(llm=get_llm(), node_prompt="Write it up.")
@@ -39,7 +39,7 @@ def langgraph_version() -> None:
     # Raw LangGraph has no built-in STATIC state-dataflow validation or a
     # summary() table. The closest analog is the structural view from
     # get_graph() after compile(); state read/write mistakes only surface at
-    # runtime. pttai adds the static check + summary on top.
+    # runtime. nae adds the static check + summary on top.
     from langgraph.graph import StateGraph, MessagesState, START, END
     from langchain_core.messages import SystemMessage
 
@@ -63,7 +63,7 @@ def langgraph_version() -> None:
 
 
 if __name__ == "__main__":
-    print("=== pttai ===")
-    pttai_version()
+    print("=== nae ===")
+    nae_version()
     print("\n=== raw LangGraph ===")
     langgraph_version()

@@ -1,1 +1,1 @@
-::: pttai.nodes.decision_node.RouterNode
+::: nae.nodes.decision_node.RouterNode

@@ -7,9 +7,9 @@ validator catching a bug before a single model call.
 ## 1. Install
 
 ```bash
-pip install pttai
+pip install nae
 
-# pttai works with any LangChain chat model — install the provider you want:
+# nae works with any LangChain chat model — install the provider you want:
 pip install langchain-openai python-dotenv   # OpenAI (used on this page)
 pip install langchain-anthropic              # Anthropic
 pip install langchain-google-genai           # Google
@@ -22,7 +22,7 @@ caveat: `reasoning_effort` and structured-output routing are tuned to OpenAI
 gpt-5.x semantics; wiring, the tool-call loop, and routing are otherwise
 provider-neutral.
 
-Requires Python ≥ 3.10. To work on pttai itself, clone the repo and
+Requires Python ≥ 3.10. To work on nae itself, clone the repo and
 `pip install -e ".[openai,dev]"` (extras: `[rag]` for `ChromaRAG`, `[docs]` for
 this site).
 
@@ -31,7 +31,7 @@ this site).
 Three lines make a complete graph: one node, one constructor, one invoke.
 
 ```python
-from pttai import AgentNode, AgenticGraph
+from nae import AgentNode, AgenticGraph
 from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(model="gpt-5.4-nano")   # any LangChain chat model works
@@ -54,7 +54,7 @@ three personas that argue **concurrently**, and joins at `verdict`. The whole
 topology is the one wiring line near the bottom.
 
 ```python
-from pttai import AgentNode, AgenticGraph, fanout
+from nae import AgentNode, AgenticGraph, fanout
 
 frame = AgentNode(llm=llm, node_prompt=(
     "Restate the user's question as ONE sharp, concrete decision. One sentence."))
@@ -81,7 +81,7 @@ print(out["token"])                       # per-model token totals
 `verdict` fires once after all three finish. `summary()` prints a topology
 table and `out["token"]` accumulates usage across every call — both covered in
 [State & observability](state.md). Full version:
-[`examples/panel.py`](https://github.com/TeeratP/pttai/blob/main/examples/panel.py).
+[`examples/panel.py`](https://github.com/TeeratP/nae/blob/main/examples/panel.py).
 
 ## 4. Break it — and let the validator tell you
 
@@ -89,7 +89,7 @@ Wire a graph with a real dataflow bug: `early` reads a `summary` key that only
 `late`, downstream of it, produces.
 
 ```python
-from pttai import AgentNode, AgenticGraph
+from nae import AgentNode, AgenticGraph
 
 early = AgentNode(llm=llm, reads=["summary"],
                   node_prompt="Polish this summary: {summary}")
@@ -104,7 +104,7 @@ The constructor fails immediately, naming the node, the key, and the real
 producer:
 
 ```
-pttai.validation.GraphValidationError: AgenticGraph 'graph': 1 error(s), 0 warning(s)
+nae.validation.GraphValidationError: AgenticGraph 'graph': 1 error(s), 0 warning(s)
   [error] early: reads computed key 'summary' but no upstream node produces it before this node (produced by: ['late'], none of which are upstream); available keys here: ['log', 'messages', 'token']
 ```
 
@@ -129,4 +129,4 @@ with its verbatim error message.
 - **Retrieval:** wrap any LangChain retriever as a tool with
   `make_retriever_tool` (see [Node types](node-types.md#rag-tools)) — a
   complete RAG pipeline is in
-  [`examples/nlp/rag_qa.py`](https://github.com/TeeratP/pttai/blob/main/examples/nlp/rag_qa.py).
+  [`examples/nlp/rag_qa.py`](https://github.com/TeeratP/nae/blob/main/examples/nlp/rag_qa.py).

@@ -1,15 +1,15 @@
-# pttai
+# nae
 
-pttai is a small declarative layer over
+nae is a small declarative layer over
 [LangGraph](https://langchain-ai.github.io/langgraph/) for building LLM agent
 graphs. You create nodes — each a self-contained, tool-using agent — wire them
 with the `>` operator, and hand the result to `AgenticGraph`, which compiles it
 to a native LangGraph `StateGraph`.
 
-pttai builds on LangGraph, it doesn't replace it. The execution underneath is
+nae builds on LangGraph, it doesn't replace it. The execution underneath is
 plain LangGraph — streaming, async, checkpointers, and LangSmith work
 unchanged, and you can drop down to raw LangGraph at any point (no lock-in).
-What pttai adds: the `>` wiring, nodes with a built-in tool-call loop, and a
+What nae adds: the `>` wiring, nodes with a built-in tool-call loop, and a
 build-time validator that catches dataflow bugs before you spend a token.
 
 ## The same agent, both ways
@@ -38,8 +38,8 @@ def multiply(a: int, b: int) -> int:
 ```
 
 ```python
-# pttai
-from pttai import AgentNode, AgenticGraph
+# nae
+from nae import AgentNode, AgenticGraph
 
 agent = AgentNode(llm=llm, tools=[add, multiply])   # name inferred from the variable -> "agent"
 graph = AgenticGraph(start_node=agent, end_nodes={agent})   # schema-free
@@ -68,10 +68,10 @@ graph = builder.compile()
 graph.invoke({"messages": [{"role": "user", "content": "What is 21 + 21, then times 3?"}]})  # -> 126
 ```
 
-Same tools, same loop, same answer. pttai folds the model node, the `ToolNode`,
+Same tools, same loop, same answer. nae folds the model node, the `ToolNode`,
 the `tools_condition` edge, and the loop-back edge into one `AgentNode`, and
 infers the state schema for you. Both versions run side by side in
-[`examples/vs_langgraph.py`](https://github.com/TeeratP/pttai/blob/main/examples/vs_langgraph.py).
+[`examples/vs_langgraph.py`](https://github.com/TeeratP/nae/blob/main/examples/vs_langgraph.py).
 
 ## See your graph
 
@@ -83,14 +83,14 @@ from IPython.display import display
 display(graph)    # or make `graph` the last expression of the cell
 ```
 
-![pttai renders your graph](assets/graph-example.png)
+![nae renders your graph](assets/graph-example.png)
 
 This one is the multi-agent panel from the [Quickstart](quickstart.md):
 `frame > fanout(optimist, skeptic, pragmatist) > verdict`. The
-[full notebook tour](https://github.com/TeeratP/pttai/blob/main/example.ipynb)
+[full notebook tour](https://github.com/TeeratP/nae/blob/main/example.ipynb)
 walks through rendering, validation, and every node type in one place, and
 `python demo/app.py` opens a local
-[Gradio playground](https://github.com/TeeratP/pttai/blob/main/demo/) — paste a
+[Gradio playground](https://github.com/TeeratP/nae/blob/main/demo/) — paste a
 `>`-DSL snippet, see the diagram and validator output, no API key needed.
 
 How does `>` become a graph? `a > b` records a link; `AgenticGraph(...)` walks

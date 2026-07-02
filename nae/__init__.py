@@ -1,4 +1,4 @@
-"""pttai — Pythonic Topology Tools for AI.
+"""nae — Nodes and Edges: a declarative DSL over LangGraph.
 
 Write agent workflows in the ergonomic layer you *want* to write in — wire nodes
 with the `>` operator, fan out with `fanout(...)` / `[a, b]`, map-reduce with
@@ -8,7 +8,7 @@ checkpointers, LangSmith) is right underneath.
 
 Public API::
 
-    from pttai import (
+    from nae import (
         AgenticGraph,   # compiles the wired nodes into a LangGraph StateGraph
         AgentNode,      # LLM node: tool-call loop, typed multi-key reads/writes
         DecisionNode,   # constrained structured-output routing
@@ -19,12 +19,12 @@ Public API::
     )
 """
 
-from pttai.graph import AgenticGraph
-from pttai.node import fanout
-from pttai.nodes import AgentNode, DecisionNode, ConditionNode, HumanNode
-from pttai.state import AgenticState
+from nae.graph import AgenticGraph
+from nae.node import fanout
+from nae.nodes import AgentNode, DecisionNode, ConditionNode, HumanNode
+from nae.state import AgenticState
 
-__version__ = "0.1.3"
+__version__ = "0.1.0"
 
 __all__ = [
     "AgenticGraph",

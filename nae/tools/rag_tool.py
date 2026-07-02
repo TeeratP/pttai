@@ -38,7 +38,7 @@ class ChromaRAG:
     Requires the optional `rag` extra: `pip install -e .[rag]`.
     """
 
-    def __init__(self, embeddings, collection_name: str = "pttai", persist_directory=None):
+    def __init__(self, embeddings, collection_name: str = "nae", persist_directory=None):
         from langchain_chroma import Chroma  # lazy import: optional dependency
         self.store = Chroma(
             collection_name=collection_name,

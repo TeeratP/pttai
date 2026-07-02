@@ -18,11 +18,11 @@ from langgraph.graph import StateGraph, START, END, MessagesState
 from langgraph.types import CachePolicy, RetryPolicy, Send
 from langgraph.cache.memory import InMemoryCache
 from langchain_core.messages import HumanMessage
-from pttai.node import Node, Branch, Spread
-from pttai.nodes import AgentNode, HumanNode, DecisionNode, RouterNode, ConditionNode
-from pttai.nodes._fields import prompt_placeholders, is_history_annotation
-from pttai.state import AgenticState, RESERVED, accumulate
-from pttai.validation import (
+from nae.node import Node, Branch, Spread
+from nae.nodes import AgentNode, HumanNode, DecisionNode, RouterNode, ConditionNode
+from nae.nodes._fields import prompt_placeholders, is_history_annotation
+from nae.state import AgenticState, RESERVED, accumulate
+from nae.validation import (
     GraphValidationError, ValidationReport, Issue, schema_keys, reduced_keys,
     compute_availability, collect_issues, check_placeholders,
 )
@@ -141,7 +141,7 @@ class AgenticGraph(StateGraph):
 
     Examples:
         ```python
-        from pttai import AgentNode, AgenticGraph
+        from nae import AgentNode, AgenticGraph
 
         outline = AgentNode(llm=llm, node_prompt="Outline the answer.")
         draft = AgentNode(llm=llm, node_prompt="Write a draft from the outline.")
@@ -328,7 +328,7 @@ class AgenticGraph(StateGraph):
 
         Normalizes `input`/`message` like `invoke` (str/list/dict/Command +
         `**extra` state keys), then passes through to the compiled graph's stream.
-        See [`invoke`][pttai.AgenticGraph.invoke] for the full input/config contract.
+        See [`invoke`][nae.AgenticGraph.invoke] for the full input/config contract.
         """
         return self.compiled_graph.stream(
             _normalize_input(input, message=message, _schema=self._schema_keys, **extra), config=config, durability=durability)
@@ -336,7 +336,7 @@ class AgenticGraph(StateGraph):
     async def ainvoke(self, input=_UNSET, /, *, message=None, config=None, durability=None, **extra):
         """Async variant of invoke. Sync nodes run in LangGraph's threadpool.
 
-        See [`invoke`][pttai.AgenticGraph.invoke] for the full input/config contract.
+        See [`invoke`][nae.AgenticGraph.invoke] for the full input/config contract.
         """
         return await self.compiled_graph.ainvoke(
             _normalize_input(input, message=message, _schema=self._schema_keys, **extra), config=config, durability=durability)
@@ -344,7 +344,7 @@ class AgenticGraph(StateGraph):
     async def astream(self, input=_UNSET, /, *, message=None, config=None, durability=None, **extra):
         """Async streaming variant of stream.
 
-        See [`invoke`][pttai.AgenticGraph.invoke] for the full input/config contract.
+        See [`invoke`][nae.AgenticGraph.invoke] for the full input/config contract.
         """
         async for chunk in self.compiled_graph.astream(
                 _normalize_input(input, message=message, _schema=self._schema_keys, **extra), config=config, durability=durability):

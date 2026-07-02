@@ -1,6 +1,6 @@
 """13 · Free observability — the ``token`` and ``log`` channels.
 
-Every pttai graph tracks two things for you with **zero wiring**:
+Every nae graph tracks two things for you with **zero wiring**:
 
   * ``state['token']`` — total token spend across EVERY LLM call in the run
     (including tool-loop calls and parallel fan-out), as
@@ -9,7 +9,7 @@ Every pttai graph tracks two things for you with **zero wiring**:
 
 In raw LangGraph you'd hand-wire a usage callback + a custom reducer channel and
 read ``response.usage_metadata`` in every node yourself (see the block below).
-pttai does it automatically — the value prop of this example.
+nae does it automatically — the value prop of this example.
 
     python examples/basics/13_token_and_log.py
 
@@ -23,13 +23,13 @@ import os
 import sys
 
 _EX = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # examples/
-sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import pttai` works from a bare clone
+sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import nae` works from a bare clone
 sys.path.insert(0, _EX)  # -> `from _llm import get_llm`
 from _llm import get_llm
 
 
-def pttai_version() -> dict:
-    from pttai import AgentNode, AgenticGraph
+def nae_version() -> dict:
+    from nae import AgentNode, AgenticGraph
 
     # Naming is optional: `outline` gets its name inferred from the variable it's
     # assigned to, while `draft` is named explicitly. Both work — name a node when
@@ -48,7 +48,7 @@ def pttai_version() -> dict:
 # --- equivalent in raw LangGraph ---
 # To get the SAME token total you must: (1) declare a custom reduced channel with
 # a summing reducer, and (2) read `response.usage_metadata` in EVERY node and
-# return it. Miss one node and your total is silently wrong. pttai's LLMNode does
+# return it. Miss one node and your total is silently wrong. nae's LLMNode does
 # all of this for you.
 def langgraph_version() -> dict:
     import operator
@@ -96,14 +96,14 @@ def langgraph_version() -> dict:
 
 
 if __name__ == "__main__":
-    result = pttai_version()
+    result = nae_version()
 
-    print("[pttai] token usage (total across the whole run):")
+    print("[nae] token usage (total across the whole run):")
     print("   ", result["token"] or "{}  <- empty offline; the fake reports no usage_metadata")
     print("    With a real model this looks like:")
     print("    {'gpt-5.4-nano': {'input_tokens': 42, 'output_tokens': 88, 'total_tokens': 130, ...}}")
     print()
-    print("[pttai] per-node trace (state['log']):")
+    print("[nae] per-node trace (state['log']):")
     for line in result["log"]:
         print("   ", line)
 

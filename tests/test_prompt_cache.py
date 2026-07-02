@@ -1,7 +1,7 @@
 """Issue #2: auto OpenAI prompt_cache_key (opt-in, per-run or user-supplied)."""
 
-from pttai.graph import AgenticGraph
-from pttai.nodes import AgentNode
+from nae.graph import AgenticGraph
+from nae.nodes import AgentNode
 
 
 def test_kwarg_passed_when_openai_and_enabled(t):

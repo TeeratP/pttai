@@ -1,8 +1,8 @@
-# pttai architectures — famous agent patterns
+# nae architectures — famous agent patterns
 
 The canonical agent patterns from Anthropic's
 [Building Effective Agents](https://www.anthropic.com/research/building-effective-agents)
-and the common LangGraph tutorials, each in **one runnable file**: the **pttai
+and the common LangGraph tutorials, each in **one runnable file**: the **nae
 version first**, then a `# --- equivalent in raw LangGraph ---` block, so you can
 read the same topology built both ways.
 

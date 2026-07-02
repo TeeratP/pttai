@@ -1,6 +1,6 @@
 # State & observability
 
-Every pttai graph shares one state object across its nodes. By default that is
+Every nae graph shares one state object across its nodes. By default that is
 [`AgenticState`](api/state/agenticstate.md), a `TypedDict` of **reduced
 channels**: each key carries a reducer that merges node outputs, so parallel
 branches combine instead of overwriting each other.
@@ -46,7 +46,7 @@ usage callback plus a custom summing channel to get the same numbers.
 Offline, with no API key, the fake model reports no usage, so `token` is an
 empty `{}` — the accounting runs, there is nothing to count. Side-by-side with
 the raw-LangGraph version:
-[`examples/basics/13_token_and_log.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/13_token_and_log.py).
+[`examples/basics/13_token_and_log.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/13_token_and_log.py).
 
 The validator reads the same declared `reads`/`writes` that drive these
 channels — see [The validator](validator.md) for what it checks.

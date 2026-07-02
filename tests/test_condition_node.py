@@ -6,8 +6,8 @@ and routes off it via the shared RouterNode machinery.
 
 import pytest
 
-from pttai.graph import AgenticGraph
-from pttai.nodes import AgentNode, DecisionNode, ConditionNode
+from nae.graph import AgenticGraph
+from nae.nodes import AgentNode, DecisionNode, ConditionNode
 
 
 def _agent(t, name, content):

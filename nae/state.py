@@ -1,4 +1,4 @@
-"""Default state schema and channel reducers for pttai.
+"""Default state schema and channel reducers for nae.
 
 Defines `AgenticState`, the `TypedDict` of reduced channels every graph uses
 unless you pass your own `state=`: `messages` (the conversation, via LangGraph's

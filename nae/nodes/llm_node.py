@@ -9,8 +9,8 @@ reuse `_run_tool_loop`.
 import json
 from typing import Any, List, Optional
 
-from pttai.node import Node
-from pttai.state import merge_token_usage
+from nae.node import Node
+from nae.state import merge_token_usage
 from langchain_core.messages import SystemMessage, AIMessage, ToolMessage
 from langchain_core.tools import StructuredTool, BaseTool
 
@@ -59,7 +59,7 @@ class LLMNode(Node):
 
         Args:
             name: Unique identifier for the node (inferred from the assignment
-                target when omitted; see [Node][pttai.node.Node]).
+                target when omitted; see [Node][nae.node.Node]).
             llm: Language model instance this node calls.
             node_prompt: System prompt prepended to the history on each call.
             tools: Tools the node may call. Each is normalized to a LangChain
@@ -68,8 +68,8 @@ class LLMNode(Node):
                 the tool-call loop. Subclasses decide how they bind to the model.
             max_tool_iterations: Safety cap on the tool-call loop in
                 `_run_tool_loop`; exceeding it raises `RuntimeError`.
-            cache_ttl: see [Node][pttai.node.Node] — node-level result caching.
-            retry: see [Node][pttai.node.Node] — node-level retry on exception.
+            cache_ttl: see [Node][nae.node.Node] — node-level result caching.
+            retry: see [Node][nae.node.Node] — node-level retry on exception.
         """
         super().__init__(name, llm, node_prompt, cache_ttl=cache_ttl, retry=retry)
         self.max_tool_iterations = max_tool_iterations

@@ -10,13 +10,13 @@ import os
 import sys
 
 _EX = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # examples/
-sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import pttai` works from a bare clone
+sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import nae` works from a bare clone
 sys.path.insert(0, _EX)  # -> `from _llm import get_llm`
 from _llm import get_llm
 
 
-def pttai_version() -> list:
-    from pttai import AgentNode, AgenticGraph, fanout
+def nae_version() -> list:
+    from nae import AgentNode, AgenticGraph, fanout
 
     start = AgentNode(llm=get_llm(), node_prompt="Restate the task.")
     pros = AgentNode(llm=get_llm(), node_prompt="List the pros.")
@@ -64,5 +64,5 @@ def langgraph_version() -> list:
 
 
 if __name__ == "__main__":
-    print("[pttai]      ran nodes:", [line.split(":", 1)[0] for line in pttai_version()])
+    print("[nae]      ran nodes:", [line.split(":", 1)[0] for line in nae_version()])
     print("[langgraph]  ran nodes:", [line.split(":", 1)[0] for line in langgraph_version()])

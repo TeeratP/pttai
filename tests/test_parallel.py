@@ -9,10 +9,10 @@ wire the join. So the clean no-paren one-liner works. The explicit-Branch form
 
 import pytest
 
-from pttai import fanout
-from pttai.graph import AgenticGraph
-from pttai.nodes import AgentNode, DecisionNode
-from pttai.state import AgenticState
+from nae import fanout
+from nae.graph import AgenticGraph
+from nae.nodes import AgentNode, DecisionNode
+from nae.state import AgenticState
 
 
 def _edges(graph):

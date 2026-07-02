@@ -1,31 +1,31 @@
-# **pttai** — *Pythonic Topology Tools for AI*
+# **nae** — *Nodes and Edges: a declarative DSL over LangGraph*
 
-**Build LLM agent graphs in a few lines.** pttai is a small declarative DSL over
+**Build LLM agent graphs in a few lines.** nae is a small declarative DSL over
 [LangGraph](https://langchain-ai.github.io/langgraph/): wire self-contained,
 tool-using agent nodes together with a `>` operator into a *visible* DAG —
 fan-out, map-reduce, structured-output routing, human-in-the-loop — and skip the
 `add_node` / `add_edge` / `add_conditional_edges` / `Send` boilerplate. It all
 compiles down to a native LangGraph `StateGraph`.
 
-pttai **builds on LangGraph, it doesn't replace it.** LangGraph is well worth
+nae **builds on LangGraph, it doesn't replace it.** LangGraph is well worth
 learning directly — especially for experienced users who want full control.
-pttai's job is to make that capability more *accessible*: the value is
+nae's job is to make that capability more *accessible*: the value is
 everything you *don't* write, folded into a small `>`-DSL. And because each node
-declares the state keys it reads and writes, pttai statically checks your graph
+declares the state keys it reads and writes, nae statically checks your graph
 for read-before-written dataflow bugs *before* you invoke. You keep the whole
 LangGraph ecosystem (streaming, async, checkpointers, LangSmith) and can drop
 down to raw LangGraph anytime — no lock-in.
 
-Full documentation: **[teeratp.github.io/pttai](https://teeratp.github.io/pttai/)**.
+Full documentation: **[teeratp.github.io/nae](https://teeratp.github.io/nae/)**.
 
-[![PyPI](https://img.shields.io/pypi/v/pttai)](https://pypi.org/project/pttai/)
-[![Docs](https://img.shields.io/badge/docs-teeratp.github.io%2Fpttai-blue)](https://teeratp.github.io/pttai/)
-[![CI](https://github.com/TeeratP/pttai/actions/workflows/ci.yml/badge.svg)](https://github.com/TeeratP/pttai/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/nae)](https://pypi.org/project/nae/)
+[![Docs](https://img.shields.io/badge/docs-teeratp.github.io%2Fnae-blue)](https://teeratp.github.io/nae/)
+[![CI](https://github.com/TeeratP/nae/actions/workflows/ci.yml/badge.svg)](https://github.com/TeeratP/nae/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-%E2%89%A53.10-blue)
 ![LangGraph](https://img.shields.io/badge/LangGraph-1.0-orange)
-[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/TeeratP/pttai/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/TeeratP/nae/blob/main/LICENSE)
 
-## pttai vs. raw LangGraph
+## nae vs. raw LangGraph
 
 The same tool-using agent — an LLM that calls `add` / `multiply` in a loop until
 it has the answer. Ask it *"What is 21 + 21, then times 3?"* and both print
@@ -52,8 +52,8 @@ def multiply(a: int, b: int) -> int:
 ```
 
 ```python
-# pttai
-from pttai import AgentNode, AgenticGraph
+# nae
+from nae import AgentNode, AgenticGraph
 
 agent = AgentNode(llm=llm, tools=[add, multiply])   # name inferred from the variable -> "agent"
 graph = AgenticGraph(start_node=agent, end_nodes={agent})   # schema-free
@@ -82,11 +82,11 @@ graph = builder.compile()
 graph.invoke({"messages": [{"role": "user", "content": "What is 21 + 21, then times 3?"}]})  # -> 126
 ```
 
-Identical behavior — same tools, same loop, same answer. pttai folds the model
+Identical behavior — same tools, same loop, same answer. nae folds the model
 node, the `ToolNode`, the `tools_condition` edge and the loop-back edge into
 **one `AgentNode`** with a built-in tool-call loop, and infers the state schema
 for you. Both versions run side by side in
-[`examples/vs_langgraph.py`](https://github.com/TeeratP/pttai/blob/main/examples/vs_langgraph.py).
+[`examples/vs_langgraph.py`](https://github.com/TeeratP/nae/blob/main/examples/vs_langgraph.py).
 
 ## Catch dataflow bugs at build time
 
@@ -95,7 +95,7 @@ forward dataflow analysis **at construction** and *fails the build* — before a
 single model call — if a node reads a state key that nothing upstream produces:
 
 ```python
-from pttai import AgentNode, AgenticGraph
+from nae import AgentNode, AgenticGraph
 
 early = AgentNode(llm=llm, reads=["summary"])    # name inferred -> "early"; reads 'summary'...
 late  = AgentNode(llm=llm, writes=["summary"])   # ...-> "late"; but it's produced downstream
@@ -106,23 +106,23 @@ AgenticGraph(start_node=early, end_nodes={late})
 ```
 
 Raw LangGraph compiles the same graph and only trips at runtime, on the first
-input that exercises the broken path. pttai names the offending node and key at
+input that exercises the broken path. nae names the offending node and key at
 build time; `graph.validate()` runs the same check on demand. Every bug class
 it catches, with the verbatim errors:
-**[The validator](https://teeratp.github.io/pttai/validator/)**.
+**[The validator](https://teeratp.github.io/nae/validator/)**.
 
 ## Examples
 
-Two runnable galleries make the "pttai vs. LangGraph" story concrete:
+Two runnable galleries make the "nae vs. LangGraph" story concrete:
 
-- **[`examples/basics/`](https://github.com/TeeratP/pttai/blob/main/examples/basics/)** — one file per feature, each showing
-  the pttai version *and* the equivalent raw-LangGraph version side by side. The
-  fastest way to see exactly what plumbing pttai folds away — tool loops,
+- **[`examples/basics/`](https://github.com/TeeratP/nae/blob/main/examples/basics/)** — one file per feature, each showing
+  the nae version *and* the equivalent raw-LangGraph version side by side. The
+  fastest way to see exactly what plumbing nae folds away — tool loops,
   fan-out/join, map-reduce, structured-output routing, typed state IO,
   human-in-the-loop — one concept at a time.
-- **[`examples/architectures/`](https://github.com/TeeratP/pttai/blob/main/examples/architectures/)** — famous agent
+- **[`examples/architectures/`](https://github.com/TeeratP/nae/blob/main/examples/architectures/)** — famous agent
   patterns (router, evaluator-optimizer, orchestrator-workers, reflection, and
-  more) built end-to-end in pttai, so you can lift a whole topology instead of a
+  more) built end-to-end in nae, so you can lift a whole topology instead of a
   single node.
 
 Start with `basics/` to learn the primitives, then reach for `architectures/`
@@ -132,21 +132,21 @@ when you're wiring a real system.
 
 `python demo/app.py` launches a local Gradio playground: paste a `>`-DSL snippet,
 click **Build + Validate**, and see the compiled LangGraph diagram and the
-build-time validator output side by side — no API key needed. See [`demo/`](https://github.com/TeeratP/pttai/blob/main/demo/).
+build-time validator output side by side — no API key needed. See [`demo/`](https://github.com/TeeratP/nae/blob/main/demo/).
 
 ## Install
 
 ```bash
-pip install pttai
+pip install nae
 
-# pttai works with ANY LangChain chat model — install the provider you want:
+# nae works with ANY LangChain chat model — install the provider you want:
 pip install langchain-openai python-dotenv   # OpenAI (used in the examples below)
 pip install langchain-anthropic              # Anthropic
 pip install langchain-google-genai           # Google
 ```
 
 Nodes take the model via `llm=` — pass any LangChain `BaseChatModel`. (A
-`pttai[openai]` extra exists as a shortcut for `langchain-openai` +
+`nae[openai]` extra exists as a shortcut for `langchain-openai` +
 `python-dotenv`, but it's convenience only, not a requirement.) Note:
 `reasoning_effort` and structured-output routing are tuned to OpenAI gpt-5.x
 semantics; core wiring, the tool-call loop, and routing are otherwise
@@ -155,7 +155,7 @@ provider-neutral.
 Or from source (for development):
 
 ```bash
-git clone https://github.com/TeeratP/pttai && cd pttai
+git clone https://github.com/TeeratP/nae && cd nae
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[openai,dev]"
 ```
@@ -173,7 +173,7 @@ out to three rival personas — optimist / skeptic / pragmatist — who argue
 ruling. The whole thing is the one wiring line at the bottom.
 
 ```python
-from pttai import AgentNode, AgenticGraph, fanout
+from nae import AgentNode, AgenticGraph, fanout
 from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(model="gpt-5.4-nano")   # swap for any LangChain chat model — see Install above
@@ -201,7 +201,7 @@ print(out["token"])                       # per-model token totals
 ```
 
 Runs from a single paste with only `OPENAI_API_KEY` set. Full version:
-[`examples/panel.py`](https://github.com/TeeratP/pttai/blob/main/examples/panel.py).
+[`examples/panel.py`](https://github.com/TeeratP/nae/blob/main/examples/panel.py).
 
 The graph also renders itself. In a notebook, end a cell with the graph — or
 call `display(panel)` — and you get the compiled DAG:
@@ -211,7 +211,7 @@ from IPython.display import display
 display(panel)    # or make `panel` the last expression of the cell
 ```
 
-![pttai renders your graph](https://raw.githubusercontent.com/TeeratP/pttai/main/docs/assets/graph-example.png)
+![nae renders your graph](https://raw.githubusercontent.com/TeeratP/nae/main/docs/assets/graph-example.png)
 
 ## What you get
 
@@ -255,7 +255,7 @@ pragmatist  AgentNode  messages  log,messages  log,messages,token
 ```
 
 The offline, no-API-key tour of parallelism, map-reduce, typed IO, and
-validation lives in [`examples/parallel_usage.py`](https://github.com/TeeratP/pttai/blob/main/examples/parallel_usage.py).
+validation lives in [`examples/parallel_usage.py`](https://github.com/TeeratP/nae/blob/main/examples/parallel_usage.py).
 
 ## vs. LangChain's Functional API
 
@@ -263,14 +263,14 @@ The closest comparison isn't raw graphs — it's LangChain's own Functional API
 (`@entrypoint` / `@task`), which also lets you skip explicit graph wiring. The
 difference is **visibility of control flow**:
 
-| | Functional API (`@entrypoint`/`@task`) | pttai |
+| | Functional API (`@entrypoint`/`@task`) | nae |
 |---|---|---|
 | Control flow | hidden in plain Python (loops, `if`, `await`) | an explicit, declarative DAG |
 | Fan-out / join | you orchestrate futures by hand | `fanout(...)` / `.map("field")`, one line |
 | Inspect the topology | run it and trace | `summary()` prints the static DAG |
 | Catch dataflow bugs | at runtime | at **compile time**, before any invoke |
 
-Both are concise. pttai's edge is that the topology is *inspectable and
+Both are concise. nae's edge is that the topology is *inspectable and
 validatable* — you can see the fan-out/join/map-reduce structure, render it, and
 have the compiler reject read-before-written bugs — whereas the Functional API
 hides the graph inside ordinary Python, so you lose the auditable DAG.
@@ -281,7 +281,7 @@ hides the graph inside ordinary Python, so you lose the auditable DAG.
 so `a > b > c` builds a linked structure in memory. `AgenticGraph(...)` walks
 that structure **once** at construction, emits the real LangGraph
 `add_node`/`add_edge`/`Send` calls, runs the dataflow validator, and `compile()`s
-to a native `StateGraph` — which `AgenticGraph` subclasses. So pttai is a
+to a native `StateGraph` — which `AgenticGraph` subclasses. So nae is a
 build-time convenience that disappears at runtime: the execution underneath is
 plain LangGraph (streaming, async, durability, checkpointers, LangSmith all
 included), and you can drop down to it anytime. No lock-in.
@@ -296,7 +296,7 @@ predicate — no model call), and **`HumanNode`** (resumable human-in-the-loop
 via `interrupt()`). The LLM-backed nodes share an `LLMNode` base; all take
 `cache_ttl`/`retry`, and an `AgenticGraph` can itself be embedded as a node.
 Each type with a runnable snippet:
-**[Node types](https://teeratp.github.io/pttai/node-types/)**.
+**[Node types](https://teeratp.github.io/nae/node-types/)**.
 
 ## State
 
@@ -304,7 +304,7 @@ Each type with a runnable snippet:
 (`add_messages`), a `log` trace (`operator.add`), per-model `token` totals, and
 a private `decision_{name}` key per router. Nodes return deltas, never mutate
 state in place, and reducers merge them — the full channel model is in
-**[State & observability](https://teeratp.github.io/pttai/state/)**.
+**[State & observability](https://teeratp.github.io/nae/state/)**.
 
 ### Free observability: the `token` and `log` channels
 
@@ -322,7 +322,7 @@ print(out["log"])     # ['frame:...', 'optimist:...', ...] — one line per node
 call, and parallel branch, deep-summed per model. In raw LangGraph you'd
 hand-wire a usage callback plus a custom summing channel to get this.
 Side-by-side vs. raw LangGraph:
-[`examples/basics/13_token_and_log.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/13_token_and_log.py).
+[`examples/basics/13_token_and_log.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/13_token_and_log.py).
 
 ## Limitations
 
@@ -356,4 +356,4 @@ node caching/retry/`reasoning_effort`/`durability`.
 
 ## License
 
-MIT — see [LICENSE](https://github.com/TeeratP/pttai/blob/main/LICENSE).
+MIT — see [LICENSE](https://github.com/TeeratP/nae/blob/main/LICENSE).

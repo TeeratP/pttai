@@ -1,6 +1,6 @@
 # Node types
 
-pttai ships four node types. All are callables (`__call__(state) -> delta`)
+nae ships four node types. All are callables (`__call__(state) -> delta`)
 invoked by LangGraph with the shared state; each returns **only the keys it
 updates** and never mutates state in place, which is what keeps checkpointing,
 parallel-branch merges, and subgraph composition correct.
@@ -12,7 +12,7 @@ LLM-backed node type.
 
 !!! note
     The snippets below assume `llm = ...` is any LangChain chat model, plus
-    `from pttai import AgentNode, DecisionNode, ConditionNode, HumanNode,
+    `from nae import AgentNode, DecisionNode, ConditionNode, HumanNode,
     AgenticGraph`. Full signatures live in the API reference, linked from each
     section.
 
@@ -130,7 +130,7 @@ config — without them there is nowhere to store the paused run.
   `InMemoryCache`), and `retry` attaches a `RetryPolicy` for exceptions.
 - **Graphs compose as nodes.** An `AgenticGraph` can be wired inside a larger
   one (`graph_0 > graph_1`) — see
-  [`examples/basics/10_graph_composition.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/10_graph_composition.py).
+  [`examples/basics/10_graph_composition.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/10_graph_composition.py).
 
 ## RAG tools
 
@@ -139,7 +139,7 @@ config — without them there is nowhere to store the paused run.
 the `[rag]` extra, `ChromaRAG` bundles a Chroma store behind the same
 interface. See the [RAG tools API](api/advanced/tools.md) and the end-to-end
 pipeline in
-[`examples/nlp/rag_qa.py`](https://github.com/TeeratP/pttai/blob/main/examples/nlp/rag_qa.py).
+[`examples/nlp/rag_qa.py`](https://github.com/TeeratP/nae/blob/main/examples/nlp/rag_qa.py).
 
 See every node in action, one file at a time, in the [Examples](examples.md)
 gallery.

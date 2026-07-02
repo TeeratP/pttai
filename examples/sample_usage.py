@@ -31,9 +31,9 @@ from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 
-from pttai.graph import AgenticGraph
-from pttai.nodes import AgentNode, DecisionNode
-from pttai.state import AgenticState
+from nae.graph import AgenticGraph
+from nae.nodes import AgentNode, DecisionNode
+from nae.state import AgenticState
 
 
 def random_number(maximum: int) -> int:

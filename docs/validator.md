@@ -1,6 +1,6 @@
 # The compile-time validator
 
-Every node in a pttai graph declares the state keys it reads and writes. That
+Every node in a nae graph declares the state keys it reads and writes. That
 gives `AgenticGraph` enough information to run a static **dataflow analysis**
 over the wired nodes at construction, *before compiling* — so a node that reads
 a key nothing produces, or a decision branch left unwired, fails the build at
@@ -57,7 +57,7 @@ recorded during the build. It computes, per node:
 exclusive `DecisionNode` choice-group, so the analysis understands your
 branching. On top of that dataflow it runs a handful of structural checks.
 
-Each bug class below shows a minimal snippet and the **verbatim** message pttai
+Each bug class below shows a minimal snippet and the **verbatim** message nae
 raises. Classes 1–4 and 7 are validator findings (`GraphValidationError`);
 classes 5 and 6 are caught earlier, while the graph is being wired, as plain
 **`ValueError`s** — you get them even with `validate=False`.
@@ -68,7 +68,7 @@ A node reads a state key that no upstream node has produced yet — the producer
 runs downstream or on a sibling branch. This is the classic ordering bug.
 
 ```python
-from pttai import AgentNode, AgenticGraph
+from nae import AgentNode, AgenticGraph
 
 # `writer` produces `summary`; `reader` needs it — but reader runs FIRST.
 reader = AgentNode(name="reader", llm=llm, reads=["summary"],
@@ -80,7 +80,7 @@ AgenticGraph(start_node=reader, end_nodes={writer})
 ```
 
 ```
-pttai.validation.GraphValidationError: AgenticGraph 'graph': 1 error(s), 0 warning(s)
+nae.validation.GraphValidationError: AgenticGraph 'graph': 1 error(s), 0 warning(s)
   [error] reader: reads computed key 'summary' but no upstream node produces it before this node (produced by: ['writer'], none of which are upstream); available keys here: ['log', 'messages', 'token']
 ```
 
@@ -94,7 +94,7 @@ isn't an input), the message instead points you to `inputs=`:
 ### 2. Undeclared key (typo)
 
 A node reads or writes a key the state schema doesn't declare. LangGraph would
-**silently** read nothing / drop the write; pttai catches it.
+**silently** read nothing / drop the write; nae catches it.
 
 Read side:
 
@@ -115,13 +115,13 @@ an explicit `state=` schema that omits the key.)
 ### 3. Concurrent write with no reducer
 
 Two nodes on parallel branches (`fanout`) write the same plain key. At runtime
-LangGraph raises `InvalidUpdateError`; pttai catches it at build time.
+LangGraph raises `InvalidUpdateError`; nae catches it at build time.
 
 ```python
 from typing import Annotated, TypedDict
 import operator
 from langgraph.graph.message import add_messages
-from pttai import AgentNode, AgenticGraph, fanout
+from nae import AgentNode, AgenticGraph, fanout
 
 class S(TypedDict):
     messages: Annotated[list, add_messages]
@@ -150,7 +150,7 @@ A `DecisionNode` (or `ConditionNode`) declares a choice you never wired to a
 handler. The model could route to a branch that goes nowhere.
 
 ```python
-from pttai import DecisionNode, AgentNode, AgenticGraph
+from nae import DecisionNode, AgentNode, AgenticGraph
 
 decide = DecisionNode(name="decide", llm=llm,
                       node_prompt="Is the sentiment positive or negative?",

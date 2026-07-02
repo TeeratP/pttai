@@ -6,15 +6,15 @@ predicate over state instead of an LLM call — free, deterministic, no prompt.
 """
 
 from typing import Callable, List, Optional
-from pttai.node import Node
-from pttai.nodes.decision_node import RouterNode
+from nae.node import Node
+from nae.nodes.decision_node import RouterNode
 
 
 class ConditionNode(RouterNode, Node):
     """Routing by a Python predicate over state — no LLM, no prompt, free and
     deterministic. `condition(state)` must return one of `choices`.
 
-    The code sibling of [DecisionNode][pttai.nodes.decision_node.DecisionNode]:
+    The code sibling of [DecisionNode][nae.nodes.decision_node.DecisionNode]:
     reach for it whenever the branch is decidable in Python (a length check, a
     loop counter, a flag another node wrote) — you get zero-cost, reproducible
     routing with no model call. Wire it by indexing a choice, exactly like a
@@ -23,7 +23,7 @@ class ConditionNode(RouterNode, Node):
 
     Examples:
         ```python
-        from pttai import AgentNode, ConditionNode, AgenticGraph
+        from nae import AgentNode, ConditionNode, AgenticGraph
 
         def is_short(state):
             return "short" if len(state["messages"][-1].content) < 20 else "long"
@@ -57,8 +57,8 @@ class ConditionNode(RouterNode, Node):
             reads: State keys this node reads — default `[]` (the callable
                 reads state directly). Pass `reads=[...]` so the validator can
                 check those keys are available where this node runs.
-            cache_ttl: see [Node][pttai.node.Node] — node-level result caching.
-            retry: see [Node][pttai.node.Node] — node-level retry on exception.
+            cache_ttl: see [Node][nae.node.Node] — node-level result caching.
+            retry: see [Node][nae.node.Node] — node-level retry on exception.
 
         Raises:
             AssertionError: If condition or choices is empty

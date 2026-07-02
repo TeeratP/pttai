@@ -1,4 +1,4 @@
-"""LLM-driven routing nodes for pttai.
+"""LLM-driven routing nodes for nae.
 
 Defines the routing machinery shared by every branching node: `Choice` (a named
 branch you wire with `decision["label"] > handler`), the `RouterNode` mixin
@@ -9,9 +9,9 @@ operators), and `DecisionNode` — the LLM router that returns a constrained
 """
 
 from typing import Any, List, Literal, Optional
-from pttai.node import Node, Branch, Spread
-from pttai.nodes.llm_node import LLMNode
-from pttai.nodes._fields import partition_reads
+from nae.node import Node, Branch, Spread
+from nae.nodes.llm_node import LLMNode
+from nae.nodes._fields import partition_reads
 from langchain_core.messages import SystemMessage
 from pydantic import BaseModel
 
@@ -156,7 +156,7 @@ class DecisionNode(RouterNode, LLMNode):
 
     Examples:
         ```python
-        from pttai import AgentNode, DecisionNode, AgenticGraph
+        from nae import AgentNode, DecisionNode, AgenticGraph
 
         classify = DecisionNode(
             llm=llm,
@@ -201,8 +201,8 @@ class DecisionNode(RouterNode, LLMNode):
                 generalization of input_field). Reads are dispatched by VALUE
                 type just like AgentNode — message lists become history, scalars
                 are interpolated into node_prompt. Use reads OR input_field.
-            cache_ttl: see [Node][pttai.node.Node] — node-level result caching.
-            retry: see [Node][pttai.node.Node] — node-level retry on exception.
+            cache_ttl: see [Node][nae.node.Node] — node-level result caching.
+            retry: see [Node][nae.node.Node] — node-level retry on exception.
 
         Raises:
             AssertionError: If node_prompt or choices is empty

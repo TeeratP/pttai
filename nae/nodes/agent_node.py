@@ -1,4 +1,4 @@
-"""The `AgentNode` — pttai's workhorse LLM node.
+"""The `AgentNode` — nae's workhorse LLM node.
 
 Prepends `node_prompt` as a `SystemMessage` to the message history, calls the
 model, and returns a state delta. On top of the plain call it wraps two modes
@@ -9,8 +9,8 @@ raw LangGraph makes you wire by hand) and structured output (`writes=[...]` /
 the conversation.
 """
 from typing import Any, Optional, List, Dict, Union
-from pttai.nodes.llm_node import LLMNode, _usage_delta, _is_openai
-from pttai.nodes._fields import partition_reads
+from nae.nodes.llm_node import LLMNode, _usage_delta, _is_openai
+from nae.nodes._fields import partition_reads
 from langchain_core.messages import SystemMessage
 from pydantic import create_model
 
@@ -38,7 +38,7 @@ class AgentNode(LLMNode):
 
     Examples:
         ```python
-        from pttai import AgentNode, AgenticGraph
+        from nae import AgentNode, AgenticGraph
 
         def add(a: int, b: int) -> int:      return a + b
         def multiply(a: int, b: int) -> int: return a * b
@@ -101,8 +101,8 @@ class AgentNode(LLMNode):
                 (e.g. "low"/"medium"/"high" on gpt-5.x). Passed as a per-call
                 kwarg to the LLM. (DecisionNode does not expose this — reasoning
                 effort conflicts with structured output on current OpenAI models.)
-            cache_ttl: see [Node][pttai.node.Node] — node-level result caching.
-            retry: see [Node][pttai.node.Node] — node-level retry on exception.
+            cache_ttl: see [Node][nae.node.Node] — node-level result caching.
+            retry: see [Node][nae.node.Node] — node-level retry on exception.
         """
         super().__init__(name=name, llm=llm, node_prompt=node_prompt, tools=None,
                          max_tool_iterations=max_tool_iterations,

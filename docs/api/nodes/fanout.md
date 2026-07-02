@@ -1,1 +1,1 @@
-::: pttai.fanout
+::: nae.fanout

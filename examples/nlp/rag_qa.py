@@ -4,7 +4,7 @@ The flagship NLP pipeline: a retriever tool searches a tiny knowledge base and
 the ``AgentNode`` runs the retrieve -> answer loop internally (call model, run
 the retriever tool, feed the passages back, answer grounded in them).
 
-We use pttai's real ``make_retriever_tool`` (from ``pttai.tools``) wrapping a
+We use nae's real ``make_retriever_tool`` (from ``nae.tools``) wrapping a
 tiny in-memory keyword retriever. ``ChromaRAG`` is the batteries-included path,
 but ``langchain_chroma`` is an optional extra that is not installed in the
 offline test env, so the retriever here is a dependency-free stand-in exposing
@@ -18,7 +18,7 @@ import os
 import sys
 
 _EX = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # examples/
-sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import pttai` works from a bare clone
+sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import nae` works from a bare clone
 sys.path.insert(0, _EX)  # -> `from _llm import get_llm`
 from _llm import get_llm
 
@@ -26,7 +26,7 @@ from langchain_core.documents import Document
 
 # A tiny knowledge base. In a real pipeline these would be chunks in a vector DB.
 CORPUS = [
-    "The pttai library compiles a `>`-wired DSL down to a native LangGraph StateGraph.",
+    "The nae library compiles a `>`-wired DSL down to a native LangGraph StateGraph.",
     "An AgentNode runs the model<->tool loop internally until the model returns a final answer.",
     "A DecisionNode uses constrained structured output so the model must return one of its choices.",
     "The build-time validator statically checks that every state key a node reads is produced upstream.",
@@ -51,14 +51,14 @@ class KeywordRetriever:
         return [Document(page_content=d) for d in ranked[: self.k]]
 
 
-def pttai_version() -> str:
-    from pttai import AgentNode, AgenticGraph
-    from pttai.tools import make_retriever_tool
+def nae_version() -> str:
+    from nae import AgentNode, AgenticGraph
+    from nae.tools import make_retriever_tool
 
     search = make_retriever_tool(
         KeywordRetriever(CORPUS),
         name="search_docs",
-        description="Search the pttai knowledge base for passages relevant to the question.",
+        description="Search the nae knowledge base for passages relevant to the question.",
     )
     answer = AgentNode(
         llm=get_llm(),
@@ -74,11 +74,11 @@ def langgraph_version() -> str:
     from langgraph.graph import StateGraph, MessagesState, START
     from langgraph.prebuilt import ToolNode, tools_condition
 
-    # The retriever tool is the same StructuredTool; pttai's make_retriever_tool
+    # The retriever tool is the same StructuredTool; nae's make_retriever_tool
     # is a thin wrapper, so raw LangGraph binds it exactly the same way.
-    from pttai.tools import make_retriever_tool
+    from nae.tools import make_retriever_tool
     search = make_retriever_tool(KeywordRetriever(CORPUS), name="search_docs",
-                                 description="Search the pttai knowledge base.")
+                                 description="Search the nae knowledge base.")
 
     from langchain_core.messages import SystemMessage
     llm_with_tools = get_llm().bind_tools([search])
@@ -100,5 +100,5 @@ def langgraph_version() -> str:
 
 
 if __name__ == "__main__":
-    print("[pttai]     ", pttai_version())
+    print("[nae]     ", nae_version())
     print("[langgraph] ", langgraph_version())

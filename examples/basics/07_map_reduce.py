@@ -11,13 +11,13 @@ import os
 import sys
 
 _EX = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # examples/
-sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import pttai` works from a bare clone
+sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import nae` works from a bare clone
 sys.path.insert(0, _EX)  # -> `from _llm import get_llm`
 from _llm import get_llm
 
 
-def pttai_version() -> list:
-    from pttai import AgentNode, AgenticGraph
+def nae_version() -> list:
+    from nae import AgentNode, AgenticGraph
 
     dispatch = AgentNode(llm=get_llm(), node_prompt="Kick off the summaries.")
     summarize = AgentNode(llm=get_llm(), node_prompt="Summarize this document.")
@@ -70,5 +70,5 @@ def langgraph_version() -> list:
 
 
 if __name__ == "__main__":
-    print("[pttai]      total messages after map+reduce:", len(pttai_version()))
+    print("[nae]      total messages after map+reduce:", len(nae_version()))
     print("[langgraph]  total messages after map+reduce:", len(langgraph_version()))

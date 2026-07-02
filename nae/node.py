@@ -28,8 +28,8 @@ def _infer_name():
     back to build-time numbering). Never raises."""
     try:
         frame = sys._getframe(1)
-        # climb past pttai's own __init__ frames to the user's call site
-        while frame is not None and frame.f_globals.get("__name__", "").startswith("pttai"):
+        # climb past nae's own __init__ frames to the user's call site
+        while frame is not None and frame.f_globals.get("__name__", "").startswith("nae"):
             frame = frame.f_back
         if frame is None:
             return None
@@ -247,7 +247,7 @@ def fanout(*tails):
 
     Examples:
         ```python
-        from pttai import AgentNode, AgenticGraph, fanout
+        from nae import AgentNode, AgenticGraph, fanout
 
         start = AgentNode(llm=llm, node_prompt="Restate the task.")
         pros = AgentNode(llm=llm, node_prompt="List the pros.")

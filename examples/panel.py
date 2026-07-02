@@ -3,7 +3,7 @@
 A question goes to `frame` (which sharpens it into one concrete decision), fans
 out to three personas — optimist / skeptic / pragmatist — who argue
 CONCURRENTLY, then `verdict` weighs every argument into a one-paragraph ruling.
-Shows pttai's differentiators in ~20 lines: the `>` wiring, `fanout(...)`
+Shows nae's differentiators in ~20 lines: the `>` wiring, `fanout(...)`
 parallel branches with a deferred join, schema-free state, `summary()`, and
 per-model token totals from `out["token"]`.
 
@@ -14,7 +14,7 @@ Needs: OPENAI_API_KEY  (in your environment or a .env file)
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
-from pttai import AgentNode, AgenticGraph, fanout
+from nae import AgentNode, AgenticGraph, fanout
 
 load_dotenv()
 llm = ChatOpenAI(model="gpt-5.4-nano")

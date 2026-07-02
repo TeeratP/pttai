@@ -22,8 +22,8 @@ from typing import Annotated, TypedDict
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage
 from langgraph.graph.message import add_messages
 
-from pttai import AgentNode, AgenticGraph, AgenticState, fanout
-from pttai.validation import GraphValidationError
+from nae import AgentNode, AgenticGraph, AgenticState, fanout
+from nae.validation import GraphValidationError
 
 
 # --- a minimal inline fake LLM so the script runs without an API key ---------

@@ -2,9 +2,9 @@
 
 import pytest
 
-from pttai.graph import AgenticGraph
-from pttai.nodes import AgentNode, DecisionNode
-from pttai.state import AgenticState
+from nae.graph import AgenticGraph
+from nae.nodes import AgentNode, DecisionNode
+from nae.state import AgenticState
 
 
 def _edges(graph):

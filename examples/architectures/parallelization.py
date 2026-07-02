@@ -2,7 +2,7 @@
 
 A question is framed once, fanned out to three rival personas that argue IN
 PARALLEL, then a chair weighs all three into one verdict. This is the pattern in
-``examples/panel.py``, folded here into the pttai-vs-LangGraph format.
+``examples/panel.py``, folded here into the nae-vs-LangGraph format.
 
     ┌▶ [ optimist ]  ─┐
     [ frame ] ─┼▶ [ skeptic ]   ─┼▶ [ verdict ] ─▶ out
@@ -15,7 +15,7 @@ import os
 import sys
 
 _EX = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # examples/
-sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import pttai` works from a bare clone
+sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import nae` works from a bare clone
 sys.path.insert(0, _EX)  # -> `from _llm import get_llm`
 from _llm import get_llm
 
@@ -23,8 +23,8 @@ QUESTION = ("Should an early-stage SaaS startup rewrite its monolith into "
             "microservices to win enterprise customers?")
 
 
-def pttai_version() -> str:
-    from pttai import AgentNode, AgenticGraph, fanout
+def nae_version() -> str:
+    from nae import AgentNode, AgenticGraph, fanout
 
     frame = AgentNode(llm=get_llm(), node_prompt="Restate the question as ONE concrete decision.")
     optimist = AgentNode(llm=get_llm(), node_prompt="Argue FOR the bold move. Two sentences.")
@@ -70,5 +70,5 @@ def langgraph_version() -> str:
 
 
 if __name__ == "__main__":
-    print("[pttai]     ", pttai_version())
+    print("[nae]     ", nae_version())
     print("[langgraph] ", langgraph_version())

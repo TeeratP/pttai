@@ -1,6 +1,6 @@
-# pttai basics — one feature per file
+# nae basics — one feature per file
 
-Each file shows the **pttai version first**, then a runnable
+Each file shows the **nae version first**, then a runnable
 `# --- equivalent in raw LangGraph ---` block, so you can see the same behavior
 built both ways side by side.
 

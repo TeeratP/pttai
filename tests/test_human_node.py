@@ -4,8 +4,8 @@
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
-from pttai.graph import AgenticGraph
-from pttai.nodes import AgentNode, ConditionNode, HumanNode
+from nae.graph import AgenticGraph
+from nae.nodes import AgentNode, ConditionNode, HumanNode
 
 
 def test_into_writes_raw_value_to_key(t):

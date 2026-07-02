@@ -1,12 +1,12 @@
 # Everything the demo needs so the one-command run works:
 #   pip install -r demo/requirements.txt && python demo/app.py
-# Run locally from a clone (pttai resolves from source). On a Hugging Face
-# Space, uncomment the pttai line below so pttai installs from git — nothing
+# Run locally from a clone (nae resolves from source). On a Hugging Face
+# Space, uncomment the nae line below so nae installs from git — nothing
 # else from the repo is needed (app.py vendors an offline get_llm fallback).
 gradio>=5,<6
 langgraph>=1,<2
 langchain-core>=1,<2
 pydantic>=2,<3
 
-# --- Hugging Face Space only: install pttai from git (uncomment on the Space) ---
-# pttai @ git+https://github.com/TeeratP/pttai.git
+# --- Hugging Face Space only: install nae from git (uncomment on the Space) ---
+# nae @ git+https://github.com/TeeratP/nae.git

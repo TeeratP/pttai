@@ -4,9 +4,9 @@ from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
-from pttai.graph import AgenticGraph
-from pttai.nodes import AgentNode, HumanNode
-from pttai.state import AgenticState
+from nae.graph import AgenticGraph
+from nae.nodes import AgentNode, HumanNode
+from nae.state import AgenticState
 
 
 def test_interrupt_then_resume(t):

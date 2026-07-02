@@ -1,8 +1,8 @@
-site_name: pttai
-site_description: Pythonic Topology Tools for AI — a declarative >-DSL over LangGraph with a build-time dataflow validator, compiled to native LangGraph.
-site_url: https://teeratp.github.io/pttai/
-repo_url: https://github.com/TeeratP/pttai
-repo_name: TeeratP/pttai
+site_name: nae
+site_description: "Nodes and Edges: a declarative DSL over LangGraph — a declarative >-DSL over LangGraph with a build-time dataflow validator, compiled to native LangGraph."
+site_url: https://teeratp.github.io/nae/
+repo_url: https://github.com/TeeratP/nae
+repo_name: TeeratP/nae
 
 theme:
   name: material

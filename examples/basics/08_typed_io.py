@@ -12,13 +12,13 @@ import os
 import sys
 
 _EX = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # examples/
-sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import pttai` works from a bare clone
+sys.path.insert(0, os.path.dirname(_EX))  # repo root -> `import nae` works from a bare clone
 sys.path.insert(0, _EX)  # -> `from _llm import get_llm`
 from _llm import get_llm
 
 
-def pttai_version() -> int:
-    from pttai import AgentNode, AgenticGraph
+def nae_version() -> int:
+    from nae import AgentNode, AgenticGraph
 
     rate = AgentNode(
         llm=get_llm(),
@@ -65,7 +65,7 @@ def langgraph_version() -> int:
 
 
 if __name__ == "__main__":
-    s1 = pttai_version()
+    s1 = nae_version()
     s2 = langgraph_version()
-    print(f"[pttai]      score={s1!r} (type {type(s1).__name__})")
+    print(f"[nae]      score={s1!r} (type {type(s1).__name__})")
     print(f"[langgraph]  score={s2!r} (type {type(s2).__name__})")

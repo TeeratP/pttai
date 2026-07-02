@@ -1,4 +1,4 @@
-# pttai vs. raw LangGraph
+# nae vs. raw LangGraph
 
 The same tool-using agent — an LLM that calls `add` / `multiply` in a loop until
 it has the answer. Ask it *"What is 21 + 21, then times 3?"* and both print **126**.
@@ -7,10 +7,10 @@ it has the answer. Ask it *"What is 21 + 21, then times 3?"* and both print **12
 
 ---
 
-### pttai
+### nae
 
 ```python
-from pttai import AgentNode, AgenticGraph
+from nae import AgentNode, AgenticGraph
 
 agent = AgentNode(name="agent", llm=llm, tools=[add, multiply])
 graph = AgenticGraph(start_node=agent, end_nodes={agent})   # schema-free
@@ -42,7 +42,7 @@ graph.invoke({"messages": [{"role": "user", "content": "What is 21 + 21, then ti
 
 ---
 
-**Identical behavior** — same tools, same loop, same answer (126). pttai folds
+**Identical behavior** — same tools, same loop, same answer (126). nae folds
 the model node, the `ToolNode`, the `tools_condition` edge and the loop-back edge
 into **one `AgentNode`** with a built-in tool-call loop, and infers the state
 schema for you. Runnable both ways: [`vs_langgraph.py`](./vs_langgraph.py).

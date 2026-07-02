@@ -1,4 +1,4 @@
-"""pttai vs. raw LangGraph — the same tool-using agent, side by side.
+"""nae vs. raw LangGraph — the same tool-using agent, side by side.
 
 Both implementations below build the *identical* agent: an LLM that can call two
 tools (`add`, `multiply`) in a loop until it has a final answer, then return it.
@@ -6,7 +6,7 @@ Ask it "What is 21 + 21, then times 3?" and both print **126**.
 
 The only difference is how much graph plumbing you write:
 
-  * `pttai_version()`    — one `AgentNode` with a built-in tool-call loop.
+  * `nae_version()`    — one `AgentNode` with a built-in tool-call loop.
   * `langgraph_version()` — the honest, idiomatic raw-LangGraph equivalent:
     `StateGraph(MessagesState)` + a model node + a `ToolNode` +
     `tools_condition` + a loop-back edge, then `compile()`.
@@ -15,7 +15,7 @@ Run it::
 
     export OPENAI_API_KEY=sk-...
     python examples/vs_langgraph.py            # runs both
-    python examples/vs_langgraph.py pttai      # runs only the pttai version
+    python examples/vs_langgraph.py nae      # runs only the nae version
     python examples/vs_langgraph.py langgraph  # runs only the raw-LangGraph version
 
 (Needs OPENAI_API_KEY — both versions make real model calls.)
@@ -24,7 +24,7 @@ Honest line counts of the graph-building code (the part that differs; shared
 tool defs, the LLM instantiation, the invoke/print, blanks and comments are not
 counted — see the comment block at the bottom of this file):
 
-    pttai:         3 lines
+    nae:         3 lines
     raw LangGraph: 10 lines   (plus one extra import line)
 """
 
@@ -50,11 +50,11 @@ def multiply(a: int, b: int) -> int:
     return a * b
 
 
-# --- the pttai way ----------------------------------------------------------
+# --- the nae way ----------------------------------------------------------
 
-def pttai_version() -> str:
-    """A tool-using agent in pttai. The whole model<->tools loop is one node."""
-    from pttai import AgentNode, AgenticGraph
+def nae_version() -> str:
+    """A tool-using agent in nae. The whole model<->tools loop is one node."""
+    from nae import AgentNode, AgenticGraph
 
     llm = ChatOpenAI(model="gpt-5.4-nano")
 
@@ -96,8 +96,8 @@ def langgraph_version() -> str:
 
 def main() -> None:
     which = sys.argv[1] if len(sys.argv) > 1 else "both"
-    if which in ("pttai", "both"):
-        print(f"[pttai]      {QUESTION} -> {pttai_version()}")
+    if which in ("nae", "both"):
+        print(f"[nae]      {QUESTION} -> {nae_version()}")
     if which in ("langgraph", "both"):
         print(f"[langgraph]  {QUESTION} -> {langgraph_version()}")
 
@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
 # -- Honest line count (graph-building code only) ---------------------------
 #
-# pttai_version() graph code — 3 lines:
+# nae_version() graph code — 3 lines:
 #     agent = AgentNode(name="agent", llm=llm, tools=[add, multiply])
 #     graph = AgenticGraph(start_node=agent, end_nodes={agent})
 #
@@ -124,6 +124,6 @@ if __name__ == "__main__":
 #     builder.add_edge("tools", "call_model")
 #     graph = builder.compile()
 #
-# Same agent, same answer (126). pttai folds the model node, the ToolNode, the
+# Same agent, same answer (126). nae folds the model node, the ToolNode, the
 # conditional edge and the loop-back edge into one AgentNode with an internal
 # tool-call loop, and infers the state schema (MessagesState) for you.

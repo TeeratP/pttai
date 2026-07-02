@@ -11,10 +11,10 @@ an unknown invoke key is a clear error rather than a silent drop.
 import pytest
 from langchain_core.messages import HumanMessage
 
-from pttai.graph import AgenticGraph
-from pttai.nodes import AgentNode
-from pttai.state import AgenticState
-from pttai.validation import GraphValidationError, schema_keys
+from nae.graph import AgenticGraph
+from nae.nodes import AgentNode
+from nae.state import AgenticState
+from nae.validation import GraphValidationError, schema_keys
 
 
 def _agent(t, name, content=None, **kw):

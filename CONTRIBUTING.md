@@ -1,6 +1,6 @@
-# Contributing to pttai
+# Contributing to nae
 
-Thanks for your interest in contributing! pttai is a thin declarative layer over
+Thanks for your interest in contributing! nae is a thin declarative layer over
 [LangGraph](https://langchain-ai.github.io/langgraph/). This guide covers how to
 get set up, run the tests, and submit a change.
 
@@ -9,7 +9,7 @@ get set up, run the tests, and submit a change.
 Requires **Python ≥ 3.10**.
 
 ```bash
-git clone https://github.com/TeeratP/pttai && cd pttai
+git clone https://github.com/TeeratP/nae && cd nae
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"          # core + pytest
 ```
@@ -59,10 +59,10 @@ build).
 ## Code style
 
 - Python, targeting 3.10+. Match the surrounding code.
-- New node types subclass `Node` (`pttai/node.py`), implement
+- New node types subclass `Node` (`nae/node.py`), implement
   `__call__(state) -> delta` **returning only the keys they update** (never
   mutate `state` in place), set `self.child = None` in `__init__`, and register
-  in `pttai/nodes/__init__.py`. Add an `isinstance` branch in
+  in `nae/nodes/__init__.py`. Add an `isinstance` branch in
   `AgenticGraph._build_graph` only if the node needs non-default edge handling.
 - Keep the LLM injected per-node (`llm=`), and preserve the compile-time
   validator's checks — if you add a node that reads/writes state, teach

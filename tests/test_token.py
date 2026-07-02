@@ -2,10 +2,10 @@
 
 from langchain_core.messages import HumanMessage
 
-from pttai import fanout
-from pttai.graph import AgenticGraph
-from pttai.nodes import AgentNode
-from pttai.state import merge_token_usage
+from nae import fanout
+from nae.graph import AgenticGraph
+from nae.nodes import AgentNode
+from nae.state import merge_token_usage
 
 
 def usage(i, o):

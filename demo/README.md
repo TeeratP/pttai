@@ -1,5 +1,5 @@
 ---
-title: pttai playground
+title: nae playground
 emoji: 🕸️
 colorFrom: indigo
 colorTo: purple
@@ -8,12 +8,12 @@ sdk_version: 5.50.0
 app_file: app.py
 pinned: false
 license: mit
-short_description: Build a pttai >-DSL agent graph; see it compiled + validated.
+short_description: Build a nae >-DSL agent graph; see it compiled + validated.
 ---
 
-# pttai playground (interactive demo)
+# nae playground (interactive demo)
 
-A one-command playground for the pttai `>`-DSL. Paste a snippet, click
+A one-command playground for the nae `>`-DSL. Paste a snippet, click
 **Build + Validate**, and see:
 
 1. **The graph** — rendered as a mermaid node/edge diagram. On a clean build
@@ -39,7 +39,7 @@ pip install -r demo/requirements.txt
 python demo/app.py
 ```
 
-Then open the printed local URL. (Run from the repo so `import pttai` and the
+Then open the printed local URL. (Run from the repo so `import nae` and the
 offline `get_llm()` resolve from source.)
 
 ## Preset gallery
@@ -64,7 +64,7 @@ a locked-down user). Host accordingly.
 **What the sandbox does:**
 
 - **Input size cap** — snippets over 20 000 chars are rejected.
-- **AST allow-list** — imports are restricted to `pttai` / `typing` /
+- **AST allow-list** — imports are restricted to `nae` / `typing` /
   stdlib-safe roots. Escape-prone modules are deliberately kept *off* the
   list — notably `operator` and `functools`, because
   `operator.attrgetter('__globals__')` reaches a dunder attribute through a
@@ -96,21 +96,21 @@ This folder is a self-contained Gradio Space (`app_file: app.py`). To deploy:
 
 ```bash
 # 1. create a Gradio Space (once), then clone it
-huggingface-cli repo create pttai-playground --type space --space_sdk gradio
-git clone https://huggingface.co/spaces/<you>/pttai-playground && cd pttai-playground
+huggingface-cli repo create nae-playground --type space --space_sdk gradio
+git clone https://huggingface.co/spaces/<you>/nae-playground && cd nae-playground
 
 # 2. copy the demo files in (this README carries the Space metadata header)
-cp /path/to/pttai/demo/{app.py,requirements.txt,README.md} .
+cp /path/to/nae/demo/{app.py,requirements.txt,README.md} .
 
-# 3. uncomment the `pttai @ git+https://...` line in requirements.txt so the
-#    Space installs pttai (it isn't on the Space's Python path otherwise)
+# 3. uncomment the `nae @ git+https://...` line in requirements.txt so the
+#    Space installs nae (it isn't on the Space's Python path otherwise)
 
 # 4. push
-git add -A && git commit -m "pttai playground" && git push
+git add -A && git commit -m "nae playground" && git push
 ```
 
-`requirements.txt` ships with the `pttai` install line commented out (so a
-local clone resolves `pttai` from source instead); uncomment it before pushing
+`requirements.txt` ships with the `nae` install line commented out (so a
+local clone resolves `nae` from source instead); uncomment it before pushing
 to a Space. `app.py` falls back to a vendored offline `get_llm()` when
 `examples/_llm.py` isn't present, so the Space needs nothing else from the rest
 of the repo. mermaid.js loads from its CDN at runtime (Spaces have network).

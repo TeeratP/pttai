@@ -1,8 +1,8 @@
-"""pttai interactive demo — paste DSL, see the compiled LangGraph + validator.
+"""nae interactive demo — paste DSL, see the compiled LangGraph + validator.
 
-A Gradio playground for the pttai `>` DSL. You paste/edit a small pttai snippet;
+A Gradio playground for the nae `>` DSL. You paste/edit a small nae snippet;
 on submit it is ``exec``'d in a HARDENED namespace (see the "Sandbox" section
-below) that exposes the pttai public API plus ``get_llm()`` (an offline fake
+below) that exposes the nae public API plus ``get_llm()`` (an offline fake
 model, so no API key is needed), and two things are rendered:
 
   1. the **graph** as a mermaid node/edge diagram (Gradio ships mermaid.js, so
@@ -20,7 +20,7 @@ model, so no API key is needed), and two things are rendered:
      every issue.
 
 Sandbox (safe for public hosting): the pasted code is size-capped, AST-checked
-(imports are allow-listed to pttai/typing/stdlib-safe roots; dunder access and
+(imports are allow-listed to nae/typing/stdlib-safe roots; dunder access and
 dangerous builtins like ``eval``/``open``/``__import__(...)``/``getattr`` are
 rejected — and escape-prone modules like ``operator`` are kept off the import
 allow-list, since ``operator.attrgetter('__globals__')`` would otherwise reach
@@ -46,8 +46,8 @@ import sys
 import traceback
 import builtins as _builtins
 
-# Make `import pttai` (repo root) and `from _llm import get_llm` (examples/) work
-# regardless of the cwd the demo is launched from. Harmless when pttai is instead
+# Make `import nae` (repo root) and `from _llm import get_llm` (examples/) work
+# regardless of the cwd the demo is launched from. Harmless when nae is instead
 # pip-installed (e.g. on a Hugging Face Space): the inserted paths simply don't
 # resolve and the installed package is used.
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -113,9 +113,9 @@ EXEC_TIMEOUT_S = 8.0
 # see a dunder passed as a *string*. ``operator.attrgetter('__globals__')`` (or
 # ``methodcaller``/``functools`` equivalents) would reach ``__globals__`` ->
 # ``__builtins__`` -> ``__import__`` -> ``os`` through that string, bypassing the
-# check entirely. Building a pttai graph never needs them, so they stay out.
+# check entirely. Building a nae graph never needs them, so they stay out.
 _ALLOWED_IMPORT_ROOTS = {
-    "pttai", "typing", "typing_extensions", "dataclasses",
+    "nae", "typing", "typing_extensions", "dataclasses",
     "enum", "collections", "itertools", "math",
     "langchain_core", "pydantic", "_llm",
 }
@@ -155,7 +155,7 @@ def _safe_builtins() -> dict:
     d = {}
     for name in _SAFE_BUILTIN_NAMES:
         if name == "__name__":
-            d[name] = "__pttai_demo__"
+            d[name] = "__nae_demo__"
         elif hasattr(_builtins, name):
             d[name] = getattr(_builtins, name)
     return d
@@ -207,24 +207,24 @@ def _safe_exec(code: str, ns: dict) -> None:
     process it can ``terminate()``. This function only vets + executes."""
     _validate_ast(code)
     ns["__builtins__"] = _safe_builtins()
-    compiled = compile(code, "<pttai-demo>", "exec")
+    compiled = compile(code, "<nae-demo>", "exec")
     exec(compiled, ns)
 
 
 # --- exec namespace with a tracing AgenticGraph ----------------------------
 
 def _namespace():
-    """A fresh exec namespace exposing the pttai public API + ``get_llm()``.
+    """A fresh exec namespace exposing the nae public API + ``get_llm()``.
 
     ``AgenticGraph`` is wrapped so we capture ``start_node`` / ``end_nodes`` even
     when construction raises — that is what lets us draw the pre-compile wiring
     of a graph that never compiled."""
     import inspect
-    import pttai
-    from pttai.validation import GraphValidationError
+    import nae
+    from nae.validation import GraphValidationError
 
     captured: dict = {}
-    real_graph = pttai.AgenticGraph
+    real_graph = nae.AgenticGraph
     sig = inspect.signature(real_graph)
 
     def _tracing_graph(*args, **kwargs):
@@ -239,8 +239,8 @@ def _namespace():
         return real_graph(*args, **kwargs)
 
     ns = {"get_llm": _get_llm, "GraphValidationError": GraphValidationError}
-    for name in pttai.__all__:
-        ns[name] = getattr(pttai, name)
+    for name in nae.__all__:
+        ns[name] = getattr(nae, name)
     ns["AgenticGraph"] = _tracing_graph  # override with the tracing wrapper
     return ns, captured
 
@@ -276,8 +276,8 @@ def _wiring_mermaid(start, ends, offending) -> str:
     (``.children`` / ``RouterNode.choices`` / ``Spread``), painting every node
     whose name is in ``offending`` red. Works even when the graph never
     compiled — it reads the node objects directly, not a compiled graph."""
-    from pttai.node import Spread
-    from pttai.nodes.decision_node import RouterNode
+    from nae.node import Spread
+    from nae.nodes.decision_node import RouterNode
 
     offending = offending or set()
     end_seq = ends if isinstance(ends, (set, list, tuple)) else ([ends] if ends else [])
@@ -357,13 +357,13 @@ def _diagnose_failure(captured):
     prompt-placeholder mismatch, ...). When even the unvalidated build raises a
     structural error (dead-end node, duplicate names), the offending name is
     parsed from the error message."""
-    import pttai
+    import nae
 
     args = captured.get("args", ())
     kwargs = dict(captured.get("kwargs", {}))
     kwargs["validate"] = False
     try:
-        g = pttai.AgenticGraph(*args, **kwargs)
+        g = nae.AgenticGraph(*args, **kwargs)
         report = g.validate()
         offending = {i.node for i in report.errors}
         lines = [str(i) for i in report.issues] or ["(build failed with no structured issues)"]
@@ -404,8 +404,8 @@ def _build_and_report_impl(code: str):
     Runs inside the sandbox subprocess spawned by ``build_and_report``. Only its
     two return strings cross the process boundary (they are picklable; the live
     graph/LLM objects it builds are not)."""
-    from pttai import AgenticGraph as _RealAgenticGraph
-    from pttai.validation import GraphValidationError
+    from nae import AgenticGraph as _RealAgenticGraph
+    from nae.validation import GraphValidationError
 
     ns, captured = _namespace()
     try:
@@ -590,7 +590,7 @@ BROKEN_PRESETS = {
 # BROKEN on purpose: the same RAG pipeline, but `rerank` is wired BEFORE
 # `retrieve`. So `rerank` reads `passages` when nothing upstream has produced it
 # yet — a read-before-write, i.e. a guaranteed runtime KeyError in raw LangGraph.
-# pttai's validator FAILS the build here, before you ever invoke the graph.
+# nae's validator FAILS the build here, before you ever invoke the graph.
 retrieve = AgentNode(
     name="retrieve", llm=get_llm(),
     node_prompt="Retrieve passages relevant to the question: {question}",
@@ -699,10 +699,10 @@ MERMAID_HEAD = """
 def build_ui() -> "gr.Blocks":
     import gradio as gr
 
-    with gr.Blocks(title="pttai playground", head=MERMAID_HEAD) as demo:
+    with gr.Blocks(title="nae playground", head=MERMAID_HEAD) as demo:
         gr.Markdown(
-            "# pttai playground\n"
-            "Paste a pttai `>`-DSL snippet, then **Build + Validate**. You get the "
+            "# nae playground\n"
+            "Paste a nae `>`-DSL snippet, then **Build + Validate**. You get the "
             "**graph** diagram and the **build-time validator** output — "
             "read-before-write, dangling choices, concurrent writes, and duplicate "
             "names are caught *before* you ever invoke. When a build fails, the "
@@ -712,7 +712,7 @@ def build_ui() -> "gr.Blocks":
         with gr.Row():
             with gr.Column(scale=1):
                 code = gr.Code(value=WORKING_EXAMPLE, language="python",
-                               label="pttai DSL", lines=20)
+                               label="nae DSL", lines=20)
                 with gr.Row():
                     working_dd = gr.Dropdown(
                         choices=list(WORKING_PRESETS), label="Load a working preset",

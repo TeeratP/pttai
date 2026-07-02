@@ -8,9 +8,9 @@ import datetime
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
-from pttai import AgentNode, DecisionNode
-from pttai.node import _infer_name  # noqa: F401  (kept for clarity of what's exercised)
-from pttai.nodes._fields import partition_reads
+from nae import AgentNode, DecisionNode
+from nae.node import _infer_name  # noqa: F401  (kept for clarity of what's exercised)
+from nae.nodes._fields import partition_reads
 
 
 # --- fakes ---------------------------------------------------------------
@@ -135,7 +135,7 @@ def test_empty_read_with_literal_brace_prompt_does_not_raise():
 # --- Fix 12: HumanNode(n=k) with fewer than k messages -> no IndexError --
 
 def test_human_node_n_larger_than_history(monkeypatch):
-    import pttai.nodes.human_node as hn
+    import nae.nodes.human_node as hn
 
     monkeypatch.setattr(hn, "interrupt", lambda payload: "reply")
     node = hn.HumanNode(name="human", n=5)

@@ -6,9 +6,9 @@ import asyncio
 
 from langchain_core.messages import HumanMessage
 
-from pttai.graph import AgenticGraph, _normalize_input
-from pttai.nodes import AgentNode
-from pttai.state import AgenticState
+from nae.graph import AgenticGraph, _normalize_input
+from nae.nodes import AgentNode
+from nae.state import AgenticState
 
 
 def _single_node_graph(t, **node_kwargs):

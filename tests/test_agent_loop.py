@@ -3,7 +3,7 @@
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
-from pttai.nodes import AgentNode
+from nae.nodes import AgentNode
 
 
 def double(x: int) -> int:

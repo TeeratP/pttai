@@ -8,11 +8,11 @@ import pytest
 from langchain_core.messages import AnyMessage, HumanMessage
 from langgraph.graph.message import add_messages
 
-from pttai import fanout
-from pttai.graph import AgenticGraph
-from pttai.nodes import AgentNode, DecisionNode
-from pttai.state import AgenticState
-from pttai.validation import GraphValidationError, schema_keys
+from nae import fanout
+from nae.graph import AgenticGraph
+from nae.nodes import AgentNode, DecisionNode
+from nae.state import AgenticState
+from nae.validation import GraphValidationError, schema_keys
 
 
 class SummaryState(TypedDict):
@@ -239,7 +239,7 @@ def test_cyclic_loop_carried_read_before_write_caught(t):
     # back to gen via the gate. On first entry `summary` does not exist yet ->
     # runtime KeyError. This was a FALSE NEGATIVE before the back-edge fix
     # (the loop-back gate->gen edge wrongly made summary "available" at gen).
-    from pttai import ConditionNode
+    from nae import ConditionNode
 
     gen = _agent(t, "gen", reads=["messages", "summary"])   # loop-carried read
     writer = _agent(t, "writer", output_field="summary")     # sole producer, downstream
@@ -264,7 +264,7 @@ def test_cyclic_legitimate_reads_pass(t):
     #  - `evaluate` reads `draft`, produced by `gen` EARLIER in the same loop
     #    body via a forward edge (gen->evaluate).
     # Neither read depends on a back-edge, so both are available on entry.
-    from pttai import ConditionNode
+    from nae import ConditionNode
 
     pre = _agent(t, "pre", output_field="summary")               # before the loop
     gen = _agent(t, "gen", reads=["messages", "summary"],        # reads upstream key

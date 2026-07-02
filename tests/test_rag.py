@@ -2,8 +2,8 @@
 
 from langchain_core.messages import HumanMessage, ToolMessage
 
-from pttai.nodes import AgentNode
-from pttai.tools import make_retriever_tool
+from nae.nodes import AgentNode
+from nae.tools import make_retriever_tool
 
 
 class _Doc:

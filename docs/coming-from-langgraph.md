@@ -1,14 +1,14 @@
 # Coming from LangGraph
 
-pttai *is* LangGraph underneath — `AgenticGraph` subclasses `StateGraph` and
-compiles down to one. Nothing you know is wasted: pttai replaces the imperative
+nae *is* LangGraph underneath — `AgenticGraph` subclasses `StateGraph` and
+compiles down to one. Nothing you know is wasted: nae replaces the imperative
 `add_node`/`add_edge`/`add_conditional_edges`/`Send` calls with a declarative
 `>` layer and adds a build-time validator on top. This page maps the LangGraph
-API you already use to its pttai equivalent.
+API you already use to its nae equivalent.
 
 ## Mapping table
 
-| LangGraph | pttai | Notes |
+| LangGraph | nae | Notes |
 |---|---|---|
 | `builder.add_node("a", fn)` | `a = AgentNode(name="a", llm=llm, ...)` | The node is the object; you don't register it by name. |
 | `builder.add_edge("a", "b")` | `a > b` | `>` sets `a.children = [b]` and returns `b`, so `a > b > c` chains. No edge exists until `AgenticGraph(...)` walks the chain. |
@@ -18,7 +18,7 @@ API you already use to its pttai equivalent.
 | `add_conditional_edges("a", router_fn, [...])` | `DecisionNode` (LLM) or `ConditionNode` (predicate) | Index the choices to wire them: `decide["yes"] > handler`. |
 | `Send("worker", payload)` + a conditional edge | `dispatch > worker.map("field") > reduce` | `.map("field")` fans `worker` out over `state["field"]`, one `Send` per item, in parallel, then joins once at `reduce`. |
 | `ToolNode([tools])` + `tools_condition` + loop-back edge | `AgentNode(tools=[...])` | The tool-call loop (execute → append `ToolMessage` → re-invoke) is built into the node, capped by `max_tool_iterations`. |
-| `with_structured_output(Literal[...])` + a router fn | `DecisionNode(choices=[...])` | pttai builds the `Literal` structured output *and* the conditional edges; the model can only return a valid branch. |
+| `with_structured_output(Literal[...])` + a router fn | `DecisionNode(choices=[...])` | nae builds the `Literal` structured output *and* the conditional edges; the model can only return a valid branch. |
 | `builder.compile()` | happens inside `AgenticGraph(...)` | Construction walks the wiring, **runs the validator**, and compiles. |
 | a subgraph added via `add_node(compiled_subgraph)` | `graph_0 > graph_1` | An `AgenticGraph` composes as a node inside a larger `AgenticGraph`. |
 | `MessagesState` | `AgenticState` (the default) | `messages` + reduced `log` / `token` channels; routers auto-register a per-node `decision_{name}` key. Schema-free by default; nodes auto-register keys. |
@@ -53,7 +53,7 @@ structure **once** at construction, emits the real LangGraph
 `add_node`/`add_edge`/`Send` calls, runs the dataflow validator, and
 `compile()`s to a native `StateGraph` — which `AgenticGraph` subclasses.
 
-So pttai is a build-time convenience that disappears at runtime: the execution
+So nae is a build-time convenience that disappears at runtime: the execution
 underneath is plain LangGraph, and you can drop down to it anytime.
 
 ## vs. LangChain's Functional API
@@ -62,21 +62,21 @@ The closest comparison isn't raw graphs — it's LangChain's own Functional API
 (`@entrypoint` / `@task`), which also lets you skip explicit graph wiring. The
 difference is **visibility of control flow**:
 
-| | Functional API (`@entrypoint`/`@task`) | pttai |
+| | Functional API (`@entrypoint`/`@task`) | nae |
 |---|---|---|
 | Control flow | hidden in plain Python (loops, `if`, `await`) | an explicit, declarative DAG |
 | Fan-out / join | you orchestrate futures by hand | `fanout(...)` / `.map("field")`, one line |
 | Inspect the topology | run it and trace | `summary()` prints the static DAG |
 | Catch dataflow bugs | at runtime | at **compile time**, before any invoke |
 
-Both are concise. The trade pttai makes is keeping the topology *inspectable
+Both are concise. The trade nae makes is keeping the topology *inspectable
 and validatable*: you can see the fan-out/join/map-reduce structure, render it,
 and have the build reject read-before-written bugs — where the Functional API
 hides the graph inside ordinary Python.
 
 ## Why not raw LangGraph?
 
-You keep the entire LangGraph runtime either way — pttai disappears at compile
+You keep the entire LangGraph runtime either way — nae disappears at compile
 time. What it buys you: (1) less wiring boilerplate, (2) an inspectable
 topology (`summary()` prints the DAG, and the graph renders itself in a
 notebook), and (3) a [dataflow validator](validator.md) that rejects
@@ -85,5 +85,5 @@ no equivalent in raw LangGraph.
 
 A worked comparison — the same tool-using agent in 3 lines vs. 10 — is on the
 [home page](index.md#the-same-agent-both-ways), and every file in the
-[Examples](examples.md) galleries pairs the pttai version with a
+[Examples](examples.md) galleries pairs the nae version with a
 `# --- equivalent in raw LangGraph ---` block.

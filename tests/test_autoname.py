@@ -7,7 +7,7 @@ import io
 
 import pytest
 
-from pttai import AgenticGraph, AgentNode
+from nae import AgenticGraph, AgentNode
 
 
 def test_simple_inference(t):

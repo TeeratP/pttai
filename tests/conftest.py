@@ -73,7 +73,7 @@ class FakeLLM:
 
 
 class ChatOpenAI(FakeLLM):
-    """FakeLLM whose class is *named* ChatOpenAI so pttai's duck-typed OpenAI
+    """FakeLLM whose class is *named* ChatOpenAI so nae's duck-typed OpenAI
     detection (`type(llm).__name__ == 'ChatOpenAI'`) treats it as OpenAI."""
 
 

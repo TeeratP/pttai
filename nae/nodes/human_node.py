@@ -3,7 +3,7 @@ Human-in-the-loop node implementation for the Agentic Framework.
 """
 from typing import Callable, Optional, Union
 
-from pttai.node import Node
+from nae.node import Node
 from langchain_core.messages import HumanMessage
 from langgraph.types import interrupt
 
@@ -20,7 +20,7 @@ class HumanNode(Node):
 
     Examples:
         ```python
-        from pttai import AgentNode, HumanNode, AgenticGraph
+        from nae import AgentNode, HumanNode, AgenticGraph
         from langgraph.checkpoint.memory import InMemorySaver
         from langgraph.types import Command
 
@@ -60,8 +60,8 @@ class HumanNode(Node):
             into: where the human's free-form resume value lands — "messages"
                 (default) wraps it as a HumanMessage and appends; any other key
                 writes the raw value to that key (for a router to gate on).
-            cache_ttl: see [Node][pttai.node.Node] — node-level result caching.
-            retry: see [Node][pttai.node.Node] — node-level retry on exception.
+            cache_ttl: see [Node][nae.node.Node] — node-level result caching.
+            retry: see [Node][nae.node.Node] — node-level retry on exception.
         """
         super().__init__(name, cache_ttl=cache_ttl, retry=retry)
         self.node_prompt = node_prompt

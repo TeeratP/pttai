@@ -7,9 +7,9 @@ import pytest
 from langchain_core.messages import AnyMessage
 from langgraph.graph.message import add_messages
 
-from pttai.graph import AgenticGraph
-from pttai.nodes import AgentNode
-from pttai.validation import GraphValidationError
+from nae.graph import AgenticGraph
+from nae.nodes import AgentNode
+from nae.validation import GraphValidationError
 
 
 class TopicState(TypedDict):

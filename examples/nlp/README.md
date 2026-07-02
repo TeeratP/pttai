@@ -1,10 +1,10 @@
-# pttai NLP pipelines — concrete NLP tasks, both ways
+# nae NLP pipelines — concrete NLP tasks, both ways
 
-pttai is a declarative DSL over LangGraph whose typed per-node `reads`/`writes`
+nae is a declarative DSL over LangGraph whose typed per-node `reads`/`writes`
 enable a build-time dataflow lint: you wire language-model steps with `>` and it
 compiles down to a native LangGraph `StateGraph`. NLP pipelines are a use case,
-not pttai's identity — these examples just make the DSL concrete. Each file here
-builds a real NLP pipeline the **pttai way first**, then a runnable
+not nae's identity — these examples just make the DSL concrete. Each file here
+builds a real NLP pipeline the **nae way first**, then a runnable
 `# --- equivalent in raw LangGraph ---` block, so you see the same task both ways.
 
 ## Running
@@ -27,6 +27,6 @@ for f in examples/nlp/*.py; do python "$f"; done    # all of them
 | `extract_summarize.py` | **Extract → summarize** — typed structured information extraction (`writes={...}`) feeding an abstractive summary step |
 | `doc_triage.py` | **Document triage** — classify an incoming document (`DecisionNode`) and route to a specialized handler |
 
-`rag_qa.py` uses pttai's real `make_retriever_tool` wrapping a tiny in-memory
+`rag_qa.py` uses nae's real `make_retriever_tool` wrapping a tiny in-memory
 keyword retriever, so it runs offline; swap in `ChromaRAG` (the `.[rag]` extra)
 plus real embeddings for a production vector store.

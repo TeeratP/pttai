@@ -1,6 +1,6 @@
 cff-version: 1.2.0
-message: "If you use pttai, please cite it as below."
-title: "pttai: Build-Time Dataflow Validation for LLM Pipeline Graphs"
+message: "If you use nae, please cite it as below."
+title: "nae: Build-Time Dataflow Validation for LLM Pipeline Graphs"
 abstract: >-
   A thin declarative layer over LangGraph that compiles a >-wired agent pipeline
   to a native LangGraph StateGraph and, before compiling, runs a forward may/must
@@ -9,8 +9,8 @@ abstract: >-
   branches write an unreduced key.
 type: software
 license: MIT
-repository-code: "https://github.com/TeeratP/pttai"
-url: "https://github.com/TeeratP/pttai"
+repository-code: "https://github.com/TeeratP/nae"
+url: "https://github.com/TeeratP/nae"
 keywords:
   - large language models
   - agent frameworks

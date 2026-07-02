@@ -1,12 +1,12 @@
 # Examples
 
-The repo ships two runnable galleries. Every file shows the **pttai version
+The repo ships two runnable galleries. Every file shows the **nae version
 first**, then a runnable `# --- equivalent in raw LangGraph ---` block in the
 same file, so you can read the same behavior built both ways:
 
-- [`examples/basics/`](https://github.com/TeeratP/pttai/tree/main/examples/basics)
+- [`examples/basics/`](https://github.com/TeeratP/nae/tree/main/examples/basics)
   — one feature per file, 13 files. Learn the primitives one at a time.
-- [`examples/architectures/`](https://github.com/TeeratP/pttai/tree/main/examples/architectures)
+- [`examples/architectures/`](https://github.com/TeeratP/nae/tree/main/examples/architectures)
   — the canonical agent patterns from Anthropic's
   [Building Effective Agents](https://www.anthropic.com/research/building-effective-agents)
   and the common LangGraph tutorials, 8 files. Lift a whole topology.
@@ -49,22 +49,22 @@ def _gate(state) -> str:
 
 | File | Feature |
 |------|---------|
-| [`01_single_agent.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/01_single_agent.py) | One `AgentNode` — smallest useful graph |
-| [`02_tools.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/02_tools.py) | `AgentNode(tools=[...])` with a built-in tool-call loop |
-| [`03_sequential.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/03_sequential.py) | Sequential chain with the `a > b > c` operator |
-| [`04_decision_routing.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/04_decision_routing.py) | `DecisionNode` — LLM picks the branch (structured output) |
-| [`05_condition_routing.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/05_condition_routing.py) | `ConditionNode` — deterministic Python predicate, no LLM |
-| [`06_parallel_fanout.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/06_parallel_fanout.py) | `start > fanout(a, b) > join` — concurrent branches + deferred join |
-| [`07_map_reduce.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/07_map_reduce.py) | `worker.map("field") > collector` — fan out over a list, join once |
-| [`08_typed_io.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/08_typed_io.py) | `reads=[...]`, `writes={"score": int}` — typed structured I/O |
-| [`09_human_in_the_loop.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/09_human_in_the_loop.py) | `HumanNode` + `InMemorySaver` + `Command(resume=...)` |
-| [`10_graph_composition.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/10_graph_composition.py) | An `AgenticGraph` wired in as a node in a bigger graph |
-| [`11_node_policies.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/11_node_policies.py) | `cache_ttl` / `retry` / `reasoning_effort` per-node knobs |
-| [`12_validation_summary.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/12_validation_summary.py) | `graph.validate()` + `graph.summary()` introspection |
-| [`13_token_and_log.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/13_token_and_log.py) | `state['token']` / `state['log']` — token accounting + per-node trace |
+| [`01_single_agent.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/01_single_agent.py) | One `AgentNode` — smallest useful graph |
+| [`02_tools.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/02_tools.py) | `AgentNode(tools=[...])` with a built-in tool-call loop |
+| [`03_sequential.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/03_sequential.py) | Sequential chain with the `a > b > c` operator |
+| [`04_decision_routing.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/04_decision_routing.py) | `DecisionNode` — LLM picks the branch (structured output) |
+| [`05_condition_routing.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/05_condition_routing.py) | `ConditionNode` — deterministic Python predicate, no LLM |
+| [`06_parallel_fanout.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/06_parallel_fanout.py) | `start > fanout(a, b) > join` — concurrent branches + deferred join |
+| [`07_map_reduce.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/07_map_reduce.py) | `worker.map("field") > collector` — fan out over a list, join once |
+| [`08_typed_io.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/08_typed_io.py) | `reads=[...]`, `writes={"score": int}` — typed structured I/O |
+| [`09_human_in_the_loop.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/09_human_in_the_loop.py) | `HumanNode` + `InMemorySaver` + `Command(resume=...)` |
+| [`10_graph_composition.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/10_graph_composition.py) | An `AgenticGraph` wired in as a node in a bigger graph |
+| [`11_node_policies.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/11_node_policies.py) | `cache_ttl` / `retry` / `reasoning_effort` per-node knobs |
+| [`12_validation_summary.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/12_validation_summary.py) | `graph.validate()` + `graph.summary()` introspection |
+| [`13_token_and_log.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/13_token_and_log.py) | `state['token']` / `state['log']` — token accounting + per-node trace |
 
 For example, the whole map-reduce pattern
-([`07_map_reduce.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/07_map_reduce.py))
+([`07_map_reduce.py`](https://github.com/TeeratP/nae/blob/main/examples/basics/07_map_reduce.py))
 is one wiring line — `.map("docs")` fans the worker out over `state["docs"]`,
 one parallel LangGraph `Send` per item, and the collector joins once:
 
@@ -83,17 +83,17 @@ out = graph.invoke("Summarize the docs.", docs=["alpha memo", "beta memo", "gamm
 
 | File | Pattern | Flow |
 |------|---------|------|
-| [`react_agent.py`](https://github.com/TeeratP/pttai/blob/main/examples/architectures/react_agent.py) | Tool-calling ReAct loop — one `AgentNode(tools=[...])` runs think→act→observe until it answers. | `agent ⇄ tools → answer` |
-| [`prompt_chaining.py`](https://github.com/TeeratP/pttai/blob/main/examples/architectures/prompt_chaining.py) | Fixed sequence of steps, each building on the last, with an optional early-exit gate. | `extract → gate → expand → finalize` |
-| [`routing.py`](https://github.com/TeeratP/pttai/blob/main/examples/architectures/routing.py) | Classify then dispatch; `DecisionNode(tools=...)` gathers context with a tool, then routes. | `triage → {billing, technical, general}` |
-| [`parallelization.py`](https://github.com/TeeratP/pttai/blob/main/examples/architectures/parallelization.py) | Sectioning / voting — branches run concurrently, then join. | `frame → (optimist ∥ skeptic ∥ pragmatist) → verdict` |
-| [`orchestrator_workers.py`](https://github.com/TeeratP/pttai/blob/main/examples/architectures/orchestrator_workers.py) | Dynamic fan-out over sub-tasks via `worker.map("field")`, then synthesize. | `plan → worker×N → synthesize` |
-| [`evaluator_optimizer.py`](https://github.com/TeeratP/pttai/blob/main/examples/architectures/evaluator_optimizer.py) | Generate → evaluate → refine loop; a `ConditionNode` caps the rounds. | `generate → evaluate → gate ⟳ / accept → finalize` |
-| [`reflection.py`](https://github.com/TeeratP/pttai/blob/main/examples/architectures/reflection.py) | Generate → self-critique → revise, one terminating pass. | `draft → critique → revise` |
-| [`supervisor.py`](https://github.com/TeeratP/pttai/blob/main/examples/architectures/supervisor.py) | A supervisor `DecisionNode` delegates to worker agents in a capped loop. | `supervisor → {researcher, writer} → gate ⟳ / done → report` |
+| [`react_agent.py`](https://github.com/TeeratP/nae/blob/main/examples/architectures/react_agent.py) | Tool-calling ReAct loop — one `AgentNode(tools=[...])` runs think→act→observe until it answers. | `agent ⇄ tools → answer` |
+| [`prompt_chaining.py`](https://github.com/TeeratP/nae/blob/main/examples/architectures/prompt_chaining.py) | Fixed sequence of steps, each building on the last, with an optional early-exit gate. | `extract → gate → expand → finalize` |
+| [`routing.py`](https://github.com/TeeratP/nae/blob/main/examples/architectures/routing.py) | Classify then dispatch; `DecisionNode(tools=...)` gathers context with a tool, then routes. | `triage → {billing, technical, general}` |
+| [`parallelization.py`](https://github.com/TeeratP/nae/blob/main/examples/architectures/parallelization.py) | Sectioning / voting — branches run concurrently, then join. | `frame → (optimist ∥ skeptic ∥ pragmatist) → verdict` |
+| [`orchestrator_workers.py`](https://github.com/TeeratP/nae/blob/main/examples/architectures/orchestrator_workers.py) | Dynamic fan-out over sub-tasks via `worker.map("field")`, then synthesize. | `plan → worker×N → synthesize` |
+| [`evaluator_optimizer.py`](https://github.com/TeeratP/nae/blob/main/examples/architectures/evaluator_optimizer.py) | Generate → evaluate → refine loop; a `ConditionNode` caps the rounds. | `generate → evaluate → gate ⟳ / accept → finalize` |
+| [`reflection.py`](https://github.com/TeeratP/nae/blob/main/examples/architectures/reflection.py) | Generate → self-critique → revise, one terminating pass. | `draft → critique → revise` |
+| [`supervisor.py`](https://github.com/TeeratP/nae/blob/main/examples/architectures/supervisor.py) | A supervisor `DecisionNode` delegates to worker agents in a capped loop. | `supervisor → {researcher, writer} → gate ⟳ / done → report` |
 
 Two of them, inline. The ReAct agent
-([`react_agent.py`](https://github.com/TeeratP/pttai/blob/main/examples/architectures/react_agent.py))
+([`react_agent.py`](https://github.com/TeeratP/nae/blob/main/examples/architectures/react_agent.py))
 — the whole think→act→observe loop lives inside one node:
 
 ```python
@@ -112,7 +112,7 @@ print(graph.invoke("What is 6 times 7?")["messages"][-1].content)
 ```
 
 And the evaluator–optimizer
-([`evaluator_optimizer.py`](https://github.com/TeeratP/pttai/blob/main/examples/architectures/evaluator_optimizer.py)),
+([`evaluator_optimizer.py`](https://github.com/TeeratP/nae/blob/main/examples/architectures/evaluator_optimizer.py)),
 using the `_gate` counter from [Capping loops offline](#capping-loops-offline)
 above:
 
@@ -174,8 +174,8 @@ supervisor
 ```
 
 There is also a set of NLP-focused pipelines in
-[`examples/nlp/`](https://github.com/TeeratP/pttai/tree/main/examples/nlp)
+[`examples/nlp/`](https://github.com/TeeratP/nae/tree/main/examples/nlp)
 (document triage, extract-and-summarize, and a full RAG QA pipeline), plus
-[`examples/parallel_usage.py`](https://github.com/TeeratP/pttai/blob/main/examples/parallel_usage.py),
+[`examples/parallel_usage.py`](https://github.com/TeeratP/nae/blob/main/examples/parallel_usage.py),
 an offline tour of parallelism, map-reduce, typed IO, and validation in one
 script.
