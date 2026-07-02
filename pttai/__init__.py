@@ -1,4 +1,4 @@
-"""pttai — Keras for LangGraph.
+"""pttai — Pythonic Topology Tools for AI.
 
 Write agent workflows in the ergonomic layer you *want* to write in — wire nodes
 with the ``>`` operator, fan out with ``fanout(...)`` / ``[a, b]``, map-reduce with

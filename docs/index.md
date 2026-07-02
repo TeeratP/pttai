@@ -6,11 +6,13 @@ map-reduce, and validate at compile time — and it all compiles down to a nativ
 LangGraph `StateGraph`, so you keep the whole ecosystem (streaming, async,
 checkpointers, LangSmith) with zero lock-in.
 
-If you know LangGraph, think of pttai as **Keras for LangGraph**: an ergonomic
-default layer over the same runtime. The value is everything you *don't* write —
-`add_node` / `add_edge` / `add_conditional_edges`, `Send` fan-out plumbing,
-structured-output routing, the tool-call loop — plus a build-time validator that
-catches read-before-written dataflow bugs before you ever invoke.
+pttai **builds on LangGraph, it doesn't replace it.** LangGraph is powerful and
+well worth learning directly — especially for experienced users who want full
+control. pttai's job is to make that power more *accessible*: the value is
+everything you *don't* write — `add_node` / `add_edge` / `add_conditional_edges`,
+`Send` fan-out plumbing, structured-output routing, the tool-call loop — folded
+into a small `>`-DSL, plus a build-time validator that catches read-before-written
+dataflow bugs before you ever invoke.
 
 ## The 3-vs-10 story
 

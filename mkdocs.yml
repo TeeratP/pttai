@@ -1,5 +1,5 @@
 site_name: pttai
-site_description: Keras for LangGraph — parallel, typed agent graphs in Python, compiled to LangGraph.
+site_description: Pythonic Topology Tools for AI — a declarative >-DSL over LangGraph with a build-time dataflow validator, compiled to native LangGraph.
 site_url: https://teeratp.github.io/pttai/
 repo_url: https://github.com/TeeratP/pttai
 repo_name: TeeratP/pttai
