@@ -2,31 +2,26 @@
 
 **pttai** — *Pythonic Topology Tools for AI*.
 
-**A declarative DSL over LangGraph whose typed node-IO enables a build-time
-dataflow lint.** Every node is a self-contained tool-using agent, composed with a
-`>` operator into a *visible* DAG you can fan out, map-reduce, and — because each
-node declares the state keys it reads and writes — statically check for dataflow
-bugs *before* you invoke. It all compiles down to a native LangGraph
-`StateGraph`, so you keep the whole ecosystem (streaming, async, checkpointers,
-LangSmith) with zero lock-in.
+**Build LLM agent graphs in a few lines.** pttai is a small declarative DSL over
+[LangGraph](https://langchain-ai.github.io/langgraph/): wire self-contained,
+tool-using agent nodes together with a `>` operator into a *visible* DAG —
+fan-out, map-reduce, structured-output routing, human-in-the-loop — and skip the
+`add_node` / `add_edge` / `add_conditional_edges` / `Send` boilerplate. It all
+compiles down to a native LangGraph `StateGraph`.
 
-If you know LangGraph, think of pttai as **Keras for LangGraph**: an ergonomic
-default layer over the same runtime. The value is everything you *don't* write —
-`add_node`/`add_edge`/`add_conditional_edges`, `Send` fan-out plumbing,
-structured-output routing, the tool-call loop — plus a build-time validator that
-catches read-before-written dataflow bugs before you ever invoke.
+pttai **builds on LangGraph, it doesn't replace it.** LangGraph is powerful and
+well worth learning directly — especially for experienced users who want full
+control. pttai's job is to make that power more *accessible*: the value is
+everything you *don't* write, folded into a small `>`-DSL. And because each node
+declares the state keys it reads and writes, pttai statically checks your graph
+for read-before-written dataflow bugs *before* you invoke. You keep the whole
+LangGraph ecosystem (streaming, async, checkpointers, LangSmith) and can drop
+down to raw LangGraph anytime — no lock-in.
 
 ![Python](https://img.shields.io/badge/python-%E2%89%A53.10-blue)
 ![LangGraph](https://img.shields.io/badge/LangGraph-1.0-orange)
-![tests](https://img.shields.io/badge/tests-166%20passing-green)
+![tests](https://img.shields.io/badge/tests-165%20passing-green)
 ![License](https://img.shields.io/badge/license-MIT-green)
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/TeeratP/agentic-framework/main/figures/architecture.png" width="100%"
-       alt="pttai architecture: the > DSL builds a linked node structure in memory; AgenticGraph's _build_graph walks it into add_node/add_edge/Send calls; a build-time dataflow validator gates the build (GraphValidationError on failure, before any model call); on success it compiles to a native LangGraph StateGraph run via invoke/stream/async.">
-</p>
-
-<p align="center"><em>The <code>&gt;</code> DSL → <code>_build_graph</code> → <strong>build-time validator gate</strong> → native LangGraph <code>StateGraph</code>. (<a href="https://github.com/TeeratP/agentic-framework/blob/main/figures/architecture.svg">SVG</a> · <a href="https://github.com/TeeratP/agentic-framework/blob/main/figures/architecture.mmd">source</a>)</em></p>
 
 ## pttai vs. raw LangGraph
 
@@ -70,52 +65,39 @@ Identical behavior — same tools, same loop, same answer. pttai folds the model
 node, the `ToolNode`, the `tools_condition` edge and the loop-back edge into
 **one `AgentNode`** with a built-in tool-call loop, and infers the state schema
 for you. Both versions run side by side in
-[`examples/vs_langgraph.py`](https://github.com/TeeratP/agentic-framework/blob/main/examples/vs_langgraph.py).
+[`examples/vs_langgraph.py`](https://github.com/TeeratP/pttai/blob/main/examples/vs_langgraph.py).
 
-## The validator: bugs caught before you ever invoke
+## Catch dataflow bugs at build time
 
-The line count is the *secondary* win. The one you can't get from raw LangGraph
-or `create_react_agent` is a **build-time dataflow analysis** that *fails the
-build* on read-before-write (including the cyclic, loop-carried case), dangling
-branches, and concurrent unreduced writes — before a single model call. Raw
-LangGraph compiles the same bugs and only trips at runtime, on the first input
-that exercises the broken path.
+Because every node declares what it reads and writes, `AgenticGraph(...)` runs a
+forward dataflow analysis **at construction** and *fails the build* — before a
+single model call — if a node reads a state key that nothing upstream produces:
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/TeeratP/agentic-framework/main/figures/validator_before_after.png" width="100%"
-       alt="Two panels on the same buggy RAG pipeline. Left (pttai): the AgenticGraph constructor raises GraphValidationError at build time with 0 model calls. Right (raw LangGraph): compile() succeeds with no dataflow check, then a runtime KeyError on the first invoke; across 12 such bugs all 12 fail at runtime and 8 (simulated) LLM calls are burned.">
-</p>
+```python
+from pttai import AgentNode, AgenticGraph
 
-Measured on a 36-pipeline benchmark ([`eval/bugbench/`](https://github.com/TeeratP/agentic-framework/blob/main/eval/bugbench/)): pttai
-catches **12/12** pttai-only dataflow bugs at build with **0 false positives** on
-19 valid pipelines, while raw LangGraph catches **0** of those at build (all 12
-surface at runtime) and burns **8 model calls** — a *simulated, worst-case-ordered*
-figure from an offline fake LLM, not measured real-model cost. And the DSL is
-~**60% less code** — 113 vs 281 LOC across 12 pipelines. (Duplicate node names
-are caught by *both* frameworks at build; the dead-end class is legal LangGraph
-behavior, not a defect — both are excluded above.)
+early = AgentNode(name="early", llm=llm, reads=["summary"])    # reads 'summary'...
+late  = AgentNode(name="late",  llm=llm, writes=["summary"])   # ...but it's produced downstream
+early > late
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/TeeratP/agentic-framework/main/figures/bug_catch.png" width="49%"
-       alt="Bar chart: pttai catches 12/12 pttai-only dataflow bugs at build; raw LangGraph catches 0 at build (all 12 surface at runtime) and burns 8 simulated LLM calls; pttai has 0 false positives on 19 valid pipelines.">
-  <img src="https://raw.githubusercontent.com/TeeratP/agentic-framework/main/figures/loc_comparison.png" width="49%"
-       alt="Grouped bar chart of lines of code per pipeline: pttai 113 LOC vs raw LangGraph 281 LOC across 12 pipelines, about 60% fewer lines.">
-</p>
+AgenticGraph(start_node=early, end_nodes={late})
+# GraphValidationError: 'early' reads computed key 'summary' but no upstream node produces it
+```
 
-Full methodology and per-class results are in
-[`docs/COMPARISON.md`](https://github.com/TeeratP/agentic-framework/blob/main/docs/COMPARISON.md); regenerate the charts from the
-committed CSV/JSON with `python figures/make_charts.py`.
+Raw LangGraph compiles the same graph and only trips at runtime, on the first
+input that exercises the broken path. pttai names the offending node and key at
+build time; `graph.validate()` runs the same check on demand.
 
 ## Examples
 
 Two runnable galleries make the "pttai vs. LangGraph" story concrete:
 
-- **[`examples/basics/`](https://github.com/TeeratP/agentic-framework/blob/main/examples/basics/)** — one file per feature, each showing
+- **[`examples/basics/`](https://github.com/TeeratP/pttai/blob/main/examples/basics/)** — one file per feature, each showing
   the pttai version *and* the equivalent raw-LangGraph version side by side. The
   fastest way to see exactly what plumbing pttai folds away — tool loops,
   fan-out/join, map-reduce, structured-output routing, typed state IO,
   human-in-the-loop — one concept at a time.
-- **[`examples/architectures/`](https://github.com/TeeratP/agentic-framework/blob/main/examples/architectures/)** — famous agent
+- **[`examples/architectures/`](https://github.com/TeeratP/pttai/blob/main/examples/architectures/)** — famous agent
   patterns (router, evaluator-optimizer, orchestrator-workers, reflection, and
   more) built end-to-end in pttai, so you can lift a whole topology instead of a
   single node.
@@ -127,21 +109,14 @@ when you're wiring a real system.
 
 `python demo/app.py` launches a local Gradio playground: paste a `>`-DSL snippet,
 click **Build + Validate**, and see the compiled LangGraph diagram and the
-build-time validator output side by side — no API key needed. See [`demo/`](https://github.com/TeeratP/agentic-framework/blob/main/demo/).
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/TeeratP/agentic-framework/main/figures/demo_screenshot.png" width="100%"
-       alt="pttai playground: (a) a working RAG QA pipeline (retrieve > rerank > answer) compiles clean with a rendered LangGraph diagram and a green validator; (b) a broken pipeline (rerank wired before retrieve) fails the build — the offending 'rerank' node is painted red and the read-before-write error is shown, before the graph is ever invoked.">
-</p>
-
-<p align="center"><em>The playground: (a) a working pipeline compiles clean; (b) a broken one fails the build with the offending node painted <strong>red</strong> and the error attached.</em></p>
+build-time validator output side by side — no API key needed. See [`demo/`](https://github.com/TeeratP/pttai/blob/main/demo/).
 
 ## Install
 
 Not on PyPI yet — install from source:
 
 ```bash
-git clone https://github.com/TeeratP/agentic-framework && cd agentic-framework
+git clone https://github.com/TeeratP/pttai && cd pttai
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[openai]"          # core + langchain-openai & python-dotenv
 ```
@@ -187,7 +162,7 @@ print(out["token"])                       # per-model token totals
 ```
 
 Runs from a single paste with just `OPENAI_API_KEY` set. Full version:
-[`examples/panel.py`](https://github.com/TeeratP/agentic-framework/blob/main/examples/panel.py).
+[`examples/panel.py`](https://github.com/TeeratP/pttai/blob/main/examples/panel.py).
 
 ## What you get
 
@@ -214,7 +189,7 @@ Runs from a single paste with just `OPENAI_API_KEY` set. Full version:
 - **Compile-time validation + `summary()`** — the constructor runs a forward
   dataflow analysis and **fails the build** if a node reads a key nothing
   produces upstream (with the offending key and real writer named), and
-  `summary()` prints a Keras-`model.summary()`-style topology table:
+  `summary()` prints a `model.summary()`-style topology table:
 
 ```
 AgenticGraph 'graph'   state=AgenticState
@@ -231,7 +206,7 @@ pragmatist  AgentNode  messages  log,messages  log,messages,token
 ```
 
 The offline, no-API-key tour of parallelism, map-reduce, typed IO, and
-validation lives in [`examples/parallel_usage.py`](https://github.com/TeeratP/agentic-framework/blob/main/examples/parallel_usage.py).
+validation lives in [`examples/parallel_usage.py`](https://github.com/TeeratP/pttai/blob/main/examples/parallel_usage.py).
 
 ## vs. LangChain's Functional API
 
@@ -320,7 +295,7 @@ a usage callback plus a custom summing channel to get this. (Offline, with no
 `OPENAI_API_KEY`, the fake model reports no usage, so `token` is an empty `{}` —
 the accounting runs, there's just nothing to count; a real model fills it as
 shown.) Side-by-side vs. raw LangGraph:
-[`examples/basics/13_token_and_log.py`](https://github.com/TeeratP/agentic-framework/blob/main/examples/basics/13_token_and_log.py).
+[`examples/basics/13_token_and_log.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/13_token_and_log.py).
 
 ## Limitations
 
@@ -347,11 +322,11 @@ python examples/panel.py               # live multi-agent panel (needs OPENAI_AP
 python examples/vs_langgraph.py        # the 3-vs-10 comparison, both ways (needs OPENAI_API_KEY)
 ```
 
-The **166-test** suite covers state reducers, graph construction, routing, the
+The **165-test** suite covers state reducers, graph construction, routing, the
 tool-call loop, interrupt/resume, RAG tool wiring, streaming/async, configurable
 fields, parallel fan-out/join, map-reduce, multi-key IO, static validation, and
 node caching/retry/`reasoning_effort`/`durability`.
 
 ## License
 
-MIT — see [LICENSE](https://github.com/TeeratP/agentic-framework/blob/main/LICENSE).
+MIT — see [LICENSE](https://github.com/TeeratP/pttai/blob/main/LICENSE).
