@@ -325,7 +325,7 @@ python examples/panel.py               # live multi-agent panel (needs OPENAI_AP
 python examples/vs_langgraph.py        # the 3-vs-10 comparison, both ways (needs OPENAI_API_KEY)
 ```
 
-The **164-test** suite covers state reducers, graph construction, routing, the
+The **166-test** suite covers state reducers, graph construction, routing, the
 tool-call loop, interrupt/resume, RAG tool wiring, streaming/async, configurable
 fields, parallel fan-out/join, map-reduce, multi-key IO, static validation, and
 node caching/retry/`reasoning_effort`/`durability`.
