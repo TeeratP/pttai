@@ -5,15 +5,35 @@ class, plus the equivalent raw-LangGraph graph so we can measure where the bug
 surfaces in each framework. Each CLEAN item is a real, working pipeline from
 ``examples/`` (the false-positive set — the validator must NOT flag these).
 
-Honesty notes baked into the labels (`pttai_only`):
+Honesty notes baked into the labels (`category`):
   * ``duplicate-node-names`` is caught at BUILD by *both* frameworks — raw
     LangGraph's ``add_node`` raises ``Node `x` already present.`` So it is NOT a
-    pttai differentiator (``pttai_only=False``).
+    pttai differentiator (``category="both"``).
+  * ``dead-end-node`` is NOT a LangGraph bug. A node with no outgoing edge is a
+    *legal implicit terminal* in LangGraph — it compiles and runs to a normal
+    halt (verified empirically on LangGraph 1.2.x: ``compile()`` does not raise
+    and ``invoke()`` returns without error). pttai rejects it only because its
+    own DSL *requires* every terminal to be declared in ``end_nodes``. So it is
+    pttai DSL strictness, not a LangGraph defect: ``category="dsl-strictness"``.
+    It does NOT count toward the pttai-only differentiator headline or the
+    wasted-call total.
+  * ``cyclic-read-before-write`` is a genuine pttai-only-at-build catch (issue
+    #34): a graph with a cycle where a node reads a key produced ONLY by a
+    downstream node that loops back. On the FIRST iteration the key is absent,
+    so raw LangGraph KeyErrors at runtime; pttai's back-edge-aware availability
+    fixpoint rejects it at build.
   * The validator checks state-key PRESENCE / availability, not Python value
     types — there is no true "type mismatch" detection. The closest firing
     check is ``prompt-placeholder-mismatch`` (a ``{name}`` in a node_prompt with
     no matching scalar read -> guaranteed runtime KeyError), included as its own
     class.
+
+Note on the LangGraph "wasted calls" figure: it is a SIMULATED, worst-case
+measurement, not real-model cost. Every LangGraph baseline runs against a
+counting *fake* LLM (offline), and the dangling-choice baselines deterministically
+hit the omitted branch because the fake ``with_structured_output`` picks the
+first ``Literal`` value and the corpus orders the unwired choice first. That is a
+worst-case ordering, disclosed here honestly — not an observation of a real model.
 """
 
 import os
@@ -35,9 +55,16 @@ class Item:
     id: str
     bug_class: str
     label: str                       # "buggy" | "clean"
-    pttai_only: bool                 # buggy: is this a pttai-only-at-build catch?
+    category: str                    # buggy: "differentiator" | "both" | "dsl-strictness"
     build_pttai: Callable            # constructs the AgenticGraph (raises if invalid)
     langgraph: Optional[Callable] = None   # buggy only: () -> phase dict w/ wasted_calls
+
+    @property
+    def pttai_only(self) -> bool:
+        """A genuine pttai-only-at-build differentiator (excludes ``both`` and
+        ``dsl-strictness``). Kept for the ``results.csv`` column and downstream
+        chart code."""
+        return self.category == "differentiator"
 
 
 # ===========================================================================
@@ -145,6 +172,102 @@ def _rbw3_lg():
 
 
 # ===========================================================================
+# BUG CLASS 1b — CYCLIC read-before-write: a node reads a key produced ONLY by
+#                a DOWNSTREAM node that loops back (loop-carried). On the first
+#                iteration the key is absent, so raw LangGraph KeyErrors at
+#                runtime. pttai's back-edge-aware availability fixpoint (issue
+#                #34) rejects it at build.  (pttai-only)
+# ===========================================================================
+class _SummaryState(AgenticState):
+    summary: str                                      # produced only inside the loop
+
+
+class _TallyState(AgenticState):
+    tally: str                                        # produced only inside the loop
+
+
+def _crbw1_pttai():
+    llm = get_llm()
+    gen = AgentNode(name="gen", llm=llm, node_prompt="generate",
+                    reads=["messages", "summary"])            # loop-carried read
+    writer = AgentNode(name="writer", llm=llm, node_prompt="summarize",
+                       output_field="summary")                # sole producer, DOWNSTREAM
+    gate = ConditionNode(name="gate", condition=lambda s: "refine",
+                         choices=["refine", "accept"])
+    fin = AgentNode(name="fin", llm=llm, node_prompt="done")
+    gen > writer > gate
+    gate["refine"] > gen                                      # back-edge closes the cycle
+    gate["accept"] > fin
+    AgenticGraph(state=_SummaryState, start_node=gen, end_nodes={fin})
+
+
+def _crbw1_lg():
+    llm, counter = counting_llm()
+
+    class S(MessagesState):
+        summary: str
+
+    def build():
+        b = StateGraph(S)
+        b.add_node("gen", lambda s: {"messages": [llm.invoke(
+            [SystemMessage(f"generate {s['summary']}")] + s["messages"])]})  # KeyError iter 1
+        b.add_node("writer", lambda s: {"summary": "a summary"})
+        b.add_node("fin", step(llm, "done"))
+        b.add_edge(START, "gen")
+        b.add_edge("gen", "writer")
+        b.add_conditional_edges("writer", lambda s: "refine",
+                                {"refine": "gen", "accept": "fin"})  # loops back to gen
+        b.add_edge("fin", END)
+        return b
+
+    out = run_langgraph(build, HELLO)
+    out["wasted_calls"] = counter[0]
+    return out
+
+
+def _crbw2_pttai():
+    llm = get_llm()
+    start = AgentNode(name="start", llm=llm, node_prompt="start")
+    loop = AgentNode(name="loop", llm=llm, node_prompt="iterate",
+                     reads=["messages", "tally"])             # loop-carried read
+    acc = AgentNode(name="acc", llm=llm, node_prompt="accumulate",
+                    output_field="tally")                     # sole producer, DOWNSTREAM
+    gate = ConditionNode(name="gate", condition=lambda s: "again",
+                         choices=["again", "done"])
+    fin = AgentNode(name="fin", llm=llm, node_prompt="done")
+    start > loop > acc > gate
+    gate["again"] > loop                                      # back-edge closes the cycle
+    gate["done"] > fin
+    AgenticGraph(state=_TallyState, start_node=start, end_nodes={fin})
+
+
+def _crbw2_lg():
+    llm, counter = counting_llm()
+
+    class S(MessagesState):
+        tally: str
+
+    def build():
+        b = StateGraph(S)
+        b.add_node("start", step(llm, "start"))
+        b.add_node("loop", lambda s: {"messages": [llm.invoke(
+            [SystemMessage(f"iterate {s['tally']}")] + s["messages"])]})  # KeyError iter 1
+        b.add_node("acc", lambda s: {"tally": "1"})
+        b.add_node("fin", step(llm, "done"))
+        b.add_edge(START, "start")
+        b.add_edge("start", "loop")
+        b.add_edge("loop", "acc")
+        b.add_conditional_edges("acc", lambda s: "again",
+                                {"again": "loop", "done": "fin"})  # loops back to loop
+        b.add_edge("fin", END)
+        return b
+
+    out = run_langgraph(build, HELLO)
+    out["wasted_calls"] = counter[0]
+    return out
+
+
+# ===========================================================================
 # BUG CLASS 2 — dangling decision/condition choice (a choice with no .child)
 #               (pttai-only)
 # ===========================================================================
@@ -238,7 +361,13 @@ def _dc3_lg():
 
 
 # ===========================================================================
-# BUG CLASS 3 — non-end node whose .child is None (a dead-end)  (pttai-only)
+# BUG CLASS 3 — non-end node whose .child is None (a dead-end)
+#   NOT a LangGraph bug: a node with no outgoing edge is a LEGAL implicit
+#   terminal in LangGraph (verified empirically — compile() does not raise and
+#   invoke() returns without error). pttai rejects it only because its DSL
+#   REQUIRES every terminal to be declared in end_nodes. So this is pttai DSL
+#   strictness, category="dsl-strictness" — excluded from the pttai-only
+#   differentiator headline and the wasted-call total.
 # ===========================================================================
 def _de1_pttai():
     llm = get_llm()
@@ -505,21 +634,25 @@ def _pp2_lg():
 # BUGGY corpus
 # ===========================================================================
 BUGGY: List[Item] = [
-    Item("rbw-1", "read-before-write", "buggy", True, _rbw1_pttai, _rbw1_lg),
-    Item("rbw-2", "read-before-write", "buggy", True, _rbw2_pttai, _rbw2_lg),
-    Item("rbw-3", "read-before-write", "buggy", True, _rbw3_pttai, _rbw3_lg),
-    Item("dc-1", "dangling-choice", "buggy", True, _dc1_pttai, _dc1_lg),
-    Item("dc-2", "dangling-choice", "buggy", True, _dc2_pttai, _dc2_lg),
-    Item("dc-3", "dangling-choice", "buggy", True, _dc3_pttai, _dc3_lg),
-    Item("de-1", "dead-end-node", "buggy", True, _de1_pttai, _de1_lg),
-    Item("de-2", "dead-end-node", "buggy", True, _de2_pttai, _de2_lg),
-    Item("de-3", "dead-end-node", "buggy", True, _de3_pttai, _de3_lg),
-    Item("dup-1", "duplicate-node-names", "buggy", False, _dup1_pttai, _dup1_lg),
-    Item("dup-2", "duplicate-node-names", "buggy", False, _dup2_pttai, _dup2_lg),
-    Item("cw-1", "concurrent-write-no-reducer", "buggy", True, _cw1_pttai, _cw1_lg),
-    Item("cw-2", "concurrent-write-no-reducer", "buggy", True, _cw2_pttai, _cw2_lg),
-    Item("pp-1", "prompt-placeholder-mismatch", "buggy", True, _pp1_pttai, _pp1_lg),
-    Item("pp-2", "prompt-placeholder-mismatch", "buggy", True, _pp2_pttai, _pp2_lg),
+    Item("rbw-1", "read-before-write", "buggy", "differentiator", _rbw1_pttai, _rbw1_lg),
+    Item("rbw-2", "read-before-write", "buggy", "differentiator", _rbw2_pttai, _rbw2_lg),
+    Item("rbw-3", "read-before-write", "buggy", "differentiator", _rbw3_pttai, _rbw3_lg),
+    Item("crbw-1", "cyclic-read-before-write", "buggy", "differentiator", _crbw1_pttai, _crbw1_lg),
+    Item("crbw-2", "cyclic-read-before-write", "buggy", "differentiator", _crbw2_pttai, _crbw2_lg),
+    Item("dc-1", "dangling-choice", "buggy", "differentiator", _dc1_pttai, _dc1_lg),
+    Item("dc-2", "dangling-choice", "buggy", "differentiator", _dc2_pttai, _dc2_lg),
+    Item("dc-3", "dangling-choice", "buggy", "differentiator", _dc3_pttai, _dc3_lg),
+    # dead-end: pttai DSL strictness, NOT a LangGraph bug (legal implicit terminal).
+    Item("de-1", "dead-end-node", "buggy", "dsl-strictness", _de1_pttai, _de1_lg),
+    Item("de-2", "dead-end-node", "buggy", "dsl-strictness", _de2_pttai, _de2_lg),
+    Item("de-3", "dead-end-node", "buggy", "dsl-strictness", _de3_pttai, _de3_lg),
+    # duplicate names: caught at build by BOTH frameworks — not a differentiator.
+    Item("dup-1", "duplicate-node-names", "buggy", "both", _dup1_pttai, _dup1_lg),
+    Item("dup-2", "duplicate-node-names", "buggy", "both", _dup2_pttai, _dup2_lg),
+    Item("cw-1", "concurrent-write-no-reducer", "buggy", "differentiator", _cw1_pttai, _cw1_lg),
+    Item("cw-2", "concurrent-write-no-reducer", "buggy", "differentiator", _cw2_pttai, _cw2_lg),
+    Item("pp-1", "prompt-placeholder-mismatch", "buggy", "differentiator", _pp1_pttai, _pp1_lg),
+    Item("pp-2", "prompt-placeholder-mismatch", "buggy", "differentiator", _pp2_pttai, _pp2_lg),
 ]
 
 
@@ -575,7 +708,7 @@ def _clean_builder(pkg, mod):
 
 
 CLEAN: List[Item] = [
-    Item(f"clean-{pkg}-{mod}", f"valid/{pkg}", "clean", False, _clean_builder(pkg, mod))
+    Item(f"clean-{pkg}-{mod}", f"valid/{pkg}", "clean", "clean", _clean_builder(pkg, mod))
     for pkg, mod in CLEAN_EXAMPLES
 ]
 

@@ -1,10 +1,12 @@
 # pttai
 
-**The easiest way to build multi-agent systems in Python.** Every node is a
-self-contained tool-using agent, composed into a *visible* DAG you can fan out,
-map-reduce, and validate at compile time — and it all compiles down to a native
-LangGraph `StateGraph`, so you keep the whole ecosystem (streaming, async,
-checkpointers, LangSmith) with zero lock-in.
+**A declarative DSL over LangGraph whose typed node-IO enables a build-time
+dataflow lint.** Every node is a self-contained tool-using agent, composed with a
+`>` operator into a *visible* DAG you can fan out, map-reduce, and — because each
+node declares the state keys it reads and writes — statically check for dataflow
+bugs *before* you invoke. It all compiles down to a native LangGraph
+`StateGraph`, so you keep the whole ecosystem (streaming, async, checkpointers,
+LangSmith) with zero lock-in.
 
 If you know LangGraph, think of pttai as **Keras for LangGraph**: an ergonomic
 default layer over the same runtime. The value is everything you *don't* write —
@@ -72,25 +74,28 @@ for you. Both versions run side by side in
 
 The line count is the *secondary* win. The one you can't get from raw LangGraph
 or `create_react_agent` is a **build-time dataflow analysis** that *fails the
-build* on read-before-write, dangling branches, and concurrent unreduced writes
-— before a single model call. Raw LangGraph compiles the same bugs and only
-trips at runtime, after wasting LLM calls, or worse, silently.
+build* on read-before-write (including the cyclic, loop-carried case), dangling
+branches, and concurrent unreduced writes — before a single model call. Raw
+LangGraph compiles the same bugs and only trips at runtime, on the first input
+that exercises the broken path.
 
 <p align="center">
   <img src="figures/validator_before_after.png" width="100%"
-       alt="Two panels on the same buggy RAG pipeline. Left (pttai): the AgenticGraph constructor raises GraphValidationError at build time with 0 model calls. Right (raw LangGraph): compile() succeeds with no dataflow check, then a runtime KeyError on the first invoke; across 13 such bugs 10 fail at runtime, 3 are silently wrong, and 15 LLM calls are wasted.">
+       alt="Two panels on the same buggy RAG pipeline. Left (pttai): the AgenticGraph constructor raises GraphValidationError at build time with 0 model calls. Right (raw LangGraph): compile() succeeds with no dataflow check, then a runtime KeyError on the first invoke; across 12 such bugs all 12 fail at runtime and 8 (simulated) LLM calls are burned.">
 </p>
 
-Measured on a 34-pipeline benchmark ([`eval/bugbench/`](eval/bugbench/)): pttai
-catches **13/13** pttai-only dataflow bugs at build with **0 false positives** on
-19 valid pipelines, while raw LangGraph catches **0** of those at build (10 fail
-at runtime, 3 silently wrong) and burns **15 wasted LLM calls**. And the DSL is
+Measured on a 36-pipeline benchmark ([`eval/bugbench/`](eval/bugbench/)): pttai
+catches **12/12** pttai-only dataflow bugs at build with **0 false positives** on
+19 valid pipelines, while raw LangGraph catches **0** of those at build (all 12
+surface at runtime) and burns **8 model calls** — a *simulated, worst-case-ordered*
+figure from an offline fake LLM, not measured real-model cost. And the DSL is
 ~**60% less code** — 113 vs 281 LOC across 12 pipelines. (Duplicate node names
-are caught by *both* frameworks at build, so that class is excluded above.)
+are caught by *both* frameworks at build; the dead-end class is legal LangGraph
+behavior, not a defect — both are excluded above.)
 
 <p align="center">
   <img src="figures/bug_catch.png" width="49%"
-       alt="Bar chart: pttai catches 13/13 pttai-only bugs at build; raw LangGraph catches 0 at build (10 runtime, 3 silent) and wastes 15 LLM calls; pttai has 0 false positives on 19 valid pipelines.">
+       alt="Bar chart: pttai catches 12/12 pttai-only dataflow bugs at build; raw LangGraph catches 0 at build (all 12 surface at runtime) and burns 8 simulated LLM calls; pttai has 0 false positives on 19 valid pipelines.">
   <img src="figures/loc_comparison.png" width="49%"
        alt="Grouped bar chart of lines of code per pipeline: pttai 113 LOC vs raw LangGraph 281 LOC across 12 pipelines, about 60% fewer lines.">
 </p>
@@ -134,7 +139,7 @@ build-time validator output side by side — no API key needed. See [`demo/`](de
 Not on PyPI yet — install from source:
 
 ```bash
-git clone https://github.com/TeeratP/pttai && cd pttai
+git clone https://github.com/TeeratP/agentic-framework && cd agentic-framework
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[openai]"          # core + langchain-openai & python-dotenv
 ```

@@ -52,6 +52,7 @@ def evaluate():
             "id": item.id,
             "bug_class": item.bug_class,
             "label": item.label,
+            "category": item.category,
             "pttai_only": item.pttai_only,
             "pttai_flagged_at_build": flagged,
             "pttai_error_type": etype,
@@ -82,14 +83,14 @@ def summarize(rows):
     buggy = [by_id[i.id] for i in BUGGY]
     clean = [by_id[i.id] for i in CLEAN]
 
-    # ---- catch rate on buggy (per class + overall), split by differentiator ----
+    # ---- catch rate on buggy (per class + overall), split by category ----
     per_class = defaultdict(lambda: {"n": 0, "pttai_caught": 0, "lg_build": 0,
                                      "lg_runtime": 0, "lg_silent": 0,
-                                     "lg_wasted_total": 0, "pttai_only": None})
+                                     "lg_wasted_total": 0, "category": None})
     for r in buggy:
         c = per_class[r["bug_class"]]
         c["n"] += 1
-        c["pttai_only"] = r["pttai_only"]
+        c["category"] = r["category"]
         c["pttai_caught"] += int(r["pttai_flagged_at_build"])
         phase = r["lg_phase"]
         if phase == "build":
@@ -103,13 +104,26 @@ def summarize(rows):
     n_buggy = len(buggy)
     pttai_caught = sum(r["pttai_flagged_at_build"] for r in buggy)
     lg_caught_build = sum(r["lg_phase"] == "build" for r in buggy)
-    lg_runtime = sum(r["lg_phase"] == "runtime" for r in buggy)
-    lg_silent = sum(r["lg_phase"] == "silent" for r in buggy)
-    lg_wasted_total = sum(r["lg_wasted_calls"] or 0 for r in buggy)
 
-    # pttai-only differentiator subset (dup-names is caught by BOTH -> excluded)
-    diff = [r for r in buggy if r["pttai_only"]]
-    both = [r for r in buggy if not r["pttai_only"]]
+    # Three disjoint subsets by category:
+    #   differentiator — genuine pttai-only-at-build catches (the headline)
+    #   both           — caught at build by BOTH frameworks (duplicate names)
+    #   dsl-strictness — dead-end: NOT a LangGraph bug (legal implicit terminal),
+    #                    pttai rejects it only per its own end_nodes requirement;
+    #                    excluded from the differentiator headline + wasted total.
+    diff = [r for r in buggy if r["category"] == "differentiator"]
+    both = [r for r in buggy if r["category"] == "both"]
+    strict = [r for r in buggy if r["category"] == "dsl-strictness"]
+
+    def _subset(rows):
+        return {
+            "n": len(rows),
+            "pttai_caught": sum(r["pttai_flagged_at_build"] for r in rows),
+            "langgraph_build_catch": sum(r["lg_phase"] == "build" for r in rows),
+            "langgraph_runtime": sum(r["lg_phase"] == "runtime" for r in rows),
+            "langgraph_silent": sum(r["lg_phase"] == "silent" for r in rows),
+            "langgraph_wasted_calls_total": sum(r["lg_wasted_calls"] or 0 for r in rows),
+        }
 
     # ---- false positives on clean ----
     n_clean = len(clean)
@@ -120,25 +134,20 @@ def summarize(rows):
             "buggy": n_buggy,
             "clean": n_clean,
             "bug_classes": len(per_class),
-            "pttai_only_classes": sorted({r["bug_class"] for r in diff}),
+            "differentiator_classes": sorted({r["bug_class"] for r in diff}),
             "caught_by_both_classes": sorted({r["bug_class"] for r in both}),
+            "dsl_strictness_classes": sorted({r["bug_class"] for r in strict}),
         },
         "buggy": {
             "pttai_build_catch_rate": _rate(pttai_caught, n_buggy),
             "pttai_caught": pttai_caught,
             "langgraph_build_catch": lg_caught_build,
-            "langgraph_runtime": lg_runtime,
-            "langgraph_silent": lg_silent,
-            "langgraph_wasted_calls_total": lg_wasted_total,
         },
-        "pttai_only_subset": {
-            "n": len(diff),
-            "pttai_caught": sum(r["pttai_flagged_at_build"] for r in diff),
-            "langgraph_build_catch": sum(r["lg_phase"] == "build" for r in diff),
-            "langgraph_runtime": sum(r["lg_phase"] == "runtime" for r in diff),
-            "langgraph_silent": sum(r["lg_phase"] == "silent" for r in diff),
-            "langgraph_wasted_calls_total": sum(r["lg_wasted_calls"] or 0 for r in diff),
-        },
+        # Kept as the primary headline subset. NOTE for downstream consumers: the
+        # wasted-call figure is SIMULATED (offline fake LLM), worst-case-ordered.
+        "pttai_only_subset": _subset(diff),
+        "caught_by_both_subset": _subset(both),
+        "dsl_strictness_subset": _subset(strict),
         "clean": {
             "pttai_false_positive_rate": _rate(len(clean_flagged), n_clean),
             "pttai_false_positives": len(clean_flagged),
@@ -187,17 +196,19 @@ def _print(rows, summary):
 
     # ---- per-class catch-rate table ----
     print("\nCATCH RATE BY CLASS (buggy)")
-    hdr = ("bug class", "pttai-only?", "n", "pttai caught", "LG build", "LG runtime",
+    hdr = ("bug class", "category", "n", "pttai caught", "LG build", "LG runtime",
            "LG silent", "LG wasted")
-    w = (30, 12, 3, 13, 9, 11, 10, 10)
+    w = (26, 15, 3, 13, 9, 11, 10, 10)
     print(row(hdr)); print("-" * (sum(w) + 2 * (len(w) - 1)))
+    _cat = {"differentiator": "pttai-only", "both": "BOTH", "dsl-strictness": "DSL-strict"}
     for cls, c in summary["per_class"].items():
-        print(row((cls, "yes" if c["pttai_only"] else "NO (both)", c["n"],
+        print(row((cls, _cat.get(c["category"], c["category"]), c["n"],
                    f'{c["pttai_caught"]}/{c["n"]}', c["lg_build"], c["lg_runtime"],
                    c["lg_silent"], c["lg_wasted_total"])))
 
     b = summary["buggy"]
     d = summary["pttai_only_subset"]
+    st = summary["dsl_strictness_subset"]
     cl = summary["clean"]
     print("\n" + "=" * 90)
     print("HEADLINE")
@@ -215,12 +226,17 @@ def _print(rows, summary):
           f"{cl['pttai_false_positive_rate']:.0%}")
     if cl["pttai_false_positives"]:
         print(f"    !! false positives on: {cl['false_positive_ids']}")
-    print(f"\nWASTED COST (LLM calls raw LangGraph burns before the bug surfaces):")
-    print(f"  total across all buggy items:      {b['langgraph_wasted_calls_total']} model calls")
-    print(f"  total across pttai-only subset:    {d['langgraph_wasted_calls_total']} model calls")
-    print(f"  pttai on every buggy item:         0 model calls (rejected at build, no invoke)")
-    print(f"\npttai-only-at-build classes: {summary['counts']['pttai_only_classes']}")
+    print(f"\nWASTED COST — SIMULATED (offline fake LLM), worst-case-ordered; NOT real-model cost.")
+    print(f"  differentiator subset (raw LangGraph):  "
+          f"{d['langgraph_wasted_calls_total']} model calls burned before the bug surfaces")
+    print(f"  pttai on every differentiator item:     0 model calls (rejected at build, no invoke)")
+    print(f"\nDSL-STRICTNESS subset (dead-end) — NOT a LangGraph bug, excluded from the headline:")
+    print(f"  {st['n']} items; pttai build-rejects (its DSL requires declared end_nodes), "
+          f"raw LangGraph compiles + runs to a legal implicit-terminal halt "
+          f"({st['langgraph_silent']} silent, {st['langgraph_wasted_calls_total']} calls = normal work, not waste).")
+    print(f"\ndifferentiator classes:      {summary['counts']['differentiator_classes']}")
     print(f"caught-by-both classes:      {summary['counts']['caught_by_both_classes']}")
+    print(f"dsl-strictness classes:      {summary['counts']['dsl_strictness_classes']}")
 
 
 def main():

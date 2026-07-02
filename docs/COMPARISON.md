@@ -61,7 +61,7 @@ AgenticGraph(start_node=d, end_nodes={h})
 Raw LangGraph: if your `add_conditional_edges` path map omits `"b"`, the model
 returning `"b"` dead-ends at runtime — a bug that hides until that branch is hit.
 
-### c. A non-end node whose `.child` is `None`
+### c. A non-end node whose `.child` is `None` (pttai DSL strictness — NOT a LangGraph bug)
 
 ```python
 a = AgentNode(name="a", llm=get_llm(), node_prompt="one")
@@ -76,8 +76,13 @@ AgenticGraph(start_node=a, end_nodes=set())
 Node 'b' has no children and is not an end node.
 ```
 
-Raw LangGraph: a node with no outgoing edge and no edge to `END` is a structural
-dead-end you must remember to wire yourself.
+**This is not a LangGraph defect.** In raw LangGraph a node with no outgoing edge
+is a *legal implicit terminal*: the graph compiles and runs to a normal halt
+(verified empirically on LangGraph 1.2.x — `compile()` does not raise and
+`invoke()` returns without error). pttai rejects it only because its DSL
+*requires* every terminal to be declared in `end_nodes`. It is a useful
+guardrail, but it is **pttai DSL strictness, not a bug LangGraph misses** — so it
+is *excluded* from the differentiator numbers below.
 
 ### d. Duplicate node names — caught by BOTH frameworks (not a differentiator)
 
@@ -102,22 +107,27 @@ is friendlier, but the guarantee is the same. (This was previously described her
 as a silent overwrite; that was wrong for LangGraph 1.0 — corrected after
 measuring it in `eval/bugbench/`.)
 
-> There are more genuine pttai-only-at-build catches (concurrent writes to a
-> reducer-less key across parallel branches; a `node_prompt` placeholder with no
-> matching scalar read; unreachable nodes) — all in
+> There are more genuine pttai-only-at-build catches (the cyclic / loop-carried
+> read-before-write case; concurrent writes to a reducer-less key across parallel
+> branches; a `node_prompt` placeholder with no matching scalar read) — all in
 > `pttai/validation.py::collect_issues`, and all measured in `eval/bugbench/`. Of
-> the four classes above, **three (a, b, c) are caught only by pttai at build**;
-> raw LangGraph surfaces them at runtime (after wasting model calls) or not at
-> all. Duplicate names (d) is the one caught by both.
+> the four classes above, **two (a, b) are caught only by pttai at build** while
+> raw LangGraph surfaces them at runtime after wasting model calls; the dead-end
+> (c) is pttai DSL strictness, not a LangGraph bug (legal implicit terminal); and
+> duplicate names (d) is caught by both.
 
-Measured over the full `eval/bugbench/` corpus (15 buggy + 19 valid pipelines),
-pttai catches **13/13** pttai-only dataflow bugs at build with **0** false
-positives; raw LangGraph catches **0** of those at build (10 surface at runtime,
-3 silently) after burning **15** wasted model calls:
+Measured over the full `eval/bugbench/` corpus (17 buggy + 19 valid pipelines),
+pttai catches **12/12** pttai-only dataflow bugs at build with **0** false
+positives; raw LangGraph catches **0** of those at build (all 12 surface at
+runtime) after burning **8** model calls — a **simulated, worst-case-ordered**
+figure from the offline fake LLM, not measured real-model cost (see
+[`eval/bugbench/README.md`](../eval/bugbench/README.md)). The `dead-end-node`
+class is *excluded* from these numbers because it is legal LangGraph behavior, not
+a defect:
 
 <p align="center">
   <img src="../figures/bug_catch.png" width="90%"
-       alt="pttai catches 13/13 pttai-only bugs at build with 0 wasted calls; raw LangGraph catches 0 at build (10 runtime, 3 silent) and wastes 15 LLM calls; 0 pttai false positives on 19 valid pipelines.">
+       alt="pttai catches 12/12 pttai-only dataflow bugs at build with 0 wasted calls; raw LangGraph catches 0 at build (all 12 surface at runtime) and burns 8 simulated LLM calls; 0 pttai false positives on 19 valid pipelines.">
 </p>
 
 <p align="center"><em>Regenerate from the committed data with <code>python figures/make_charts.py</code>.</em></p>

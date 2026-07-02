@@ -21,62 +21,86 @@ Writes `eval/bugbench/results.csv` (per-item) and `eval/bugbench/results.json`
 
 ## Corpus
 
-**34 items:** 15 buggy across 6 classes + 19 clean/valid (every runnable
+**36 items:** 17 buggy across 7 classes + 19 clean/valid (every runnable
 `examples/architectures/*` and `examples/basics/*` pipeline — the false-positive
-control).
+control). Each buggy item has a **category**: `differentiator` (pttai-only at
+build), `both` (caught at build by both frameworks), or `dsl-strictness` (a pttai
+DSL requirement that is **not** a LangGraph bug).
 
-| Bug class | instances | pttai-only at build? | what raw LangGraph does |
+| Bug class | instances | category | what raw LangGraph does |
 |---|:--:|:--:|---|
-| `read-before-write` (reads a computed key before its producer runs) | 3 | **yes** | runtime `KeyError` (0–1 wasted calls) |
-| `dangling-choice` (a decision/condition choice with no wired node) | 3 | **yes** | runtime `KeyError` on the omitted branch (1 wasted call) |
-| `dead-end-node` (a non-end node with no outgoing edge) | 3 | **yes** | **silent** — graph just halts (2–3 wasted calls) |
-| `concurrent-write-no-reducer` (parallel branches write one reducer-less key) | 2 | **yes** | runtime `InvalidUpdateError` (1 wasted call) |
-| `prompt-placeholder-mismatch` (`{name}` in prompt, no matching scalar read) | 2 | **yes** | runtime `KeyError` when the prompt is formatted |
-| `duplicate-node-names` | 2 | **NO — caught by both** | **build** `ValueError('Node \`x\` already present.')` |
+| `read-before-write` (reads a computed key before its producer runs) | 3 | **differentiator** | runtime `KeyError` (0–1 wasted calls) |
+| `cyclic-read-before-write` (reads a key produced only by a downstream node that loops back) | 2 | **differentiator** | runtime `KeyError` on the first iteration (0–1 wasted calls) |
+| `dangling-choice` (a decision/condition choice with no wired node) | 3 | **differentiator** | runtime `KeyError` on the omitted branch (1 wasted call) |
+| `concurrent-write-no-reducer` (parallel branches write one reducer-less key) | 2 | **differentiator** | runtime `InvalidUpdateError` (1 wasted call) |
+| `prompt-placeholder-mismatch` (`{name}` in prompt, no matching scalar read) | 2 | **differentiator** | runtime `KeyError` when the prompt is formatted |
+| `duplicate-node-names` | 2 | **both** | **build** `ValueError('Node \`x\` already present.')` |
+| `dead-end-node` (a non-end node with no outgoing edge) | 3 | **dsl-strictness** | **compiles + runs** to a legal implicit-terminal halt (see note) |
 
 ### Honesty notes
 
+- **`dead-end-node` is NOT a LangGraph bug.** A node with no outgoing edge is a
+  *legal implicit terminal* in LangGraph: `compile()` does **not** raise and
+  `invoke()` returns without error (verified empirically on LangGraph 1.2.x). The
+  benchmark classifies it `dsl-strictness` because pttai rejects it only per its
+  own rule that every terminal must be declared in `end_nodes` — not because
+  LangGraph did anything wrong. It is therefore **excluded** from the
+  differentiator headline and the wasted-call total. The `silent` phase and the
+  8 "calls" it records are just the graph running its two nodes to completion —
+  normal work, not waste.
+- **`cyclic-read-before-write` is a genuine pttai-only-at-build catch** (issue
+  #34): a cycle where a node reads a key produced **only** by a downstream node
+  that loops back. On the first iteration the key is absent, so raw LangGraph
+  `KeyError`s at runtime; pttai's back-edge-aware availability fixpoint rejects
+  it at build.
 - **`duplicate-node-names` is caught by BOTH frameworks at build.** Raw
-  LangGraph's `add_node` raises `Node \`x\` already present.` It is included in
-  the corpus for completeness but is **not** a pttai differentiator. (`docs/COMPARISON.md`
-  previously claimed LangGraph silently merges duplicate names — that was wrong
-  and has been corrected.)
+  LangGraph's `add_node` raises `Node \`x\` already present.` It is included for
+  completeness but is **not** a pttai differentiator.
 - **There is no true value-*type* mismatch detection.** The validator checks
   state-key *presence / availability*, not Python value types. The closest
   firing check is `prompt-placeholder-mismatch` (a guaranteed runtime
   `KeyError`), included as its own class.
 - The **clean/valid set is the real, shipped `examples/`** — the strongest
   false-positive control available.
+- **The "wasted calls" figure is SIMULATED, not real-model cost.** Every
+  LangGraph baseline runs against a counting *fake* LLM (offline), and the
+  dangling-choice baselines deterministically hit the omitted branch because the
+  fake `with_structured_output` picks the first `Literal` value and the corpus
+  orders the unwired choice first — a **worst-case ordering**, disclosed here, not
+  an observation of a real model.
 
 ## Results (measured, offline fake LLM)
 
 ### Catch rate by class
 
-| bug class | pttai-only? | n | pttai caught | LG build | LG runtime | LG silent | LG wasted calls |
+| bug class | category | n | pttai caught | LG build | LG runtime | LG silent | LG wasted calls |
 |---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| read-before-write | yes | 3 | 3/3 | 0 | 3 | 0 | 2 |
-| dangling-choice | yes | 3 | 3/3 | 0 | 3 | 0 | 3 |
-| dead-end-node | yes | 3 | 3/3 | 0 | 0 | 3 | 8 |
-| duplicate-node-names | NO (both) | 2 | 2/2 | 2 | 0 | 0 | 0 |
-| concurrent-write-no-reducer | yes | 2 | 2/2 | 0 | 2 | 0 | 2 |
-| prompt-placeholder-mismatch | yes | 2 | 2/2 | 0 | 2 | 0 | 0 |
+| read-before-write | differentiator | 3 | 3/3 | 0 | 3 | 0 | 2 |
+| cyclic-read-before-write | differentiator | 2 | 2/2 | 0 | 2 | 0 | 1 |
+| dangling-choice | differentiator | 3 | 3/3 | 0 | 3 | 0 | 3 |
+| concurrent-write-no-reducer | differentiator | 2 | 2/2 | 0 | 2 | 0 | 2 |
+| prompt-placeholder-mismatch | differentiator | 2 | 2/2 | 0 | 2 | 0 | 0 |
+| duplicate-node-names | both | 2 | 2/2 | 2 | 0 | 0 | 0 |
+| dead-end-node | dsl-strictness | 3 | 3/3 | 0 | 0 | 3 | 8¹ |
+
+¹ Not waste: LangGraph compiles and runs the dead-end graph to a normal halt.
 
 ### Headline
 
 | metric | value |
 |---|---|
-| pttai build-time catch rate (all 15 buggy) | **15/15 = 100%** |
+| pttai build-time catch rate (all 17 buggy) | **17/17 = 100%** |
 | …of which raw LangGraph also catches at build | 2 (the duplicate-name class — both) |
-| **pttai-only-at-build differentiator subset** | **13/13 caught**; on the same 13, LangGraph = 0 build / 10 runtime / 3 silent |
+| **pttai-only-at-build differentiator subset** | **12/12 caught**; on the same 12, LangGraph = 0 build / 12 runtime / 0 silent |
 | **pttai false-positive rate** (19 clean/valid) | **0/19 = 0%** |
 
-### Wasted cost
+### Wasted cost (simulated, offline fake LLM — worst-case-ordered)
 
-| framework | LLM calls burned before the bug surfaces (15 buggy items) |
+| framework | LLM calls burned before the bug surfaces (12 differentiator items) |
 |---|---|
-| raw LangGraph | **15 model calls** — and 3 items (`dead-end-node`) surface **silently**, never erroring |
+| raw LangGraph | **8 simulated model calls** (all 12 surface at runtime) |
 | pttai | **0 model calls** — every buggy pipeline is rejected at build, before any `invoke()` |
 
-The `dead-end-node` class is the sharpest illustration: raw LangGraph runs the
-graph to a silent halt (no error, wrong/empty output) after wasting the most
-calls; pttai refuses to build it.
+This is a simulated worst case, not measured real-model cost (see the honesty
+note on the fake LLM above). The `dead-end-node` class is deliberately **not**
+counted here — it is legal LangGraph behavior, not a defect.

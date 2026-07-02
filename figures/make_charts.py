@@ -93,7 +93,7 @@ def loc_chart() -> None:
 def bug_chart() -> None:
     data = json.loads(BUG_JSON.read_text())
     summ = data["summary"]
-    sub = summ["pttai_only_subset"]   # the 13 pttai-only dataflow bugs
+    sub = summ["pttai_only_subset"]   # the pttai-only dataflow-bug differentiator subset
     clean = summ["clean"]
     n = sub["n"]
 

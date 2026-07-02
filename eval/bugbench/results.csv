@@ -1,35 +1,37 @@
-id,bug_class,label,pttai_only,pttai_flagged_at_build,pttai_error_type,pttai_message,pttai_build_ms,pttai_wasted_calls,lg_phase,lg_error_type,lg_message,lg_wasted_calls
-rbw-1,read-before-write,buggy,True,True,GraphValidationError,"[error] write: reads computed key 'plan' but no upstream node produces it before this node (produced by: ['planner'], none of which are upstream); available keys here: ['decision', 'log', 'messages', 'token']",0.618,0,runtime,KeyError,'plan',0
-rbw-2,read-before-write,buggy,True,True,GraphValidationError,"[error] summarize: reads computed key 'draft' but no upstream node produces it before this node (produced by: ['drafter'], none of which are upstream); available keys here: ['decision', 'log', 'messages', 'token']",0.593,0,runtime,KeyError,'draft',1
-rbw-3,read-before-write,buggy,True,True,GraphValidationError,"[error] reader: reads computed key 'score' but no upstream node produces it before this node (produced by: ['scorer'], none of which are upstream); available keys here: ['decision', 'log', 'messages', 'token']",0.529,0,runtime,KeyError,'score',1
-dc-1,dangling-choice,buggy,True,True,GraphValidationError,"[error] d: choice 'b' has no connected node; wire it, e.g. `decision['b'] > some_node`",0.749,0,runtime,KeyError,'b',1
-dc-2,dangling-choice,buggy,True,True,GraphValidationError,"[error] d: choice 'med' has no connected node; wire it, e.g. `decision['med'] > some_node`",0.752,0,runtime,KeyError,'med',1
-dc-3,dangling-choice,buggy,True,True,GraphValidationError,"[error] g: choice 'fail' has no connected node; wire it, e.g. `decision['fail'] > some_node`",1.093,0,runtime,KeyError,'fail',1
-de-1,dead-end-node,buggy,True,True,ValueError,Node 'b' has no children and is not an end node.,0.263,0,silent,,,2
-de-2,dead-end-node,buggy,True,True,ValueError,Node 'c' has no children and is not an end node.,0.276,0,silent,,,3
-de-3,dead-end-node,buggy,True,True,ValueError,Node 'c' has no children and is not an end node.,0.291,0,silent,,,3
-dup-1,duplicate-node-names,buggy,False,True,ValueError,Duplicate node name 'dup': two distinct nodes share this name. Node names must be unique within a graph.,0.014,0,build,ValueError,Node `dup` already present.,0
-dup-2,duplicate-node-names,buggy,False,True,ValueError,Duplicate node name 'worker': two distinct nodes share this name. Node names must be unique within a graph.,0.01,0,build,ValueError,Node `worker` already present.,0
-cw-1,concurrent-write-no-reducer,buggy,True,True,GraphValidationError,"[error] b: concurrently writes 'result' with node 'c', but 'result' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime",0.476,0,runtime,InvalidUpdateError,At key 'result': Can receive only one value per step. Use an Annotated key to handle multiple values.,1
-cw-2,concurrent-write-no-reducer,buggy,True,True,GraphValidationError,"[error] b: concurrently writes 'result' with node 'c', but 'result' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime",0.525,0,runtime,InvalidUpdateError,At key 'result': Can receive only one value per step. Use an Annotated key to handle multiple values.,1
-pp-1,prompt-placeholder-mismatch,buggy,True,True,GraphValidationError,[error] reader: node_prompt references placeholder {subject} but 'subject' is not a declared scalar read ['topic']; this raises KeyError when the prompt is interpolated,0.459,0,runtime,KeyError,'subject',0
-pp-2,prompt-placeholder-mismatch,buggy,True,True,GraphValidationError,[error] scorer: node_prompt references placeholder {criteria} but 'criteria' is not a declared scalar read ['rubric']; this raises KeyError when the prompt is interpolated,0.566,0,runtime,KeyError,'criteria',0
-clean-architectures-prompt_chaining,valid/architectures,clean,False,False,,,2.438,,,,,
-clean-architectures-routing,valid/architectures,clean,False,False,,,4.242,,,,,
-clean-architectures-react_agent,valid/architectures,clean,False,False,,,3.935,,,,,
-clean-architectures-parallelization,valid/architectures,clean,False,False,,,3.312,,,,,
-clean-architectures-evaluator_optimizer,valid/architectures,clean,False,False,,,2.268,,,,,
-clean-architectures-orchestrator_workers,valid/architectures,clean,False,False,,,2.688,,,,,
-clean-architectures-reflection,valid/architectures,clean,False,False,,,1.998,,,,,
-clean-architectures-supervisor,valid/architectures,clean,False,False,,,2.604,,,,,
-clean-basics-01_single_agent,valid/basics,clean,False,False,,,1.58,,,,,
-clean-basics-02_tools,valid/basics,clean,False,False,,,2.808,,,,,
-clean-basics-03_sequential,valid/basics,clean,False,False,,,2.029,,,,,
-clean-basics-04_decision_routing,valid/basics,clean,False,False,,,2.148,,,,,
-clean-basics-05_condition_routing,valid/basics,clean,False,False,,,1.963,,,,,
-clean-basics-06_parallel_fanout,valid/basics,clean,False,False,,,2.523,,,,,
-clean-basics-07_map_reduce,valid/basics,clean,False,False,,,2.739,,,,,
-clean-basics-08_typed_io,valid/basics,clean,False,False,,,2.416,,,,,
-clean-basics-10_graph_composition,valid/basics,clean,False,False,,,2.559,,,,,
-clean-basics-11_node_policies,valid/basics,clean,False,False,,,1.867,,,,,
-clean-basics-12_validation_summary,valid/basics,clean,False,False,,,1.648,,,,,
+id,bug_class,label,category,pttai_only,pttai_flagged_at_build,pttai_error_type,pttai_message,pttai_build_ms,pttai_wasted_calls,lg_phase,lg_error_type,lg_message,lg_wasted_calls
+rbw-1,read-before-write,buggy,differentiator,True,True,GraphValidationError,"[error] write: reads computed key 'plan' but no upstream node produces it before this node (produced by: ['planner'], none of which are upstream); available keys here: ['decision', 'log', 'messages', 'token']",0.682,0,runtime,KeyError,'plan',0
+rbw-2,read-before-write,buggy,differentiator,True,True,GraphValidationError,"[error] summarize: reads computed key 'draft' but no upstream node produces it before this node (produced by: ['drafter'], none of which are upstream); available keys here: ['decision', 'log', 'messages', 'token']",0.56,0,runtime,KeyError,'draft',1
+rbw-3,read-before-write,buggy,differentiator,True,True,GraphValidationError,"[error] reader: reads computed key 'score' but no upstream node produces it before this node (produced by: ['scorer'], none of which are upstream); available keys here: ['decision', 'log', 'messages', 'token']",0.537,0,runtime,KeyError,'score',1
+crbw-1,cyclic-read-before-write,buggy,differentiator,True,True,GraphValidationError,"[error] gen: reads computed key 'summary' but no upstream node produces it before this node (produced by: ['writer'], none of which are upstream); available keys here: ['log', 'messages', 'token']",0.693,0,runtime,KeyError,'summary',0
+crbw-2,cyclic-read-before-write,buggy,differentiator,True,True,GraphValidationError,"[error] loop: reads computed key 'tally' but no upstream node produces it before this node (produced by: ['acc'], none of which are upstream); available keys here: ['log', 'messages', 'token']",0.644,0,runtime,KeyError,'tally',1
+dc-1,dangling-choice,buggy,differentiator,True,True,GraphValidationError,"[error] d: choice 'b' has no connected node; wire it, e.g. `decision['b'] > some_node`",1.266,0,runtime,KeyError,'b',1
+dc-2,dangling-choice,buggy,differentiator,True,True,GraphValidationError,"[error] d: choice 'med' has no connected node; wire it, e.g. `decision['med'] > some_node`",0.806,0,runtime,KeyError,'med',1
+dc-3,dangling-choice,buggy,differentiator,True,True,GraphValidationError,"[error] g: choice 'fail' has no connected node; wire it, e.g. `decision['fail'] > some_node`",0.553,0,runtime,KeyError,'fail',1
+de-1,dead-end-node,buggy,dsl-strictness,False,True,ValueError,Node 'b' has no children and is not an end node.,0.243,0,silent,,,2
+de-2,dead-end-node,buggy,dsl-strictness,False,True,ValueError,Node 'c' has no children and is not an end node.,0.271,0,silent,,,3
+de-3,dead-end-node,buggy,dsl-strictness,False,True,ValueError,Node 'c' has no children and is not an end node.,0.296,0,silent,,,3
+dup-1,duplicate-node-names,buggy,both,False,True,ValueError,Duplicate node name 'dup': two distinct nodes share this name. Node names must be unique within a graph.,0.014,0,build,ValueError,Node `dup` already present.,0
+dup-2,duplicate-node-names,buggy,both,False,True,ValueError,Duplicate node name 'worker': two distinct nodes share this name. Node names must be unique within a graph.,0.01,0,build,ValueError,Node `worker` already present.,0
+cw-1,concurrent-write-no-reducer,buggy,differentiator,True,True,GraphValidationError,"[error] b: concurrently writes 'result' with node 'c', but 'result' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime",0.481,0,runtime,InvalidUpdateError,At key 'result': Can receive only one value per step. Use an Annotated key to handle multiple values.,1
+cw-2,concurrent-write-no-reducer,buggy,differentiator,True,True,GraphValidationError,"[error] b: concurrently writes 'result' with node 'd', but 'result' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime",0.541,0,runtime,InvalidUpdateError,At key 'result': Can receive only one value per step. Use an Annotated key to handle multiple values.,1
+pp-1,prompt-placeholder-mismatch,buggy,differentiator,True,True,GraphValidationError,[error] reader: node_prompt references placeholder {subject} but 'subject' is not a declared scalar read ['topic']; this raises KeyError when the prompt is interpolated,0.463,0,runtime,KeyError,'subject',0
+pp-2,prompt-placeholder-mismatch,buggy,differentiator,True,True,GraphValidationError,[error] scorer: node_prompt references placeholder {criteria} but 'criteria' is not a declared scalar read ['rubric']; this raises KeyError when the prompt is interpolated,0.594,0,runtime,KeyError,'criteria',0
+clean-architectures-prompt_chaining,valid/architectures,clean,clean,False,False,,,2.541,,,,,
+clean-architectures-routing,valid/architectures,clean,clean,False,False,,,4.213,,,,,
+clean-architectures-react_agent,valid/architectures,clean,clean,False,False,,,3.802,,,,,
+clean-architectures-parallelization,valid/architectures,clean,clean,False,False,,,2.754,,,,,
+clean-architectures-evaluator_optimizer,valid/architectures,clean,clean,False,False,,,2.074,,,,,
+clean-architectures-orchestrator_workers,valid/architectures,clean,clean,False,False,,,2.592,,,,,
+clean-architectures-reflection,valid/architectures,clean,clean,False,False,,,1.958,,,,,
+clean-architectures-supervisor,valid/architectures,clean,clean,False,False,,,2.549,,,,,
+clean-basics-01_single_agent,valid/basics,clean,clean,False,False,,,1.576,,,,,
+clean-basics-02_tools,valid/basics,clean,clean,False,False,,,2.792,,,,,
+clean-basics-03_sequential,valid/basics,clean,clean,False,False,,,2.014,,,,,
+clean-basics-04_decision_routing,valid/basics,clean,clean,False,False,,,2.166,,,,,
+clean-basics-05_condition_routing,valid/basics,clean,clean,False,False,,,1.991,,,,,
+clean-basics-06_parallel_fanout,valid/basics,clean,clean,False,False,,,3.058,,,,,
+clean-basics-07_map_reduce,valid/basics,clean,clean,False,False,,,2.77,,,,,
+clean-basics-08_typed_io,valid/basics,clean,clean,False,False,,,1.938,,,,,
+clean-basics-10_graph_composition,valid/basics,clean,clean,False,False,,,2.612,,,,,
+clean-basics-11_node_policies,valid/basics,clean,clean,False,False,,,1.843,,,,,
+clean-basics-12_validation_summary,valid/basics,clean,clean,False,False,,,1.857,,,,,
