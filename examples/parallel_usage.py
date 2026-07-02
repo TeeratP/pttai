@@ -127,7 +127,6 @@ def demo_mapreduce():
 class ReviewState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     log: Annotated[list[str], operator.add]
-    decision: str
     topic: str       # plain entry key (read, never written -> inferred input)
     sentiment: str   # written by the structured node
     score: str
@@ -168,7 +167,6 @@ def demo_summary(graph):
 class SummaryState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     log: Annotated[list[str], operator.add]
-    decision: str
     summary: str
 
 

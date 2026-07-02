@@ -3,8 +3,8 @@
 An NLP routing pipeline: a ``DecisionNode`` classifies the document into one of
 its ``choices`` using constrained structured output (the model MUST return a
 valid label), then routes to the matching specialized handler via
-``triage["label"] > handler``. The label goes to the dedicated ``decision``
-channel, never into the conversation.
+``triage["label"] > handler``. The label goes to the dedicated per-node
+``decision_triage`` channel, never into the conversation.
 
     python examples/nlp/doc_triage.py
 """
