@@ -45,7 +45,7 @@ def pttai_version() -> str:
 
     graph = AgenticGraph(start_node=triage, end_nodes={billing, technical, general})
     out = graph.invoke("I was charged twice this month!")
-    return f"routed to {out['decision']!r} -> {out['messages'][-1].content}"
+    return f"routed to {out['decision_triage']!r} -> {out['messages'][-1].content}"
 
 
 # --- equivalent in raw LangGraph ---

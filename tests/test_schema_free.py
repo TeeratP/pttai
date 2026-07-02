@@ -3,8 +3,8 @@
 A graph needs NO custom state schema. On the default ``AgenticState`` any
 non-standard key a node READS (and no node writes) is auto-registered as a plain
 INPUT channel and seeded at invoke; keys a node writes are auto-registered as
-plain channels. The framework-managed RESERVED channels (messages/log/decision/
-token) cannot be user-declared on a node or seeded as an invoke extra kwarg, and
+plain channels. The framework-managed RESERVED channels (messages/log/token)
+cannot be user-declared on a node or seeded as an invoke extra kwarg, and
 an unknown invoke key is a clear error rather than a silent drop.
 """
 
@@ -82,12 +82,6 @@ def test_invoke_reserved_token_raises(t):
     g = _single(t)
     with pytest.raises(ValueError, match="reserved"):
         g.invoke(message="x", token={"m": {"total_tokens": 1}})
-
-
-def test_invoke_reserved_decision_raises(t):
-    g = _single(t)
-    with pytest.raises(ValueError, match="reserved"):
-        g.invoke(message="x", decision="pos")
 
 
 # --- 4. unknown invoke key -> clear error (not a silent drop) -----------------

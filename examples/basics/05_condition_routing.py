@@ -31,7 +31,7 @@ def pttai_version() -> str:
 
     graph = AgenticGraph(start_node=route, end_nodes={brief, detailed})
     out = graph.invoke("Hi")
-    return f"routed to {out['decision']!r} -> {out['messages'][-1].content}"
+    return f"routed to {out['decision_route']!r} -> {out['messages'][-1].content}"
 
 
 # --- equivalent in raw LangGraph ---

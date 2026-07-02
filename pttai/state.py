@@ -14,7 +14,7 @@ from langgraph.graph.message import add_messages
 # (`messages` is exempt from the user-declaration guard — it is the standard
 # conversation channel and the default node read/write — but it is still
 # supplied through the dedicated input/`message=` path, not as an extra kwarg.)
-RESERVED = {"messages", "log", "decision", "token"}
+RESERVED = {"messages", "log", "token"}
 
 
 def _deep_sum(a: dict, b: dict) -> dict:
@@ -63,10 +63,6 @@ class AgenticState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     # operator.add concatenates log fragments from parallel branches.
     log: Annotated[list[str], operator.add]
-    # Transient routing key written by DecisionNode and read by its route().
-    # Plain (no reducer): last-writer-wins, which is correct because route()
-    # always runs immediately after the same node writes it.
-    decision: str
     # Per-model token tally: {model_name: usage_metadata}. The reducer unions by
     # model and deep-sums a model's usage across every LLM call in the run (incl.
     # tool-loop calls and parallel fan-out), so out["token"] is the run total.

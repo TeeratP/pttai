@@ -1,7 +1,7 @@
 """ConditionNode: deterministic routing by a Python predicate (no LLM).
 
-The code sibling of DecisionNode — writes its label to the `decision` field and
-routes off it via the shared RouterNode machinery.
+The code sibling of DecisionNode — writes its label to its `decision_{name}` field
+and routes off it via the shared RouterNode machinery.
 """
 
 import pytest
@@ -27,12 +27,12 @@ def test_routes_by_input_value(t):
     g = AgenticGraph(start_node=gate, end_nodes=[a, b])  # schema-free: count auto-input
 
     out = g.invoke(message="x", count=3)
-    assert out["decision"] == "left"
+    assert out["decision_gate"] == "left"
     assert any(m.content == "AAA" for m in out["messages"])
     assert "gate:left" in out["log"]
 
     out = g.invoke(message="x", count=7)
-    assert out["decision"] == "right"
+    assert out["decision_gate"] == "right"
     assert any(m.content == "BBB" for m in out["messages"])
 
 
@@ -54,7 +54,7 @@ def test_terminating_loop_no_counter(t):
     g = AgenticGraph(start_node=gen, end_nodes=done)
 
     out = g.invoke(message="start")   # terminates (no recursion-limit blow-up)
-    assert out["decision"] == "stop"
+    assert out["decision_loop"] == "stop"
     assert out["messages"][-1].content == "DONE"
 
 
@@ -70,21 +70,21 @@ def test_route_picks_correct_branch(t):
     y = _agent(t, "y", "Y")
     c["x"] > x
     c["y"] > y
-    assert c.route({"decision": "x"}) == "x"
-    assert c.route({"decision": "y"}) == "y"
+    assert c.route({"decision_c": "x"}) == "x"
+    assert c.route({"decision_c": "y"}) == "y"
 
 
 def test_route_childless_choice_raises(t):
     c = _cond()
     with pytest.raises(ValueError, match="does not have a child"):
-        c.route({"decision": "x"})
+        c.route({"decision_c": "x"})
 
 
 def test_route_unknown_choice_raises(t):
     c = _cond()
     c["x"] > _agent(t, "x", "X")
     with pytest.raises(ValueError, match="not found"):
-        c.route({"decision": "bogus"})
+        c.route({"decision_c": "bogus"})
 
 
 def test_condition_out_of_choices_raises(t):
@@ -139,5 +139,5 @@ def test_coexists_with_decision_node(t):
     g = AgenticGraph(start_node=dec, end_nodes=[la, lb, bb])
 
     out = g.invoke(message="x", count=3)   # dec -> a -> cond -> left -> la
-    assert out["decision"] == "left"       # cond is the last writer of `decision`
+    assert out["decision_cond"] == "left"  # cond writes its own decision_cond channel
     assert any(m.content == "LA" for m in out["messages"])

@@ -15,7 +15,6 @@ from pttai.validation import GraphValidationError
 class TopicState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     log: Annotated[list[str], operator.add]
-    decision: str
     topic: str       # scalar input (read, no writer)
     audience: str     # scalar input (read, no writer)
 

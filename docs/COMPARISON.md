@@ -37,7 +37,7 @@ AgenticGraph(start_node=write, end_nodes={planner})
 ```
 [error] write: reads computed key 'plan' but no upstream node produces it before
 this node (produced by: ['planner'], none of which are upstream); available keys
-here: ['decision', 'log', 'messages', 'token']
+here: ['log', 'messages', 'token']
 ```
 
 Raw LangGraph: compiles fine; `state["plan"]` is a `KeyError` at runtime on the

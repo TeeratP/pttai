@@ -94,7 +94,7 @@ graph.summary()
 
 ```
 AgenticGraph 'graph'   state=AgenticState
-initial: decision, log, messages, token
+initial: log, messages, token
 ------------------------------------------------
 node  type       reads     writes        available
 rag   AgentNode  messages  log,messages  log,messages

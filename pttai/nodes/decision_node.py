@@ -58,8 +58,8 @@ class RouterNode:
     ``DecisionNode(RouterNode, LLMNode)`` — and call ``_setup_choices`` explicitly
     from their own ``__init__``. Subclasses decide HOW the label is chosen
     (``DecisionNode`` via an LLM, ``ConditionNode`` via a Python callable) and
-    both write it to the dedicated ``decision`` state field (read by ``route()``),
-    never into ``messages``. Because ``RouterNode`` stays in the MRO of both,
+    both write it to a dedicated per-node ``decision_{name}`` state field (read by
+    ``route()``), never into ``messages``. Because ``RouterNode`` stays in the MRO of both,
     ``graph.py``'s ``isinstance(node, RouterNode)`` conditional-edge handling
     treats them identically.
     """
@@ -76,7 +76,7 @@ class RouterNode:
 
     def route(self, state):
 
-        decision_choice = state['decision']
+        decision_choice = state[f"decision_{self.name}"]
         for choice in self.choices:
             if decision_choice == choice.name:
                 if choice.child is None:
@@ -189,7 +189,7 @@ class DecisionNode(RouterNode, LLMNode):
             state: Current conversation state containing message history
 
         Returns:
-            A state delta: {"decision": <chosen label>, "log": [...]}
+            A state delta: {f"decision_{name}": <chosen label>, "log": [...]}
 
         Raises:
             ValueError: If LLM is not set, if choice is invalid, or if choice has no connected node
@@ -207,11 +207,11 @@ class DecisionNode(RouterNode, LLMNode):
             gathered, tool_log, _ = self._run_tool_loop(self._tool_llm, sys, history)
             prompt = [SystemMessage(content=sys)] + history + gathered
             choice = self._route_llm.invoke(prompt).choice
-            return {"decision": choice, "log": tool_log + [f'{self.name}:{choice}']}
+            return {f"decision_{self.name}": choice, "log": tool_log + [f'{self.name}:{choice}']}
 
         message_w_prompt = [SystemMessage(content=sys)] + history
         response = self._route_llm.invoke(message_w_prompt)  # use llm to decide which choice to make
         choice = response.choice
-        # Routing label is written to the dedicated `decision` field, not injected
-        # into `messages`, so it does not pollute the conversation history.
-        return {"decision": choice, "log": [f'{self.name}:{choice}']}
+        # Routing label is written to the dedicated per-node `decision_{name}` field,
+        # not injected into `messages`, so it does not pollute the conversation history.
+        return {f"decision_{self.name}": choice, "log": [f'{self.name}:{choice}']}

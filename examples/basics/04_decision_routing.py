@@ -2,8 +2,8 @@
 
 A ``DecisionNode`` calls the model with constrained (structured) output so it
 MUST return one of ``choices``, then routes to the handler wired to that choice
-via ``decision["label"] > handler``. The label goes to a dedicated ``decision``
-channel, never into the conversation.
+via ``decision["label"] > handler``. The label goes to a dedicated per-node
+``decision_{name}`` channel, never into the conversation.
 
     python examples/basics/04_decision_routing.py
 """
@@ -33,7 +33,7 @@ def pttai_version() -> str:
 
     graph = AgenticGraph(start_node=classify, end_nodes={praise, apologize})
     out = graph.invoke("I absolutely love this product!")
-    return f"routed to {out['decision']!r} -> {out['messages'][-1].content}"
+    return f"routed to {out['decision_classify']!r} -> {out['messages'][-1].content}"
 
 
 # --- equivalent in raw LangGraph ---

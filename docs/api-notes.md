@@ -17,9 +17,11 @@ composition correct rather than racy.
 - **`log`** — `operator.add`: every node appends a trace line
   (`"{name}:{content}"`, tool calls, decisions). Seed it with `[]` on invoke to
   capture the trace.
-- **`decision`** — transient routing key written by `DecisionNode`, read by its
-  `route()`. Plain last-writer-wins, which is correct because `route` runs
-  immediately after the same node writes it.
+- **`decision_{name}`** — each router (`DecisionNode`/`ConditionNode`) writes its
+  choice to its OWN per-node channel `decision_{node_name}` (auto-registered as a
+  plain last-writer-wins key), read by that node's `route()`. Per-node isolation
+  means multiple routers in one graph never clobber each other; there is no shared
+  `decision` channel.
 - **`token`** — per-model usage totals accumulated across every node.
 
 ## Invoking a graph
@@ -51,15 +53,15 @@ view of the DAG (per-node reads / writes / available keys):
 
 ```text
 AgenticGraph 'graph'   state=AgenticState
-initial: decision, log, messages, token
---------------------------------------------------------------------------
+initial: log, messages, token
+-----------------------------------------------------------------
 node        type       reads     writes        available
-frame       AgentNode  messages  log,messages  decision,log,messages,token
-optimist    AgentNode  messages  log,messages  decision,log,messages,token
-verdict     AgentNode  messages  log,messages  decision,log,messages,token
-skeptic     AgentNode  messages  log,messages  decision,log,messages,token
-pragmatist  AgentNode  messages  log,messages  decision,log,messages,token
---------------------------------------------------------------------------
+frame       AgentNode  messages  log,messages  log,messages,token
+optimist    AgentNode  messages  log,messages  log,messages,token
+verdict     AgentNode  messages  log,messages  log,messages,token
+skeptic     AgentNode  messages  log,messages  log,messages,token
+pragmatist  AgentNode  messages  log,messages  log,messages,token
+-----------------------------------------------------------------
 5 nodes · 0 errors · 0 warning(s)
 ```
 

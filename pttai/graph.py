@@ -41,7 +41,7 @@ def _check_extra_keys(extra, schema_keys_set):
     """Guard the ``**extra`` invoke kwargs (NOT the positional dict form, which
     stays back-compat for ``invoke({"messages":..., "log":[]})``):
 
-    - a RESERVED framework channel (``log``/``decision``/``token``) cannot be
+    - a RESERVED framework channel (``log``/``token``) cannot be
       seeded as an extra kwarg — it is managed internally; and
     - a key that maps to no channel in the (augmented) schema is a helpful error
       naming the key, not LangGraph's silent drop.
@@ -126,7 +126,7 @@ class AgenticGraph(StateGraph):
 
         Args:
             state: The state schema (a TypedDict). OPTIONAL — defaults to the
-                standard ``AgenticState`` (messages/log/decision/token). Any
+                standard ``AgenticState`` (messages/log/token). Any
                 scalar key a node ``writes``, and any non-optional key a node
                 ``reads`` that no node writes (a graph INPUT seeded at invoke),
                 is auto-registered as a PLAIN (last-writer-wins) channel when the
@@ -634,11 +634,11 @@ class AgenticGraph(StateGraph):
 
     def _check_reserved(self) -> None:
         """Reject USER-declared node reads/writes that collide with a reserved
-        framework channel (``log``/``decision``/``token``).
+        framework channel (``log``/``token``).
 
         ``messages`` is exempt — it is the standard conversation channel and the
         default node read/write. The framework's OWN reserved writes (``log`` for
-        every node, ``decision`` for a DecisionNode, ``token`` from the agent
+        every node, ``decision_{name}`` for a router node, ``token`` from the agent
         delta) are injected in ``_node_io``/``__call__``, never in
         ``node.writes``/``node.reads``, so they are not seen here — only genuine
         user declarations are."""
@@ -667,7 +667,7 @@ class AgenticGraph(StateGraph):
         if isinstance(node, AgenticGraph):
             return set(node._io_reads), set(node._io_writes)
         if isinstance(node, RouterNode):
-            return set(node.reads), {"decision", "log"}
+            return set(node.reads), {f"decision_{node.name}", "log"}
         if isinstance(node, HumanNode):
             return {"messages"}, {node.into}
         if isinstance(node, AgentNode):

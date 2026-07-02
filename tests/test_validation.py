@@ -18,14 +18,12 @@ from pttai.validation import GraphValidationError, schema_keys
 class SummaryState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     log: Annotated[list[str], operator.add]
-    decision: str
     summary: str
 
 
 class LoopState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     log: Annotated[list[str], operator.add]
-    decision: str
     summary: str  # produced before the loop
     draft: str    # produced inside the loop body
 
@@ -33,7 +31,6 @@ class LoopState(TypedDict):
 class XYState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     log: Annotated[list[str], operator.add]
-    decision: str
     x: Annotated[list, operator.add]
     y: Annotated[list, operator.add]
 
@@ -41,14 +38,12 @@ class XYState(TypedDict):
 class TagState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     log: Annotated[list[str], operator.add]
-    decision: str
     tag: str  # plain (no reducer) -> concurrent writes are illegal
 
 
 class CfgState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     log: Annotated[list[str], operator.add]
-    decision: str
     cfg: str  # plain entry key, may be supplied at invoke (inputs=)
 
 
@@ -141,12 +136,13 @@ def test_summary_output(t):
     g.summary(file=buf)
     out = buf.getvalue()
 
-    assert "initial:" in out and "decision" in out  # header lists initial keys
+    assert "initial:" in out and "decision_clf" in out  # header lists channels incl. the router's per-node key
+    assert "decision\n" not in out and "decision," not in out and "decision " not in out  # no bare shared `decision` channel
     for name in ("clf", "pos", "neg"):
         assert name in out                          # each node row present
     assert "DecisionNode" in out and "AgentNode" in out
     assert "messages" in out                        # reads column
-    # clf writes the `decision` key and pos/neg are available downstream of it
+    # clf writes the `decision_clf` key and pos/neg are available downstream of it
     assert "available" in out
 
 

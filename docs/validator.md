@@ -88,13 +88,13 @@ A node reads or writes a key the state schema doesn't declare. LangGraph would
 Read side:
 
 ```
-  [error] reader: reads 'sumary' which is not declared in the state schema ['decision', 'log', 'messages', 'token']; available keys here: ['log', 'messages']
+  [error] reader: reads 'sumary' which is not declared in the state schema ['log', 'messages', 'token']; available keys here: ['log', 'messages']
 ```
 
 Write side:
 
 ```
-  [error] writer: writes key 'sumary' which is not declared in the state schema ['decision', 'log', 'messages', 'token']; LangGraph silently drops unknown-key writes
+  [error] writer: writes key 'sumary' which is not declared in the state schema ['log', 'messages', 'token']; LangGraph silently drops unknown-key writes
 ```
 
 (Note: in the *schema-free* default, an undeclared key a node writes is
@@ -227,7 +227,7 @@ These don't fail the build; they surface via `graph.validate()` /
 
 ```
 AgenticGraph 'graph'   state=AgenticState
-initial: decision, log, messages, token
+initial: log, messages, token
 ------------------------------------------------------------
 node    type       reads     writes         available
 frame   AgentNode  messages  log,messages   log,messages

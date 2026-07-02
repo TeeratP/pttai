@@ -38,7 +38,7 @@ def pttai_version() -> str:
 
     graph = AgenticGraph(start_node=triage, end_nodes={bug, feature, question})
     out = graph.invoke(DOCUMENT)
-    return f"routed to {out['decision']!r} -> {out['messages'][-1].content}"
+    return f"routed to {out['decision_triage']!r} -> {out['messages'][-1].content}"
 
 
 # --- equivalent in raw LangGraph ---

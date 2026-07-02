@@ -14,7 +14,6 @@ from pttai.nodes import AgentNode
 class MultiState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     log: Annotated[list[str], operator.add]
-    decision: str
     sentiment: str
     score: str
 

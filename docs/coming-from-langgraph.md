@@ -21,7 +21,7 @@ the LangGraph API you already use to its pttai equivalent.
 | `with_structured_output(Literal[...])` + a router fn | `DecisionNode(choices=[...])` | pttai builds the `Literal` structured output *and* the conditional edges; the model can only return a valid branch. |
 | `builder.compile()` | happens inside `AgenticGraph(...)` | Construction walks the wiring, **runs the validator**, and compiles. |
 | a subgraph added via `add_node(compiled_subgraph)` | `graph_0 > graph_1` | An `AgenticGraph` composes as a node inside a larger `AgenticGraph`. |
-| `MessagesState` | `AgenticState` (the default) | `messages` + reduced `log` / `decision` / `token` channels. Schema-free by default; nodes auto-register keys. |
+| `MessagesState` | `AgenticState` (the default) | `messages` + reduced `log` / `token` channels; routers auto-register a per-node `decision_{name}` key. Schema-free by default; nodes auto-register keys. |
 | — (runtime `KeyError` when you get it wrong) | **compile-time `GraphValidationError`** | The dataflow validator has no LangGraph equivalent. See [the validator](validator.md). |
 
 ## When to use which

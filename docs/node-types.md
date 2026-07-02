@@ -20,7 +20,7 @@ an LLM and subclass `Node` directly.
 | Node | Purpose |
 |------|---------|
 | **`AgentNode`** | Prepends `node_prompt` as a `SystemMessage`, calls the LLM, returns a delta. Pass `tools=[...]` to wrap bare callables as `StructuredTool`s and run an internal tool-call loop. `reads` / `writes` give typed multi-key IO. Optional `reasoning_effort` for gpt-5.x. |
-| **`DecisionNode`** | LLM branching. Reads from `input_field`, writes its choice to `decision`, routes via conditional edges over a `Literal[*choices]` structured output — the model can only return a valid branch. Also accepts `tools=[...]` (gathers context first, *then* routes). |
+| **`DecisionNode`** | LLM branching. Reads from `input_field`, writes its choice to its per-node `decision_{name}` channel, routes via conditional edges over a `Literal[*choices]` structured output — the model can only return a valid branch. Also accepts `tools=[...]` (gathers context first, *then* routes). |
 | **`ConditionNode`** | Deterministic branching with **no LLM**. A Python predicate `condition(state) -> str` returns one of `choices`; routing is free, deterministic, and prompt-less. |
 | **`HumanNode`** | Resumable human-in-the-loop via LangGraph's `interrupt()`. Surfaces a message for review; the human's reply lands `into` `messages` (or any key a router can gate on). |
 
@@ -60,8 +60,8 @@ AgentNode(
 
 ## `DecisionNode`
 
-LLM branching only. Reads from `input_field`, writes its choice to the dedicated
-`decision` state field (never into `messages`), and routes via LangGraph
+LLM branching only. Reads from `input_field`, writes its choice to its dedicated
+per-node `decision_{name}` state field (never into `messages`), and routes via LangGraph
 conditional edges. The LLM is wrapped with `with_structured_output` over a
 `Literal[*choices]`, so the model **can only return a valid branch**.
 

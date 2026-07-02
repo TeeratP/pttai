@@ -48,6 +48,6 @@ class ConditionNode(RouterNode, Node):
         if label not in self.choices_name:
             raise ValueError(
                 f"{self.name}: condition returned {label!r}, not in choices {self.choices_name}")
-        # Routing label written to the dedicated `decision` field (read by
-        # route()), never into `messages` — same contract as DecisionNode.
-        return {"decision": label, "log": [f"{self.name}:{label}"]}
+        # Routing label written to the dedicated per-node `decision_{name}` field
+        # (read by route()), never into `messages` — same contract as DecisionNode.
+        return {f"decision_{self.name}": label, "log": [f"{self.name}:{label}"]}

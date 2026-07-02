@@ -33,7 +33,7 @@ def test_retriever_tool_binds_and_runs_in_agent(t):
         t.tool_call_msg("search_documents", {"query": "q"}),
         t.ai("answer"),
     ]), tools=[tool])
-    delta = node({"messages": [HumanMessage(content="ask")], "log": [], "decision": ""})
+    delta = node({"messages": [HumanMessage(content="ask")], "log": []})
 
     tool_msgs = [m for m in delta["messages"] if isinstance(m, ToolMessage)]
     assert tool_msgs

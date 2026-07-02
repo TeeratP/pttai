@@ -100,7 +100,7 @@ def main() -> None:
 
     result = graph.invoke(initial_state)
 
-    print("routed to :", result["decision"])
+    print("routed to :", result["decision_classifier"])
     print("final reply:", result["messages"][-1].content)
     print("\ntrace:")
     for line in result["log"]:

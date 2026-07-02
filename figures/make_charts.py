@@ -163,8 +163,7 @@ RAG_ERROR = (
     "  but no upstream node produces it before this\n"
     "  node (produced by: ['retrieve'], none of which\n"
     "  are upstream); available keys here:\n"
-    "  ['decision', 'log', 'messages', 'question',\n"
-    "  'token']"
+    "  ['log', 'messages', 'question', 'token']"
 )
 
 BROKEN_PIPELINE = (

@@ -34,5 +34,5 @@ def test_decision_routed_invoke(t):
 
     # routed to the positive handler; decision label is NOT in messages
     assert [m.content for m in out["messages"]] == ["hi", "intro", "happy"]
-    assert out["decision"] == "positive"
+    assert out["decision_d"] == "positive"
     assert "d:positive" in out["log"]

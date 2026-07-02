@@ -218,15 +218,15 @@ Runs from a single paste with just `OPENAI_API_KEY` set. Full version:
 
 ```
 AgenticGraph 'graph'   state=AgenticState
-initial: decision, log, messages, token
---------------------------------------------------------------------------
+initial: log, messages, token
+-----------------------------------------------------------------
 node        type       reads     writes        available
-frame       AgentNode  messages  log,messages  decision,log,messages,token
-optimist    AgentNode  messages  log,messages  decision,log,messages,token
-verdict     AgentNode  messages  log,messages  decision,log,messages,token
-skeptic     AgentNode  messages  log,messages  decision,log,messages,token
-pragmatist  AgentNode  messages  log,messages  decision,log,messages,token
---------------------------------------------------------------------------
+frame       AgentNode  messages  log,messages  log,messages,token
+optimist    AgentNode  messages  log,messages  log,messages,token
+verdict     AgentNode  messages  log,messages  log,messages,token
+skeptic     AgentNode  messages  log,messages  log,messages,token
+pragmatist  AgentNode  messages  log,messages  log,messages,token
+-----------------------------------------------------------------
 5 nodes · 0 errors · 0 warning(s)
 ```
 
@@ -273,7 +273,7 @@ base that owns the model binding and the tool-call loop.
 | Node | Purpose |
 |------|---------|
 | **`AgentNode`** | Prepends `node_prompt` as a `SystemMessage`, calls the LLM, returns a delta. Pass `tools=[...]` in the constructor to wrap bare callables as `StructuredTool`s and run an internal tool-call loop (capped by `max_tool_iterations`, default 25). `reads`/`writes` give typed multi-key IO. Optional `reasoning_effort` (`"low"`/`"medium"`/`"high"`) for gpt-5.x. |
-| **`DecisionNode`** | LLM branching. Reads from `input_field`, writes its choice to `decision`, routes via conditional edges over a `Literal[*choices]` structured output — the model can only return a valid branch. Also accepts `tools=[...]`: it runs a tool-gathering loop first, *then* routes via structured output (the two never share a call). Wired by indexing a choice (`decision["x"] > handler`); `decision > x` is an error. |
+| **`DecisionNode`** | LLM branching. Reads from `input_field`, writes its choice to its per-node `decision_{name}` channel, routes via conditional edges over a `Literal[*choices]` structured output — the model can only return a valid branch. Also accepts `tools=[...]`: it runs a tool-gathering loop first, *then* routes via structured output (the two never share a call). Wired by indexing a choice (`decision["x"] > handler`); `decision > x` is an error. |
 | **`ConditionNode`** | Deterministic branching with **no LLM**. A Python predicate `condition(state) -> str` returns one of `choices`; routing is free, deterministic, and prompt-less. Wired like `DecisionNode` (`cond["x"] > handler`). |
 | **`HumanNode`** | Resumable human-in-the-loop via LangGraph's `interrupt()`. Surfaces a message (or a custom `show`) for review; the human's reply lands `into` `messages` (or any key a router can gate on). Resumes when the graph is built with a `checkpointer` and invoked with a `thread_id`, via `Command(resume=value)`. |
 
@@ -292,8 +292,10 @@ graph (`graph_0 > graph_1`), and RAG helpers (`make_retriever_tool`, optional
   coerces bare strings to `HumanMessage`, and merges parallel branches.
 - **`log`** — `operator.add`: every node appends a trace line. Seed it with `[]`
   on invoke to capture the trace.
-- **`decision`** — transient routing key written by `DecisionNode`, read by its
-  `route()`.
+- **`decision_{name}`** — each router (`DecisionNode`/`ConditionNode`) writes its
+  choice to its OWN per-node channel `decision_{node_name}` (auto-registered as a
+  plain last-writer-wins key), read by that node's `route()`. There is no shared
+  `decision` channel, so multiple routers never clobber each other.
 - **`token`** — per-model usage totals accumulated across nodes.
 
 Nodes return deltas and never mutate state in place — that's what keeps

@@ -17,7 +17,7 @@ def test_tool_loop_accumulates_single_delta(t):
     node = AgentNode(name="agent", llm=t.FakeLLM(responses=[tc, final]), node_prompt="p",
                      tools=[double])
 
-    state = {"messages": [HumanMessage(content="double 3")], "log": [], "decision": ""}
+    state = {"messages": [HumanMessage(content="double 3")], "log": []}
     delta = node(state)
 
     msgs = delta["messages"]
@@ -34,7 +34,7 @@ def test_tool_loop_accumulates_single_delta(t):
 def test_no_tools_returns_single_message_delta(t):
     final = t.ai("hello")
     node = AgentNode(name="agent", llm=t.FakeLLM(responses=[final]), node_prompt="p")
-    delta = node({"messages": [HumanMessage(content="hi")], "log": [], "decision": ""})
+    delta = node({"messages": [HumanMessage(content="hi")], "log": []})
     assert delta["messages"] == [final]
     assert delta["log"] == ["agent:hello"]
 
@@ -43,7 +43,7 @@ def test_tool_loop_respects_max_iterations(t):
     tc = t.tool_call_msg("double", {"x": 1})
     node = AgentNode(name="agent", llm=t.FakeLLM(responses=[tc], repeat=True),
                      node_prompt="p", max_tool_iterations=3, tools=[double])
-    state = {"messages": [HumanMessage(content="go")], "log": [], "decision": ""}
+    state = {"messages": [HumanMessage(content="go")], "log": []}
     with pytest.raises(RuntimeError, match="max_tool_iterations"):
         node(state)
 
