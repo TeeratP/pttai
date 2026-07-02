@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -651,15 +653,67 @@
   
   
   
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
-      <a href="../api-notes/" class="md-nav__link">
+      <a href="../api/graph/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    API notes
+    Graph
   
 
     
@@ -668,6 +722,98 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nodes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/advanced/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -790,10 +936,18 @@ pttai <strong>validate</strong> it at build time, then runs it. By the end you'l
 the three things that make pttai worth using: the <code>&gt;</code> wiring, <code>AgentNode</code> with a
 retriever tool, and the compile-time validator.</p>
 <h2 id="1-install-1-min">1. Install (1 min)<a class="headerlink" href="#1-install-1-min" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pttai<span class="w">              </span><span class="c1"># core</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;pttai[openai]&quot;</span><span class="w">    </span><span class="c1"># + langchain-openai &amp; python-dotenv (for live model calls)</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>sk-...<span class="w">   </span><span class="c1"># or put it in a .env file</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pttai
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># pttai works with ANY LangChain chat model — install the provider you want:</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>pip<span class="w"> </span>install<span class="w"> </span>langchain-openai<span class="w"> </span>python-dotenv<span class="w">   </span><span class="c1"># OpenAI (used in this walkthrough)</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>pip<span class="w"> </span>install<span class="w"> </span>langchain-anthropic<span class="w">              </span><span class="c1"># Anthropic</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>pip<span class="w"> </span>install<span class="w"> </span>langchain-google-genai<span class="w">           </span><span class="c1"># Google</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>sk-...<span class="w">   </span><span class="c1"># or put it in a .env file</span>
 </code></pre></div>
+<p>Nodes take the model via <code>llm=</code> — pass any LangChain <code>BaseChatModel</code>. (A
+<code>pttai[openai]</code> extra exists as a shortcut for <code>langchain-openai</code> +
+<code>python-dotenv</code>, but it's convenience only, not a requirement.)</p>
 <p>Or from source for development:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/TeeratP/pttai<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>pttai
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
@@ -843,18 +997,21 @@ compiles it — and runs the validator as it does.</p>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pttai</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentNode</span><span class="p">,</span> <span class="n">AgenticGraph</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">ChatOpenAI</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-5.4-nano&quot;</span><span class="p">)</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">rag</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rag&quot;</span><span class="p">,</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">search</span><span class="p">],</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="n">node_prompt</span><span class="o">=</span><span class="p">(</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>        <span class="s2">&quot;Answer the user&#39;s question. ALWAYS call search_docs first to ground &quot;</span>
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>        <span class="s2">&quot;your answer in the knowledge base, then cite what you found.&quot;</span>
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="p">),</span>
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="p">)</span>
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="n">graph</span> <span class="o">=</span> <span class="n">AgenticGraph</span><span class="p">(</span><span class="n">start_node</span><span class="o">=</span><span class="n">rag</span><span class="p">,</span> <span class="n">end_nodes</span><span class="o">=</span><span class="p">{</span><span class="n">rag</span><span class="p">})</span>   <span class="c1"># schema-free; validates here</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="c1"># swap for any LangChain chat model, e.g.:</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1">#   from langchain_anthropic import ChatAnthropic;              llm = ChatAnthropic(model=&quot;claude-opus-4-8&quot;)</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1">#   from langchain_google_genai import ChatGoogleGenerativeAI;  llm = ChatGoogleGenerativeAI(model=&quot;gemini-...&quot;)</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">rag</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rag&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">search</span><span class="p">],</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="n">node_prompt</span><span class="o">=</span><span class="p">(</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>        <span class="s2">&quot;Answer the user&#39;s question. ALWAYS call search_docs first to ground &quot;</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>        <span class="s2">&quot;your answer in the knowledge base, then cite what you found.&quot;</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    <span class="p">),</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="p">)</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="n">graph</span> <span class="o">=</span> <span class="n">AgenticGraph</span><span class="p">(</span><span class="n">start_node</span><span class="o">=</span><span class="n">rag</span><span class="p">,</span> <span class="n">end_nodes</span><span class="o">=</span><span class="p">{</span><span class="n">rag</span><span class="p">})</span>   <span class="c1"># schema-free; validates here</span>
 </code></pre></div>
 <p>The <code>AgentNode</code> folds the model call, the tool execution, and the loop-back into
 one node — no <code>ToolNode</code>, no <code>tools_condition</code>, no manual edges.</p>
@@ -866,10 +1023,10 @@ explicitly with <code>summary()</code>:</p>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>AgenticGraph &#39;graph&#39;   state=AgenticState
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>initial: log, messages, token
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>------------------------------------------------
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>-----------------------------------------------------------
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>node  type       reads     writes        available
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>rag   AgentNode  messages  log,messages  log,messages
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>------------------------------------------------
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>rag   AgentNode  messages  log,messages  log,messages,token
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>-----------------------------------------------------------
 <a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>1 nodes · 0 errors · 0 warning(s)
 </code></pre></div>
 <p>To see the validator <em>catch</em> a bug, add a downstream node that reads a key

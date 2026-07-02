@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -712,15 +714,67 @@
   
   
   
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
-      <a href="../api-notes/" class="md-nav__link">
+      <a href="../api/graph/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    API notes
+    Graph
   
 
     
@@ -729,6 +783,98 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nodes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/advanced/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -916,7 +1062,7 @@ calls into a run.</p>
 </code></pre></div>
 <p>If validation finds an error, the constructor raises <code>GraphValidationError</code>; if
 it finds only warnings, the graph builds but you can inspect them with
-<a href="../api-notes/"><code>summary()</code></a>. Pass <code>validate=False</code> to skip the check (escape
+<a href="../api/graph/"><code>summary()</code></a>. Pass <code>validate=False</code> to skip the check (escape
 hatch), or call <code>graph.validate(strict=True)</code> to promote warnings to errors.</p>
 <h2 id="why-this-matters-for-llm-pipelines">Why this matters for LLM pipelines<a class="headerlink" href="#why-this-matters-for-llm-pipelines" title="Permanent link">&para;</a></h2>
 <p>Agent graphs fail differently from ordinary programs: a broken edge or a
@@ -962,11 +1108,11 @@ runs downstream or on a sibling branch. This is the classic ordering bug.</p>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">AgenticGraph</span><span class="p">(</span><span class="n">start_node</span><span class="o">=</span><span class="n">reader</span><span class="p">,</span> <span class="n">end_nodes</span><span class="o">=</span><span class="p">{</span><span class="n">writer</span><span class="p">})</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pttai.validation.GraphValidationError: AgenticGraph &#39;graph&#39;: 1 error(s), 0 warning(s)
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  [error] reader: reads computed key &#39;summary&#39; but no upstream node produces it before this node (produced by: [&#39;writer&#39;], none of which are upstream); available keys here: [&#39;log&#39;, &#39;messages&#39;]
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  [error] reader: reads computed key &#39;summary&#39; but no upstream node produces it before this node (produced by: [&#39;writer&#39;], none of which are upstream); available keys here: [&#39;log&#39;, &#39;messages&#39;, &#39;token&#39;]
 </code></pre></div>
 <p>If the key is declared in the schema but <strong>no node writes it at all</strong> (and it
 isn't an input), the message instead points you to <code>inputs=</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>  [error] reader: reads &#39;summary&#39; but no node produces it and it is not an input key; produce it upstream or declare it in inputs=... if you supply it at invoke(); available keys here: [&#39;log&#39;, &#39;messages&#39;]
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>  [error] reader: reads &#39;summary&#39; but no node produces it and it is not an input key; produce it upstream or declare it in inputs=... if you supply it at invoke(); available keys here: [&#39;log&#39;, &#39;messages&#39;, &#39;token&#39;]
 </code></pre></div>
 <h3 id="2-undeclared-key-typo">2. Undeclared key (typo)<a class="headerlink" href="#2-undeclared-key-typo" title="Permanent link">&para;</a></h3>
 <p>A node reads or writes a key the state schema doesn't declare. LangGraph would
@@ -983,17 +1129,23 @@ an explicit <code>state=</code> schema that omits the key.)</p>
 <h3 id="3-concurrent-write-with-no-reducer">3. Concurrent write with no reducer<a class="headerlink" href="#3-concurrent-write-with-no-reducer" title="Permanent link">&para;</a></h3>
 <p>Two nodes on parallel branches (<code>fanout</code>) write the same plain key. At runtime
 LangGraph raises <code>InvalidUpdateError</code>; pttai catches it at build time.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pttai</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentNode</span><span class="p">,</span> <span class="n">AgenticGraph</span><span class="p">,</span> <span class="n">fanout</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">messages</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="n">add_messages</span><span class="p">]</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">result</span><span class="p">:</span> <span class="nb">str</span>                    <span class="c1"># plain — no reducer</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">a</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span> <span class="n">writes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">])</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="n">b</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span> <span class="n">writes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">])</span>
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="n">join</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;join&quot;</span><span class="p">,</span> <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">TypedDict</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">operator</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langgraph.graph.message</span><span class="w"> </span><span class="kn">import</span> <span class="n">add_messages</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pttai</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentNode</span><span class="p">,</span> <span class="n">AgenticGraph</span><span class="p">,</span> <span class="n">fanout</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="n">messages</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="n">add_messages</span><span class="p">]</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="n">log</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">add</span><span class="p">]</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    <span class="n">result</span><span class="p">:</span> <span class="nb">str</span>                    <span class="c1"># plain — no reducer</span>
 <a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="n">start</span> <span class="o">&gt;</span> <span class="n">fanout</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">join</span>        <span class="c1"># a and b write `result` concurrently</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="n">start</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">)</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="n">a</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span> <span class="n">writes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">])</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="n">b</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span> <span class="n">writes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">])</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="n">join</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;join&quot;</span><span class="p">,</span> <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">)</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="n">start</span> <span class="o">&gt;</span> <span class="n">fanout</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">join</span>        <span class="c1"># a and b write `result` concurrently</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="n">AgenticGraph</span><span class="p">(</span><span class="n">start_node</span><span class="o">=</span><span class="n">start</span><span class="p">,</span> <span class="n">end_nodes</span><span class="o">=</span><span class="p">{</span><span class="n">join</span><span class="p">},</span> <span class="n">state</span><span class="o">=</span><span class="n">S</span><span class="p">)</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>  [error] a: concurrently writes &#39;result&#39; with node &#39;b&#39;, but &#39;result&#39; has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
 </code></pre></div>
@@ -1012,7 +1164,7 @@ handler. The model could route to a branch that goes nowhere.</p>
 <a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="n">decide</span><span class="p">[</span><span class="s2">&quot;positive&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">happy</span>         <span class="c1"># &quot;negative&quot; is never wired</span>
 <a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="n">AgenticGraph</span><span class="p">(</span><span class="n">start_node</span><span class="o">=</span><span class="n">decide</span><span class="p">,</span> <span class="n">end_nodes</span><span class="o">=</span><span class="p">{</span><span class="n">happy</span><span class="p">})</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>  [error] decide: choice &#39;negative&#39; has no connected node; wire it, e.g. `decide[&#39;negative&#39;] &gt; some_node`
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>  [error] decide: choice &#39;negative&#39; has no connected node; wire it, e.g. `decision[&#39;negative&#39;] &gt; some_node`
 </code></pre></div>
 <h3 id="5-non-end-node-with-no-child-dead-end">5. Non-end node with no child (dead end)<a class="headerlink" href="#5-non-end-node-with-no-child-dead-end" title="Permanent link">&para;</a></h3>
 <p>Every node that isn't in <code>end_nodes</code> must lead somewhere. A node with no child
@@ -1077,7 +1229,7 @@ guaranteed runtime <code>KeyError</code> when the prompt is interpolated — a h
 <a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>------------------------------------------------------------
 <a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>5 nodes · 0 errors · 0 warning(s)
 </code></pre></div>
-<p>See <a href="../api-notes/">API notes</a> for the full state-channel model.</p>
+<p>See the <a href="../api/state/">State reference</a> for the full state-channel model.</p>
 
 
 

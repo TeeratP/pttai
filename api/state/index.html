@@ -10,29 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://teeratp.github.io/pttai/api-notes/">
+        <link rel="canonical" href="https://teeratp.github.io/pttai/api/state/">
       
       
-        <link rel="prev" href="../examples/architectures/">
+        <link rel="prev" href="../nodes/">
       
+      
+        <link rel="next" href="../advanced/">
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>API notes - pttai</title>
+        <title>State - pttai</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -51,7 +53,9 @@
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -76,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#api-notes" class="md-skip">
+        <a href="#state" class="md-skip">
           Skip to content
         </a>
       
@@ -92,7 +96,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="pttai" class="md-header__button md-logo" aria-label="pttai" data-md-component="logo">
+    <a href="../.." title="pttai" class="md-header__button md-logo" aria-label="pttai" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -112,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              API notes
+              State
             
           </span>
         </div>
@@ -230,7 +234,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="pttai" class="md-nav__button md-logo" aria-label="pttai" data-md-component="logo">
+    <a href="../.." title="pttai" class="md-nav__button md-logo" aria-label="pttai" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -260,7 +264,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -287,7 +291,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../validator/" class="md-nav__link">
+      <a href="../../validator/" class="md-nav__link">
         
   
   
@@ -314,7 +318,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../quickstart/" class="md-nav__link">
+      <a href="../../quickstart/" class="md-nav__link">
         
   
   
@@ -341,7 +345,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../getting-started/" class="md-nav__link">
+      <a href="../../getting-started/" class="md-nav__link">
         
   
   
@@ -368,7 +372,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../coming-from-langgraph/" class="md-nav__link">
+      <a href="../../coming-from-langgraph/" class="md-nav__link">
         
   
   
@@ -395,7 +399,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../node-types/" class="md-nav__link">
+      <a href="../../node-types/" class="md-nav__link">
         
   
   
@@ -474,7 +478,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/basics/" class="md-nav__link">
+      <a href="../../examples/basics/" class="md-nav__link">
         
   
   
@@ -502,7 +506,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/architectures/" class="md-nav__link">
+      <a href="../../examples/architectures/" class="md-nav__link">
         
   
   
@@ -538,6 +542,116 @@
   
   
   
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graph/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graph
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nodes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
     <li class="md-nav__item md-nav__item--active">
       
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
@@ -553,7 +667,7 @@
   <span class="md-ellipsis">
     
   
-    API notes
+    State
   
 
     
@@ -571,7 +685,7 @@
   <span class="md-ellipsis">
     
   
-    API notes
+    State
   
 
     
@@ -597,10 +711,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#state-channels" class="md-nav__link">
+  <a href="#pttai.AgenticState" class="md-nav__link">
     <span class="md-ellipsis">
       
-        State channels
+        AgenticState
       
     </span>
   </a>
@@ -608,10 +722,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#invoking-a-graph" class="md-nav__link">
+  <a href="#pttai.state.merge_token_usage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Invoking a graph
+        merge_token_usage
       
     </span>
   </a>
@@ -619,76 +733,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#compile-time-validation" class="md-nav__link">
+  <a href="#pttai.state.accumulate" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Compile-time validation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        summary()
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#token-usage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Token usage
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#prompt-caching" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Prompt caching
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#node-policies-and-composition" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Node policies and composition
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#limitations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Limitations
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#testing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Testing
+        accumulate
       
     </span>
   </a>
@@ -698,6 +746,42 @@
     </ul>
   
 </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
       
     </li>
   
@@ -730,10 +814,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#state-channels" class="md-nav__link">
+  <a href="#pttai.AgenticState" class="md-nav__link">
     <span class="md-ellipsis">
       
-        State channels
+        AgenticState
       
     </span>
   </a>
@@ -741,10 +825,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#invoking-a-graph" class="md-nav__link">
+  <a href="#pttai.state.merge_token_usage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Invoking a graph
+        merge_token_usage
       
     </span>
   </a>
@@ -752,76 +836,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#compile-time-validation" class="md-nav__link">
+  <a href="#pttai.state.accumulate" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Compile-time validation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        summary()
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#token-usage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Token usage
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#prompt-caching" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Prompt caching
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#node-policies-and-composition" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Node policies and composition
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#limitations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Limitations
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#testing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Testing
+        accumulate
       
     </span>
   </a>
@@ -848,101 +866,100 @@
   
 
 
-<h1 id="api-notes">API notes<a class="headerlink" href="#api-notes" title="Permanent link">&para;</a></h1>
-<p>Reference for the runtime pieces you interact with beyond the node types: the
-state channels, compile-time validation, <code>summary()</code>, token usage, and prompt
-caching.</p>
-<h2 id="state-channels">State channels<a class="headerlink" href="#state-channels" title="Permanent link">&para;</a></h2>
-<p><code>AgenticState</code> is a <code>TypedDict</code> of <strong>reduced</strong> channels; custom schemas just add
-more. Nodes return deltas (only the keys they update) and never mutate state in
-place — that is what keeps checkpointing, parallel-branch merges, and subgraph
-composition correct rather than racy.</p>
-<ul>
-<li><strong><code>messages</code></strong> — <code>add_messages</code> reducer: appends new messages, replaces by
-  matching <code>id</code>, coerces bare strings to <code>HumanMessage</code>, and merges
-  parallel-branch updates instead of clobbering.</li>
-<li><strong><code>log</code></strong> — <code>operator.add</code>: every node appends a trace line
-  (<code>"{name}:{content}"</code>, tool calls, decisions). Seed it with <code>[]</code> on invoke to
-  capture the trace.</li>
-<li><strong><code>decision_{name}</code></strong> — each router (<code>DecisionNode</code>/<code>ConditionNode</code>) writes its
-  choice to its OWN per-node channel <code>decision_{node_name}</code> (auto-registered as a
-  plain last-writer-wins key), read by that node's <code>route()</code>. Per-node isolation
-  means multiple routers in one graph never clobber each other; there is no shared
-  <code>decision</code> channel.</li>
-<li><strong><code>token</code></strong> — per-model usage totals accumulated across every node.</li>
-</ul>
-<h2 id="invoking-a-graph">Invoking a graph<a class="headerlink" href="#invoking-a-graph" title="Permanent link">&para;</a></h2>
-<p><code>AgenticGraph</code> runs via <code>invoke</code> / <code>stream</code> / <code>ainvoke</code> / <code>astream</code> (all accept
-an optional LangGraph <code>config</code> and <code>durability</code>).</p>
-<ul>
-<li><strong><code>message=</code> shorthand</strong> — <code>graph.invoke(message="...")</code> wraps a string (or a
-  list of messages) onto <code>messages</code>. The full <code>invoke({...})</code> state form still
-  works; seed <code>log=[]</code> if you want the trace.</li>
-<li><strong>Checkpointing / resume</strong> — pass <code>checkpointer=...</code> to the constructor to
-  enable <code>HumanNode</code> interrupt/resume; invoke with a <code>thread_id</code> config and
-  resume via <code>Command(resume=value)</code>. Without a checkpointer, the simple no-config
-  <code>invoke({...})</code> path works.</li>
-<li><strong>Async</strong> is graph-level only: <code>ainvoke</code> / <code>astream</code> run the sync nodes in
-  LangGraph's threadpool; true per-node async LLM calls aren't implemented.</li>
-</ul>
-<h2 id="compile-time-validation">Compile-time validation<a class="headerlink" href="#compile-time-validation" title="Permanent link">&para;</a></h2>
-<p>The <code>AgenticGraph</code> constructor runs a <strong>forward dataflow analysis</strong> and <strong>fails
-the build</strong> if a node reads a key that nothing produces upstream — naming both
-the offending key and the real writer. Bugs surface before you ever invoke,
-rather than at runtime. You can also call <code>graph.validate()</code> directly.</p>
-<h2 id="summary"><code>summary()</code><a class="headerlink" href="#summary" title="Permanent link">&para;</a></h2>
-<p><code>summary()</code> prints a Keras-<code>model.summary()</code>-style topology table — a static
-view of the DAG (per-node reads / writes / available keys):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>AgenticGraph &#39;graph&#39;   state=AgenticState
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>initial: log, messages, token
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>-----------------------------------------------------------------
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>node        type       reads     writes        available
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>frame       AgentNode  messages  log,messages  log,messages,token
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>optimist    AgentNode  messages  log,messages  log,messages,token
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>verdict     AgentNode  messages  log,messages  log,messages,token
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>skeptic     AgentNode  messages  log,messages  log,messages,token
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>pragmatist  AgentNode  messages  log,messages  log,messages,token
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>-----------------------------------------------------------------
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>5 nodes · 0 errors · 0 warning(s)
+<h1 id="state">State<a class="headerlink" href="#state" title="Permanent link">&para;</a></h1>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="pttai.AgenticState" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">pttai.AgenticState</span>
+
+
+<a href="#pttai.AgenticState" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.TypedDict">TypedDict</span></code></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="pttai.state.merge_token_usage" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">pttai.state.merge_token_usage</span>
+
+
+<a href="#pttai.state.merge_token_usage" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">merge_token_usage</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
 </code></pre></div>
-<h2 id="token-usage">Token usage<a class="headerlink" href="#token-usage" title="Permanent link">&para;</a></h2>
-<p><code>out["token"]</code> is a <code>{model: {total_tokens / input_tokens / output_tokens}}</code>
-breakdown accumulated across every node in the run — per-model, so a graph that
-mixes models keeps them separate. It's tracked <strong>automatically — no callbacks,
-no custom reducer</strong>; every LLM call (including tool-loop and parallel-branch
-calls) is deep-summed into the total. Offline (no <code>OPENAI_API_KEY</code>) the fake
-model reports no usage, so <code>token</code> is an empty <code>{}</code>; a real model fills it.
-Side-by-side vs. the hand-wired raw-LangGraph equivalent:
-<a href="https://github.com/TeeratP/pttai/blob/main/examples/basics/13_token_and_log.py"><code>examples/basics/13_token_and_log.py</code></a>.</p>
-<h2 id="prompt-caching">Prompt caching<a class="headerlink" href="#prompt-caching" title="Permanent link">&para;</a></h2>
-<p>Opt-in OpenAI prompt caching: <code>AgenticGraph(..., prompt_cache=True)</code> threads one
-cache key through every OpenAI <code>AgentNode</code> call in the graph.</p>
-<h2 id="node-policies-and-composition">Node policies and composition<a class="headerlink" href="#node-policies-and-composition" title="Permanent link">&para;</a></h2>
-<p>All node types accept <code>cache_ttl</code> (LangGraph <code>CachePolicy</code>) and <code>retry</code>
-(<code>RetryPolicy</code>); <code>AgenticGraph</code> auto-provides an <code>InMemoryCache</code> when any node
-sets <code>cache_ttl</code>. An <code>AgenticGraph</code> can itself be embedded as a node in a larger
-graph (<code>graph_0 &gt; graph_1</code>), and RAG helpers (<code>make_retriever_tool</code>, optional
-<code>ChromaRAG</code>) wrap any LangChain retriever as a tool for <code>AgentNode(tools=[...])</code>.</p>
-<h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
-<p>Kept honest on purpose:</p>
-<ul>
-<li><strong>Structured multi-write list fields are <code>str</code>-only.</strong> <code>writes=["a", "b"]</code>
-  produces one <code>str</code> field per key; use the dict form <code>writes={"a": int}</code> for
-  native-typed structured output.</li>
-<li><strong>Map workers don't echo their source item</strong> and must output <code>messages</code> (the
-  default) — a non-message write would race N parallel workers on a plain key.</li>
-<li><strong><code>[b, c] &gt; [d, e]</code> isn't supported.</strong> Two fan-outs chained directly is
-  Python's element-wise list compare, not join wiring — insert a node between.</li>
-<li><strong>Async is graph-level only</strong> (see above).</li>
-<li><strong><code>reasoning_effort</code> is <code>AgentNode</code>-only</strong> — it conflicts with <code>DecisionNode</code>'s
-  structured output on current OpenAI models.</li>
-</ul>
-<h2 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h2>
-<p>The <strong>164-test</strong> suite (<code>python -m pytest tests/</code>) runs with <strong>no API calls</strong> — a
-scripted <code>FakeLLM</code> stands in. It covers state reducers, graph construction,
-routing, the tool-call loop, interrupt/resume, RAG tool wiring, streaming/async,
-configurable fields, parallel fan-out/join, map-reduce, multi-key IO, static
-validation, and node caching/retry/<code>reasoning_effort</code>/<code>durability</code>.</p>
+
+    <div class="doc doc-contents first">
+
+        <p>Reducer for the <code>token</code> channel: merge two <code>{model_name: usage}</code> dicts.</p>
+<p>Union by model key; when the same model appears on both sides its usage
+breakdown is deep-summed (top-level token counts AND nested <code>*_details</code>).
+Associative/commutative so parallel fan-in merges cleanly. A missing/None
+<code>left</code> (the first update) is treated as <code>{}</code>.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="pttai.state.accumulate" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">pttai.state.accumulate</span>
+
+
+<a href="#pttai.state.accumulate" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accumulate</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Reducer for a map-reduce collection channel: each parallel writer
+contributes ONE value, accumulated into a list (arrival order). A
+missing/None left (the first update) is treated as [].</p>
+
+
+    </div>
+
+</div>
 
 
 
@@ -998,10 +1015,10 @@ validation, and node caching/retry/<code>reasoning_effort</code>/<code>durabilit
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "content.code.annotate", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "content.code.annotate", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -457,28 +459,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-llmnode-base" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The LLMNode base
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#agentnode" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -516,17 +496,6 @@
     <span class="md-ellipsis">
       
         HumanNode
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#shared-knobs-and-composition" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Shared knobs and composition
       
     </span>
   </a>
@@ -662,15 +631,67 @@
   
   
   
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
-      <a href="../api-notes/" class="md-nav__link">
+      <a href="../api/graph/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    API notes
+    Graph
   
 
     
@@ -679,6 +700,98 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nodes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/advanced/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -708,28 +821,6 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#the-llmnode-base" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The LLMNode base
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
       
         <li class="md-nav__item">
   <a href="#agentnode" class="md-nav__link">
@@ -775,17 +866,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#shared-knobs-and-composition" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Shared knobs and composition
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -807,135 +887,40 @@
 
 
 <h1 id="node-types">Node types<a class="headerlink" href="#node-types" title="Permanent link">&para;</a></h1>
-<p>All nodes are callables (<code>__call__(state) -&gt; delta</code>) invoked by LangGraph with
-the shared state. They return <strong>only the keys they update</strong>; the reducers merge
-them. Nodes never mutate state in place — that is what keeps checkpointing,
-parallel-branch merges, and subgraph composition correct rather than racy.</p>
-<h2 id="the-llmnode-base">The <code>LLMNode</code> base<a class="headerlink" href="#the-llmnode-base" title="Permanent link">&para;</a></h2>
-<p>The two LLM-backed nodes — <code>AgentNode</code> and <code>DecisionNode</code> — share a common
-<code>LLMNode</code> base that owns the <strong>model binding</strong> and the <strong>tool-call loop</strong>.
-Constructing an <code>LLMNode</code> subclass normalizes <code>tools</code> (a <code>StructuredTool</code> /
-<code>BaseTool</code> is used as-is; a plain callable is wrapped via
-<code>StructuredTool.from_function</code>) and wires the internal loop capped by
-<code>max_tool_iterations</code> (default 25). <code>ConditionNode</code> and <code>HumanNode</code> do not use
-an LLM and subclass <code>Node</code> directly.</p>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Node</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong><code>AgentNode</code></strong></td>
-<td>Prepends <code>node_prompt</code> as a <code>SystemMessage</code>, calls the LLM, returns a delta. Pass <code>tools=[...]</code> to wrap bare callables as <code>StructuredTool</code>s and run an internal tool-call loop. <code>reads</code> / <code>writes</code> give typed multi-key IO. Optional <code>reasoning_effort</code> for gpt-5.x.</td>
-</tr>
-<tr>
-<td><strong><code>DecisionNode</code></strong></td>
-<td>LLM branching. Reads from <code>input_field</code>, writes its choice to its per-node <code>decision_{name}</code> channel, routes via conditional edges over a <code>Literal[*choices]</code> structured output — the model can only return a valid branch. Also accepts <code>tools=[...]</code> (gathers context first, <em>then</em> routes).</td>
-</tr>
-<tr>
-<td><strong><code>ConditionNode</code></strong></td>
-<td>Deterministic branching with <strong>no LLM</strong>. A Python predicate <code>condition(state) -&gt; str</code> returns one of <code>choices</code>; routing is free, deterministic, and prompt-less.</td>
-</tr>
-<tr>
-<td><strong><code>HumanNode</code></strong></td>
-<td>Resumable human-in-the-loop via LangGraph's <code>interrupt()</code>. Surfaces a message for review; the human's reply lands <code>into</code> <code>messages</code> (or any key a router can gate on).</td>
-</tr>
-</tbody>
-</table>
+<p>pttai ships four node types. All are callables (<code>__call__(state) -&gt; delta</code>)
+invoked by LangGraph with the shared state; each returns <strong>only the keys it
+updates</strong> and never mutates state in place, which is what keeps checkpointing,
+parallel-branch merges, and subgraph composition correct. This page is a
+conceptual tour of when to reach for each — for full signatures and every
+keyword argument, see the <a href="../api/nodes/">API Reference</a>, generated from the
+docstrings.</p>
 <h2 id="agentnode"><code>AgentNode</code><a class="headerlink" href="#agentnode" title="Permanent link">&para;</a></h2>
-<p>The workhorse. Prepends <code>node_prompt</code> as a <code>SystemMessage</code> to the history (read
-from <code>input_field</code>, default <code>messages</code>), calls the LLM, and returns a delta.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">AgentNode</span><span class="p">(</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">llm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">node_prompt</span><span class="o">=</span><span class="s2">&quot;you are a helpful assistant&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">tools</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                 <span class="c1"># bare callables or BaseTool/StructuredTool</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">max_tool_iterations</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>     <span class="c1"># cap on the internal tool-call loop</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">input_field</span><span class="o">=</span><span class="s2">&quot;messages&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">output_field</span><span class="o">=</span><span class="s2">&quot;messages&quot;</span><span class="p">,</span>    <span class="c1"># a non-default key writes final content there</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">reads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                 <span class="c1"># typed multi-key inputs</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">writes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                <span class="c1"># list[str] (str-only) or {&quot;key&quot;: type} (typed)</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">reasoning_effort</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>      <span class="c1"># &quot;low&quot; / &quot;medium&quot; / &quot;high&quot; (gpt-5.x)</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">cache_ttl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">retry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="p">)</span>
-</code></pre></div>
-<ul>
-<li><strong>Tools.</strong> When <code>tools=[...]</code> is set, the node runs an internal tool-call loop:
-  it executes every requested tool, appends <code>ToolMessage</code>s, and re-invokes the
-  model until it stops requesting tools (or hits <code>max_tool_iterations</code>, which
-  then raises). Tools cannot be combined with multi-field structured <code>writes</code>.</li>
-<li><strong>Typed IO.</strong> <code>reads=[...]</code> / <code>writes=[...]</code> give one node multi-key IO
-  dispatched <strong>by value type</strong> — a message-list read is treated as history, a
-  scalar read is interpolated into the prompt. <code>writes={"score": int}</code> returns
-  native-typed structured output (a real <code>int</code>, not a string).</li>
-<li><strong><code>output_field</code>.</strong> When it is the default <code>messages</code>, produced messages are
-  appended to the conversation; any other key writes the final response there
-  instead (a transform node).</li>
-</ul>
+<p>The workhorse. It prepends your <code>node_prompt</code> as a system message, calls the
+LLM, and returns the result. Reach for it for any "have a model do something"
+step. Give it <code>tools=[...]</code> and it runs a built-in tool-call loop (execute
+tool → append result → re-call the model, until the model stops), folding away
+the <code>ToolNode</code> + conditional-edge + loop-back plumbing you'd write by hand. Give
+it <code>writes={"score": int}</code> and it returns native-typed structured output instead
+of appending to the conversation.</p>
 <h2 id="decisionnode"><code>DecisionNode</code><a class="headerlink" href="#decisionnode" title="Permanent link">&para;</a></h2>
-<p>LLM branching only. Reads from <code>input_field</code>, writes its choice to its dedicated
-per-node <code>decision_{name}</code> state field (never into <code>messages</code>), and routes via LangGraph
-conditional edges. The LLM is wrapped with <code>with_structured_output</code> over a
-<code>Literal[*choices]</code>, so the model <strong>can only return a valid branch</strong>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">DecisionNode</span><span class="p">(</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">llm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">node_prompt</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>     <span class="c1"># required, non-empty</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">choices</span><span class="o">=</span><span class="p">[],</span>         <span class="c1"># required, non-empty</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">tools</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>         <span class="c1"># optional: gather context BEFORE routing</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">input_field</span><span class="o">=</span><span class="s2">&quot;messages&quot;</span><span class="p">,</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">reads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">cache_ttl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="n">retry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="p">)</span>
-</code></pre></div>
-<p>Wire a <code>DecisionNode</code> by <strong>indexing a choice</strong> — <code>decision["positive"] &gt; handler</code>
-sets that choice's child. <code>decision &gt; x</code> is an error. If <code>tools=[...]</code> is passed,
-the node runs a tool-gathering loop first and <em>then</em> routes via structured output
-(the two never share a call). <code>reasoning_effort</code> is not accepted — it conflicts
-with structured output on current OpenAI models.</p>
+<p>LLM branching. Use it when <em>the model</em> should pick the path — classify, triage,
+route by intent. It calls the model with constrained (structured) output over a
+<code>Literal</code> of your <code>choices</code>, so the model can only return a valid branch; the
+label goes to a private per-node channel, never into the conversation. Wire each
+branch by indexing a choice: <code>decision["positive"] &gt; handler</code>. It can also take
+<code>tools=[...]</code> to gather context first and <em>then</em> route.</p>
 <h2 id="conditionnode"><code>ConditionNode</code><a class="headerlink" href="#conditionnode" title="Permanent link">&para;</a></h2>
-<p>Deterministic branching with <strong>no LLM</strong>: a Python predicate decides the branch,
-so routing is free, deterministic, and prompt-less. Handy for capping loops.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">ConditionNode</span><span class="p">(</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>     <span class="c1"># condition(state) -&gt; str, returns one of `choices`</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">choices</span><span class="o">=</span><span class="p">[],</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">reads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>         <span class="c1"># declare keys so the validator can check availability</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">cache_ttl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">retry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">)</span>
-</code></pre></div>
-<p>Wired like a <code>DecisionNode</code> — index the choice: <code>cond["retry"] &gt; worker</code>.</p>
+<p>Deterministic branching with <strong>no LLM</strong>. Reach for it when the branch is
+decidable in plain Python — a length check, a loop counter, a flag another node
+wrote. A predicate <code>condition(state) -&gt; str</code> returns one of <code>choices</code>; routing is
+free, reproducible, and prompt-less. Wired exactly like a <code>DecisionNode</code>
+(<code>route["retry"] &gt; worker</code>), which makes it the natural tool for capping loops.</p>
 <h2 id="humannode"><code>HumanNode</code><a class="headerlink" href="#humannode" title="Permanent link">&para;</a></h2>
-<p>Resumable human-in-the-loop via LangGraph's <code>interrupt()</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">HumanNode</span><span class="p">(</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">node_prompt</span><span class="o">=</span><span class="s2">&quot;Please review the following message and provide feedback.&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                <span class="c1"># surface state[&quot;messages&quot;][-n]; n&lt;=0 shows nothing</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">show</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>          <span class="c1"># None =&gt; the n-th message; a str =&gt; literal; a callable =&gt; show(state)</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">into</span><span class="o">=</span><span class="s2">&quot;messages&quot;</span><span class="p">,</span>    <span class="c1"># where the human reply lands (&quot;messages&quot; wraps a HumanMessage)</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">cache_ttl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">retry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">)</span>
-</code></pre></div>
-<p>Resume works when the graph is built with a <code>checkpointer</code> and invoked with a
-<code>thread_id</code>: build <code>AgenticGraph(..., checkpointer=InMemorySaver())</code>, then resume
-via <code>Command(resume=value)</code>. Routing <code>into</code> a non-<code>messages</code> key lets a router
-gate on the human's answer.</p>
-<h2 id="shared-knobs-and-composition">Shared knobs and composition<a class="headerlink" href="#shared-knobs-and-composition" title="Permanent link">&para;</a></h2>
-<p>All node types also accept <code>cache_ttl</code> (LangGraph <code>CachePolicy</code> — caches the
-node's result) and <code>retry</code> (LangGraph <code>RetryPolicy</code> — retries on exception);
-<code>AgenticGraph</code> auto-provides an <code>InMemoryCache</code> when any node sets <code>cache_ttl</code>.</p>
-<p>An <code>AgenticGraph</code> can itself be embedded as a node in a larger graph
-(<code>graph_0 &gt; graph_1</code>), and RAG helpers (<code>make_retriever_tool</code>, optional
-<code>ChromaRAG</code>) wrap any LangChain retriever as a tool you hand to
-<code>AgentNode(tools=[...])</code>.</p>
+<p>Resumable human-in-the-loop, backed by LangGraph's <code>interrupt()</code>. Use it when a
+person must review or supply something mid-run. It pauses and surfaces a payload
+for review; when you invoke again with <code>Command(resume=value)</code> on the same
+thread, the reply flows back into state (as a <code>HumanMessage</code>, or into any key a
+router can gate on). Requires a <code>checkpointer</code> for the pause/resume to persist.</p>
 <p>See these nodes in action, one at a time, in the <a href="../examples/basics/">Basics gallery</a>.</p>
 
 
