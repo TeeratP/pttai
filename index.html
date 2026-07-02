@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Keras for LangGraph — parallel, typed agent graphs in Python, compiled to LangGraph.">
+        <meta name="description" content="Pythonic Topology Tools for AI — a declarative >-DSL over LangGraph with a build-time dataflow validator, compiled to native LangGraph.">
       
       
       
@@ -766,11 +766,13 @@ self-contained tool-using agent, composed into a <em>visible</em> DAG you can fa
 map-reduce, and validate at compile time — and it all compiles down to a native
 LangGraph <code>StateGraph</code>, so you keep the whole ecosystem (streaming, async,
 checkpointers, LangSmith) with zero lock-in.</p>
-<p>If you know LangGraph, think of pttai as <strong>Keras for LangGraph</strong>: an ergonomic
-default layer over the same runtime. The value is everything you <em>don't</em> write —
-<code>add_node</code> / <code>add_edge</code> / <code>add_conditional_edges</code>, <code>Send</code> fan-out plumbing,
-structured-output routing, the tool-call loop — plus a build-time validator that
-catches read-before-written dataflow bugs before you ever invoke.</p>
+<p>pttai <strong>builds on LangGraph, it doesn't replace it.</strong> LangGraph is powerful and
+well worth learning directly — especially for experienced users who want full
+control. pttai's job is to make that power more <em>accessible</em>: the value is
+everything you <em>don't</em> write — <code>add_node</code> / <code>add_edge</code> / <code>add_conditional_edges</code>,
+<code>Send</code> fan-out plumbing, structured-output routing, the tool-call loop — folded
+into a small <code>&gt;</code>-DSL, plus a build-time validator that catches read-before-written
+dataflow bugs before you ever invoke.</p>
 <h2 id="the-3-vs-10-story">The 3-vs-10 story<a class="headerlink" href="#the-3-vs-10-story" title="Permanent link">&para;</a></h2>
 <p>The same tool-using agent — an LLM that calls <code>add</code> / <code>multiply</code> in a loop until
 it has the answer — is <strong>3 lines in pttai vs. 10 in raw LangGraph</strong>:</p>
