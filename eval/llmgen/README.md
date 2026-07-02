@@ -1,16 +1,17 @@
 # `eval/llmgen/` — the validator as a guardrail for AI-generated agent code
 
-An **externally-grounded** evaluation of pttai's build-time validator. A
-frontier LLM generates N pttai pipelines from short, natural NLP task specs —
-given only the docs, and **never told to write bugs** — then every generated
-pipeline is built and the validator's verdict is recorded and adjudicated.
+An **externally-grounded** evaluation of pttai's build-time validator. A small
+OpenAI model (`gpt-5.4-nano` by default, overridable via `--model`) generates N
+pttai pipelines from short, natural NLP task specs — given only the docs, and
+**never told to write bugs** — then every generated pipeline is built and the
+validator's verdict is recorded and adjudicated.
 
 ## Why this exists
 
 `eval/bugbench/` measures a 100% catch rate on a corpus **we authored**. The
 obvious objection is circularity: *of course* the validator catches the bugs its
 author planted. This study removes the author from the loop. The bug
-distribution is produced by a frontier model solving ordinary tasks, so whatever
+distribution is produced by a model solving ordinary tasks, so whatever
 the validator catches (or misses, or wrongly flags) is a fact about **real
 AI-written agent code**, not about a hand-picked corpus. That reframes the
 validator as its most 2026-relevant thing: **a static guardrail that rejects
@@ -18,8 +19,9 @@ broken AI-generated agent pipelines before they ever run.**
 
 ## How it works
 
-1. **`gen.py`** — prompts a frontier model (via `examples/_llm.py` `get_llm()`,
-   real `ChatOpenAI` when `OPENAI_API_KEY` is set) with a compact **API
+1. **`gen.py`** — prompts a small OpenAI model (`gpt-5.4-nano` by default via
+   `examples/_llm.py` `get_llm()`, real `ChatOpenAI` when `OPENAI_API_KEY` is
+   set; override with `--model`) with a compact **API
    cheatsheet** + the pttai prose docs (`docs/*.md`) + one short, natural task
    spec drawn from the **20-spec set** (see [What the model is given](#what-the-model-is-given)).
    Each reply is saved as a standalone module in `generated/` defining
@@ -41,9 +43,9 @@ broken AI-generated agent pipelines before they ever run.**
 
 ## What the model is given
 
-To keep the study honest, this is disclosed in full — the strengthening is about
-giving the model an **accurate** picture of the API and a **broader** set of
-tasks, *not* about steering it toward (or away from) any bug.
+To keep the study honest, this is disclosed in full — including the fact that the
+cheatsheet **coaches correct pttai usage** (see the honest disclosure below). We do
+**not** claim the setup is non-circular or bug-neutral.
 
 **It IS given:**
 
@@ -52,11 +54,19 @@ tasks, *not* about steering it toward (or away from) any bug.
   kwargs (e.g. `DecisionNode` takes `choices=` and does **not** take `writes`;
   `ConditionNode`/`HumanNode` take no `llm`/`tools`), the `>` wiring rules
   (`router["choice"] > node`, `fanout(...)`, `.map(...)`), `reads`/`writes`
-  semantics, the rule that tools can't combine with multi-field structured
-  `writes`, and the instruction to use the injected `llm`. Every line is verified
-  against the pttai source. This exists so the model stops **hallucinating the
-  API** (which is generation noise, not a dataflow bug) — it does not test the
-  model's memory of our API.
+  semantics, and the instruction to use the injected `llm`. Every line is verified
+  against the pttai source.
+
+  **Honest disclosure — the cheatsheet coaches valid usage.** It states core API
+  and wiring rules, several of which map **directly onto validator error classes**:
+  "a scalar key you read must be produced by an upstream node or seeded at invoke"
+  (read-before-write), "wire EACH choice by name" (dangling-choice), and
+  "`tools=[...]` CANNOT be combined with multi-field structured writes" (a build
+  error). So the cheatsheet does reduce some error classes — telling the model the
+  real API is legitimate, but we do **not** pretend this is a clean-room test of
+  the model's unaided memory of pttai. What we do claim: the model is never told to
+  write bugs, never handed a state key or a graph, and never steered toward any
+  particular bug class; whatever bugs remain are the model's.
 - **The full prose docs** (`docs/*.md`), as before.
 - **One short, natural task spec** per generation, from the 20-spec set below.
 
@@ -99,12 +109,30 @@ The set spans chains, multi-branch routing, parallel fan-out/join, map-reduce,
 reflection/evaluator loops, tool use, and human-in-the-loop — so model mistakes
 can land across many bug classes rather than concentrating in one.
 
+## Harness revision (pre-registered vs revised — disclosed)
+
+The current harness is **not** the one we first ran, and we disclose the change so
+a reader knows the design was revised after seeing results:
+
+- **v1 (initial):** docs only, **no** API cheatsheet, **10** task specs. It
+  produced **few catches** — most generations were malformed (API hallucinations)
+  rather than buildable-but-buggy, which is generation noise, not the dataflow
+  signal the study is about.
+- **v2 (revised, current):** an **accurate API cheatsheet** was added (so the
+  model stops hallucinating the API and instead emits buildable pipelines whose
+  bugs are dataflow bugs), and the spec set was **broadened to 20** shapes.
+
+This revision happened **after** seeing v1's results, so treat v2 as a *revised*
+design, not the pre-registered one. The cheatsheet coaches correct usage (see the
+honest disclosure above), which is exactly why we surface this: the strengthened
+harness was not the original plan.
+
 ## Reproduce (one command, needs your key)
 
 ```bash
 export OPENAI_API_KEY=sk-...
-bash eval/llmgen/run_study.sh            # gen (~50 pipelines) -> score
-# bigger sample:  bash eval/llmgen/run_study.sh 10   # ~100 pipelines
+bash eval/llmgen/run_study.sh            # gen (20 specs x 5 = ~100 pipelines) -> score
+# bigger sample:  bash eval/llmgen/run_study.sh 10   # ~200 pipelines
 ```
 
 Then adjudicate per [`adjudicate.md`](adjudicate.md) (write `adjudication.csv`)
@@ -156,8 +184,11 @@ currently contain.
 ### Honest framing
 
 - The false-positive rate is only meaningful **after adjudication**
-  (`adjudication.csv`). An unadjudicated run reports a heuristic 0% and marks the
-  summary `adjudicated: false` — that is not the headline.
+  (`adjudication.csv`). The summary is marked `adjudicated: true` **only when
+  every flagged id has an explicit verdict** (an `adjudication_coverage` field
+  reports the fraction labeled); a partial file keeps `adjudicated: false`. An
+  unadjudicated (or partially adjudicated) run reports a heuristic 0% — that is
+  not the headline.
 - **Malformed generations are excluded**, not counted as catches. The claim is
   about the validator's precision on *buildable* pipelines.
 - The LangGraph phase per flag is a **lookup** from the measured `eval/bugbench`

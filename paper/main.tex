@@ -58,8 +58,8 @@ analysis~\citep{kildall,dragon,jls}: hard errors are raised only from the \may\
 measurement, not a guarantee. On a controlled 17-item bug suite \code{pttai}
 fails the build on all 17; on the 12-item subset that raw LangGraph does not also
 catch at build, LangGraph surfaces every case only at run time. Our primary,
-non-circular evaluation applies the same validator to pipelines a frontier model
-generates from NLP task specs---a static guardrail for AI-written agent code
+non-circular evaluation applies the same validator to pipelines a small OpenAI
+model (\code{gpt-5.4-nano}) generates from NLP task specs---a static guardrail for AI-written agent code
 (numbers pending a keyed generation run; \S\ref{sec:eval}). The demonstration is
 an interactive playground that paints the offending node red at build time,
 before any model call.
@@ -267,16 +267,16 @@ sees the picture of the bug before running anything.
 
 The playground itself never invokes a model---it builds, validates, and draws.
 To show that \code{pttai} \emph{is} a working agent framework and not only a
-linter, the accompanying screencast first runs a live pipeline (the
+linter, the planned screencast will first run a live pipeline (the
 parallelization example, which really calls the model) end-to-end, and only then
-switches to the playground for the build-time catch. Because the playground
+switch to the playground for the build-time catch. Because the playground
 \code{exec}s user-supplied code, it is sandboxed for public hosting: the snippet
 is size-capped, AST-checked (imports allow-listed to
 \code{pttai}/\code{typing}/safe stdlib; dunder access and dangerous builtins such
 as \code{eval}/\code{open}/\code{\_\_import\_\_} rejected), run with a restricted
 \code{\_\_builtins\_\_}, and executed under a per-request timeout. The model
 backend is an offline fake, so the demo needs no API key and makes no network
-call. A \textless2.5-minute screencast accompanies the submission.
+call. A \textless2.5-minute screencast will accompany the final submission.
 
 \begin{figure}[t]
   \centering
@@ -301,7 +301,7 @@ objection.
 
 The most 2026-relevant question is whether the validator is a useful static
 guardrail for \emph{AI-written} agent code. We therefore designed a study
-(\code{eval/llmgen/}) in which a frontier model generates \code{pttai} pipelines
+(\code{eval/llmgen/}) in which a small OpenAI model (\code{gpt-5.4-nano}) generates \code{pttai} pipelines
 from short NLP task specs---given only the docs, and \textbf{never told to write
 bugs}---after which every generated pipeline is built through the validator and
 every flag is author-adjudicated as a true bug or a false positive per a fixed

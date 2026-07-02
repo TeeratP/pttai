@@ -3,12 +3,13 @@
 #
 #   OPENAI_API_KEY=sk-...  bash eval/llmgen/run_study.sh [PER_SPEC]
 #
-# Step 1 (gen.py)   needs OPENAI_API_KEY — a frontier model writes N pttai
-#                   pipelines from short NLP task specs (given only the docs).
+# Step 1 (gen.py)   needs OPENAI_API_KEY — a small OpenAI model (gpt-5.4-nano by
+#                   default) writes N pttai pipelines from short NLP task specs
+#                   (given only the docs).
 # Step 2 (score.py) is offline — builds each pipeline and records the validator's
 #                   verdict into results.{csv,json} + flagged/.
 #
-# PER_SPEC defaults to 5 (10 specs -> ~50 pipelines). Bump it for N≈100.
+# PER_SPEC defaults to 5 (20 specs -> ~100 pipelines). Bump it for a larger N.
 set -euo pipefail
 
 PER_SPEC="${1:-5}"

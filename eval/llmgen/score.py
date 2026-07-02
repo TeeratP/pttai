@@ -19,8 +19,10 @@ Emits ``results.csv`` (per pipeline) and ``results.json`` (per pipeline +
 summary), copies each flagged snippet + its error into ``flagged/`` for
 adjudication, and prints the headline. If an ``adjudication.csv`` (columns:
 ``id,verdict,note`` where verdict is ``true-bug`` or ``false-positive``) sits in
-this dir, its human labels drive the false-positive rate; otherwise a heuristic
-labels every flag a true bug and the summary marks ``adjudicated: false``.
+this dir, its human labels drive the false-positive rate. The summary is marked
+``adjudicated: true`` ONLY when EVERY flagged id has an explicit verdict; an empty
+or partial file keeps ``adjudicated: false`` (with an ``adjudication_coverage``
+fraction), and unlabeled flags get only a heuristic true-bug label for display.
 
     PYTHONPATH=. .venv/bin/python eval/llmgen/score.py                 # scores generated/
     PYTHONPATH=. .venv/bin/python eval/llmgen/score.py --gen-dir samples   # offline proof
@@ -55,6 +57,10 @@ from _llm import get_llm  # noqa: E402  (offline fake unless OPENAI_API_KEY is s
 #   dsl-strictness -> a pttai DSL-strictness rejection, NOT a LangGraph bug:
 #             LangGraph runs the pipeline fine (e.g. a childless node is a legal
 #             implicit terminal). Excluded from the pttai-only differentiator count.
+#   unknown -> an unmapped validation error with no justified LangGraph behavior;
+#             counted separately and EXCLUDED from the differentiator count.
+# Only classes with a known, justified LangGraph behavior (runtime/silent) count
+# as pttai-only differentiators.
 # ---------------------------------------------------------------------------
 _VALIDATION_CLASSES = [
     ("read-before-write", "runtime", ["reads computed key"]),
@@ -84,7 +90,11 @@ def _classify(exc_type: str, message: str):
         for cls, phase, needles in _VALIDATION_CLASSES:
             if any(n.lower() in low for n in needles):
                 return "flagged", cls, phase
-        return "flagged", "other-validation-error", "runtime"
+        # An unmapped validation error: we have NO justified claim about how raw
+        # LangGraph behaves on it, so phase is "unknown" -- it is EXCLUDED from the
+        # runtime-or-silent differentiator tally (counting it there would silently
+        # inflate the pttai-only early-catch count).
+        return "flagged", "other-validation-error", "unknown"
     for cls, phase, needles in _STRUCTURAL_CLASSES:
         if any(n.lower() in low for n in needles):
             return "flagged", cls, phase
@@ -168,25 +178,34 @@ def summarize(rows, adjudication):
     by_phase = Counter(r["langgraph_phase"] for r in flagged)
 
     # False positives among flags: a flag is a FALSE POSITIVE if adjudicated so.
-    # Absent human labels, the heuristic labels every flag a true bug (the
-    # validator's hard errors are may-availability facts: it flags a read of a
-    # key nothing produces -> a genuine bug). Summary flags whether it's human-adjudicated.
-    adjudicated = bool(adjudication)
+    # Absent an explicit label, a flag gets a heuristic true-bug label FOR DISPLAY
+    # only (the validator's hard errors are may-availability facts: it flags a read
+    # of a key nothing produces -> a genuine bug). A run counts as human-adjudicated
+    # ONLY when EVERY flagged id has an explicit verdict in adjudication.csv --
+    # unlabeled flags must not let the run pose as human-adjudicated.
+    n_flagged = len(flagged)
+    n_adjudicated = sum(1 for r in flagged if r["id"] in adjudication)
+    adjudicated = n_flagged > 0 and n_adjudicated == n_flagged
     fps = [r for r in flagged if adjudication.get(r["id"]) == "false-positive"]
     true_bugs = [r for r in flagged if r["id"] not in {x["id"] for x in fps}]
 
     # LangGraph would only surface these at runtime / silently (not at build).
+    # "unknown" phase (unmapped validation errors) is counted separately and is
+    # EXCLUDED from the runtime-or-silent differentiator tally.
     lg_runtime = sum(r["langgraph_phase"] == "runtime" for r in flagged)
     lg_silent = sum(r["langgraph_phase"] == "silent" for r in flagged)
     lg_build = sum(r["langgraph_phase"] == "build" for r in flagged)
     lg_dsl = sum(r["langgraph_phase"] == "dsl-strictness" for r in flagged)
+    lg_unknown = sum(r["langgraph_phase"] == "unknown" for r in flagged)
 
     return {
         "backend": "REAL OpenAI" if os.environ.get("OPENAI_API_KEY") else "offline fake",
         "adjudicated": adjudicated,
+        "adjudication_coverage": _rate(n_adjudicated, n_flagged),
         "counts": {
             "total": total, "buildable": len(buildable), "clean": len(clean),
             "flagged": len(flagged), "malformed_excluded": len(malformed),
+            "flags_adjudicated": n_adjudicated,
         },
         "flag_rate_over_buildable": _rate(len(flagged), len(buildable)),
         "false_positive_rate_among_flags": _rate(len(fps), len(flagged)),
@@ -194,7 +213,8 @@ def summarize(rows, adjudication):
         "true_bugs_among_flags": len(true_bugs),
         "langgraph_would": {
             "runtime_only": lg_runtime, "silent": lg_silent, "build_too": lg_build,
-            "dsl_strictness": lg_dsl,
+            "dsl_strictness": lg_dsl, "unknown": lg_unknown,
+            # differentiator tally: only known runtime/silent classes count.
             "runtime_or_silent": lg_runtime + lg_silent,
         },
         "flags_by_class": dict(by_class),
@@ -230,6 +250,9 @@ def _print(summary, gen_dir):
           f"(broken/non-pttai code -- not counted as flags)")
     print(f"\nflag rate over buildable:    {summary['flag_rate_over_buildable']:.0%}")
     adj = "human-adjudicated" if summary["adjudicated"] else "HEURISTIC (run adjudication)"
+    print(f"adjudication coverage:       {summary['adjudication_coverage']:.0%}  "
+          f"({c.get('flags_adjudicated', 0)}/{c['flagged']} flags labeled) -> "
+          f"adjudicated: {str(summary['adjudicated']).lower()}")
     print(f"false-positive rate among flags ({adj}): "
           f"{summary['false_positive_rate_among_flags']:.0%}  "
           f"({len(summary['false_positives'])}/{c['flagged']})")
@@ -242,6 +265,8 @@ def _print(summary, gen_dir):
     print(f"  also at build:     {lg['build_too']}  (not a pttai differentiator)")
     print(f"  DSL-strictness:    {lg.get('dsl_strictness', 0)}  "
           f"(LangGraph runs fine -- not a pttai differentiator)")
+    print(f"  unknown phase:     {lg.get('unknown', 0)}  "
+          f"(unmapped -- excluded from the differentiator count)")
     print(f"  => runtime-or-silent (pttai-only early catch): {lg['runtime_or_silent']}")
     print(f"\nflags by class:           {summary['flags_by_class']}")
 

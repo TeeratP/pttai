@@ -1,11 +1,12 @@
-"""Generate pttai pipelines with a frontier LLM from short NLP task specs.
+"""Generate pttai pipelines with a small OpenAI model from short NLP task specs.
 
-The study's premise: give a frontier model ONLY the pttai docs plus a short,
-natural task spec (RAG QA, multi-hop, extract->summarize, triage, rerank,
-tool-use...) and ask it to write a runnable pttai pipeline. The model is NEVER
-told to introduce bugs. Whatever dataflow bugs appear are model-produced, not
-author-planted -- which is exactly what kills the "you graded your own bugs"
-circularity objection against the self-authored corpus in ``eval/bugbench/``.
+The study's premise: give the model (``gpt-5.4-nano`` by default, overridable via
+``--model``) ONLY the pttai docs plus a short, natural task spec (RAG QA,
+multi-hop, extract->summarize, triage, rerank, tool-use...) and ask it to write a
+runnable pttai pipeline. The model is NEVER told to introduce bugs. Whatever
+dataflow bugs appear are model-produced, not author-planted -- which is what
+answers the "you graded your own bugs" circularity objection against the
+self-authored corpus in ``eval/bugbench/``.
 
 Each generated pipeline is written to ``generated/<slug>.py`` following one
 contract so ``score.py`` can build every one uniformly::
@@ -123,7 +124,17 @@ SPECS = [
 # internals). Every signature/kwarg/rule below is verified against the pttai
 # source. This is API SURFACE + 1-2 line snippets ONLY -- deliberately NOT
 # complete, copyable, bug-free pipelines, so the model's own dataflow mistakes are
-# preserved for the study. It contains NO advice about avoiding validator errors.
+# preserved for the study.
+#
+# HONEST DISCLOSURE: the cheatsheet DOES coach correct usage. It states the core
+# API and wiring rules -- including several that map directly onto validator error
+# classes: "a scalar key you read must be produced by an upstream node or seeded
+# at invoke" (read-before-write), "wire EACH choice by name" (dangling-choice),
+# and "tools=[...] CANNOT be combined with multi-field structured writes" (a build
+# error). Telling the model the real API is legitimate, but we do NOT claim the
+# cheatsheet is non-circular or bug-neutral: it teaches valid pttai. Whatever bugs
+# remain in the generated pipelines are the model's, not steered by us toward any
+# particular class.
 API_CHEATSHEET = '''\
 ===== pttai API cheatsheet (authoritative -- prefer this over guesses) =====
 
@@ -220,8 +231,8 @@ def _require_key():
     if not os.environ.get("OPENAI_API_KEY"):
         sys.exit(
             "ERROR: OPENAI_API_KEY is not set.\n"
-            "gen.py calls a real frontier model to generate pipelines and cannot "
-            "run offline.\n"
+            "gen.py calls a real OpenAI model (gpt-5.4-nano by default) to "
+            "generate pipelines and cannot run offline.\n"
             "Set your key and retry, e.g.:\n"
             "    OPENAI_API_KEY=sk-... PYTHONPATH=. .venv/bin/python eval/llmgen/gen.py\n"
             "(To verify the SCORING path without a key, run score.py over the "
@@ -233,13 +244,16 @@ def _require_key():
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--per-spec", type=int, default=5,
-                    help="pipelines to generate per task spec (default 5 -> ~50 total)")
+                    help="pipelines to generate per task spec (default 5; 20 specs -> ~100 total)")
     ap.add_argument("--out-dir", default=os.path.join(HERE, "generated"),
                     help="where to write generated pipelines")
     ap.add_argument("--model", default=None,
-                    help="override the model id (default: whatever get_llm/env selects)")
+                    help="override the model id (default: gpt-5.4-nano, whatever get_llm selects)")
     ap.add_argument("--only", nargs="*", default=None,
                     help="only these spec ids (default: all)")
+    ap.add_argument("--force", action="store_true",
+                    help="wipe a non-empty --out-dir before generating (default: refuse, "
+                         "so a run cannot silently mix generations from different harness versions)")
     args = ap.parse_args()
 
     _require_key()  # fail fast with a clear message before importing model libs
@@ -256,6 +270,10 @@ def main():
             from langchain_openai import ChatOpenAI
             llm = ChatOpenAI(model=args.model)
 
+    # Resolve the ACTUAL model id used, so the run is attributable in the manifest.
+    model_id = (getattr(llm, "model_name", None) or getattr(llm, "model", None)
+                or args.model or "unknown")
+
     docs = _read_docs()
     system = SystemMessage(
         "You write pttai pipelines. pttai is a declarative DSL over LangGraph; "
@@ -267,6 +285,20 @@ def main():
              if args.only is None or sid in args.only]
 
     os.makedirs(args.out_dir, exist_ok=True)
+    # Guard: never silently mix generations from different harness versions into
+    # one dir (this once produced a contaminated 150-item run). Refuse a non-empty
+    # out-dir unless --force, which wipes it first with a printed warning.
+    existing = [f for f in os.listdir(args.out_dir)
+                if f.endswith(".py") or f == "manifest.json"]
+    if existing:
+        if not args.force:
+            sys.exit(f"ERROR: out-dir not empty ({len(existing)} generation file(s) in "
+                     f"{args.out_dir}); pass --force to overwrite.")
+        print(f"WARNING: --force given; wiping {len(existing)} existing "
+              f"generation file(s) in {args.out_dir} before generating.")
+        for f in existing:
+            os.remove(os.path.join(args.out_dir, f))
+
     manifest = []
     n = 0
     for sid, task in specs:
@@ -291,7 +323,7 @@ def main():
             print(f"  [{n}] wrote {fname}")
 
     with open(os.path.join(args.out_dir, "manifest.json"), "w") as f:
-        json.dump({"model": args.model or "get_llm-default",
+        json.dump({"model": model_id,
                    "per_spec": args.per_spec, "count": n,
                    "specs": [s for s, _ in specs], "items": manifest}, f, indent=2)
     print(f"\nGenerated {n} pipelines into {os.path.relpath(args.out_dir)}/ "

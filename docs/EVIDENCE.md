@@ -67,10 +67,10 @@ Columns:
 - **Declarative topology** — you *declare* the graph/flow structure (nodes + edges), rather than expressing control flow as imperative code.
 - **Build-time STRUCTURAL check** — before running, validates graph well-formedness (reachability, dead ends, entry points, connection validity).
 - **Build-time DATAFLOW check** — before running, validates *state-key dataflow*: that every key a node reads is produced upstream, and that concurrent writes to a plain key have a reducer. (This is read-before-write / concurrent-write detection — **not** event-type or socket-type checking.)
-- **False-positive guarantee** — the dataflow analysis is *sound*: it never rejects a graph that would actually run (pttai uses a `may`-set fixpoint; measured 0 false positives on 19 valid pipelines).
+- **Hard errors from may-set only (0 FP observed)** — hard rejections come from a `may`-set availability fixpoint, and **0 false positives were observed** on 19 valid pipelines. This is a *measurement, not a guarantee*: a may-only analysis can still reject a graph that would run (e.g. if an input key isn't declared) and can miss reads hidden behind opaque predicates, so it is not sound in either direction.
 - **Compiles-to-native-runtime** — lowers to an established execution engine rather than shipping its own.
 
-| Framework | Declarative topology | Build-time STRUCTURAL check | Build-time DATAFLOW check | False-positive guarantee | Compiles-to-native-runtime |
+| Framework | Declarative topology | Build-time STRUCTURAL check | Build-time DATAFLOW check | Hard errors from may-set only (0 FP observed) | Compiles-to-native-runtime |
 |---|:--:|:--:|:--:|:--:|:--:|
 | **LangGraph** | yes | partial¹ | **no** | n/a | is the runtime² |
 | **DSPy** | no³ | no | no | n/a | no⁴ |
@@ -90,9 +90,10 @@ check (its node edges are encoded in `run`-method return-type annotations, so a
 standard static type checker flags mis-wired edges before the graph runs¹²), and
 LlamaIndex/Haystack/AutoGen validate event/socket/graph structure at build. What
 none of them do is a per-node *dataflow* availability analysis over shared state —
-that is pttai's distinct contribution, and it is the only one with a
-false-positive guarantee (measured 0 FPs on 19 valid pipelines) because it is the
-only one running a state-key dataflow analysis to be sound *about*.
+that is pttai's distinct contribution. Its hard rejections come from a `may`-set
+availability fixpoint, and we **observed 0 false positives on 19 valid pipelines** —
+a measurement, **not** a soundness guarantee: a may-only analysis can still reject
+a runnable graph (e.g. an undeclared input) and can miss opaque-predicate reads.
 
 ### Notes & citations
 
@@ -106,5 +107,5 @@ only one running a state-key dataflow analysis to be sound *about*.
 8. **Haystack — dataflow: partial (type-level only).** `connect()` validates that a producer's output socket **type** is compatible with the consumer's input socket type before running — a type check on explicit connections, not a state-key availability analysis (its explicit-DAG model makes read-before-write structurally different from LangGraph's shared-state model). → [Creating Pipelines](https://docs.haystack.deepset.ai/docs/creating-pipelines).
 9. **CrewAI — no declared graph.** Orchestration is a `Process` (sequential or hierarchical/manager-delegated), not a declared node/edge graph; docs describe no build-time graph or dataflow validation. → [Processes](https://docs.crewai.com/en/concepts/processes).
 10. **AutoGen (GraphFlow) — structural: yes.** `DiGraphBuilder(...).build()` validates the directed graph's structure (entry points, cycles) before use; it does not validate shared-state dataflow. → [GraphFlow docs](https://microsoft.github.io/autogen/stable//user-guide/agentchat-user-guide/graph-flow.html).
-11. **pttai — all yes.** Declarative `>` wiring; structural checks (dead-end, dangling choice, duplicate names, unreachable); a `may`/`must` dataflow fixpoint (read-before-write incl. the cyclic loop-carried case, concurrent-write-no-reducer, prompt-placeholder); sound `may`-set errors with **0 false positives measured** on 19 valid pipelines; and it compiles down to a plain LangGraph `StateGraph`. → [`docs/validator.md`](validator.md), [`eval/bugbench/results.csv`](../eval/bugbench/results.csv).
+11. **pttai — all yes.** Declarative `>` wiring; structural checks (dead-end, dangling choice, duplicate names, unreachable); a `may`/`must` dataflow fixpoint (read-before-write incl. the cyclic loop-carried case, concurrent-write-no-reducer, prompt-placeholder); `may`-set hard errors with **0 false positives measured** on 19 valid pipelines (a measurement, not a guarantee — a may-only analysis can still reject a runnable graph with an undeclared input); and it compiles down to a plain LangGraph `StateGraph`. → [`docs/validator.md`](validator.md), [`eval/bugbench/results.csv`](../eval/bugbench/results.csv).
 12. **pydantic-graph (PydanticAI) — structural: yes (type-check time); dataflow: no.** In `pydantic-graph`, "nodes and edges are defined using type hints", and "the return type of the node's `run` method … is used to determine the outgoing edges of the node." Because edges *are* return-type annotations, a standard static type checker (mypy/pyright) flags a node that returns an undeclared successor — a build-time graph-**structure** check. But state is a single shared object (`GraphRunContext[StateT]`, "an optional way to access and mutate an object … as nodes run") passed uniformly to every node; there is **no** per-node read/write availability or state-key dataflow analysis. So it checks *wiring*, not *dataflow*. → [pydantic-graph docs](https://pydantic.dev/docs/ai/graph/graph/).

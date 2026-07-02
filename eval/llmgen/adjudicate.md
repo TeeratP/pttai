@@ -5,29 +5,63 @@ headline claim of this study is that the validator's flags are **real bugs, not
 noise** — i.e. the false-positive rate among flags is ~0. That claim only holds
 if each flag is adjudicated. This file is the labeling protocol.
 
-## The rule
+## The rule — avoid circularity
 
-A flag is a **true bug** if the pipeline, run as written, would genuinely fail
-or misbehave because of the dataflow problem the validator names. It is a
-**false positive** if the pipeline would actually run correctly and the
-validator was wrong to reject it.
+The trap: if "true bug" just restates the flag condition (e.g. dead-end true-bug =
+"a reachable non-end node has no outgoing edge" = *the flag itself*), then a false
+positive is definitionally impossible and the 0% FP rate is a **tautology**. This
+protocol avoids that by judging each flag against **raw LangGraph semantics**, not
+against the validator's own rule.
 
-The validator's hard errors are *may-availability* facts (does any path produce
-the key this node reads?), so most flags are decidable by inspection — you do
-not need to run the model. Per class:
+Sort every flag into exactly one of three outcomes:
 
-| bug class | true bug when… | how to confirm |
+1. **True differentiator bug** — the pipeline, run as written, **genuinely fails or
+   misbehaves under LangGraph semantics too**: a real runtime error (`KeyError`,
+   `InvalidUpdateError`, a routing `KeyError`) or a wrong/empty result. This is the
+   only outcome that counts toward the differentiator claim. Confirm it by asking
+   "would raw LangGraph, running this same dataflow, error or produce the wrong
+   answer?" — **not** "does it violate a pttai rule?"
+2. **pttai DSL-strictness (report SEPARATELY, NOT a differentiator)** — pttai
+   rejects it but **LangGraph runs it fine**. The canonical case is `dead-end-node`:
+   LangGraph treats a childless node as a legal implicit terminal and runs to a
+   normal halt. These are correct pttai rejections but they are strictness choices,
+   not bugs LangGraph would hit — they must be tallied on their own and excluded
+   from the differentiator count.
+3. **False positive** — pttai rejects a pipeline that would have **run correctly
+   and produced the right result** under pttai's own intended semantics; the
+   validator was simply wrong to reject it.
+
+A fourth bucket, **pttai-DSL-internal**: `prompt-placeholder-mismatch` is a pttai
+templating error — a `{name}` in a `node_prompt` with no matching scalar `reads=`.
+It **cannot occur in raw LangGraph** (LangGraph has no `node_prompt` templating),
+so it is neither a shared-state dataflow catch nor a LangGraph-runtime bug. Report
+it **separately** from the shared-state dataflow catches (`read-before-write`,
+`concurrent-write-no-reducer`, `read-undeclared`, `dangling-choice`) and do not
+fold it into the differentiator dataflow total.
+
+Most flags are decidable by inspection (no model run). Per class, judge against
+**LangGraph behavior**:
+
+| bug class | LangGraph would… | outcome |
 |---|---|---|
-| `read-before-write` | the read key is produced only by a node that runs **later** (or never) | trace `.child` order: is a producer upstream of the reader? |
-| `read-undeclared` | the key is read but no node writes it and it isn't an input | grep the pipeline for a `writes=`/`output_field=` of that key |
-| `dangling-choice` | a `DecisionNode`/`ConditionNode` choice has no wired handler | is `decision["<choice>"] > x` present for every choice? |
-| `dead-end-node` | a reachable non-end node has no outgoing edge | is the node in `end_nodes`, or does it have a `.child`? |
-| `concurrent-write-no-reducer` | two parallel branches write the same reducer-less key | are both writers under one `fanout(...)`/`[a, b]`, writing the same key? |
-| `prompt-placeholder-mismatch` | a `{name}` in a `node_prompt` has no matching scalar read | does `reads=[...]` contain every `{name}` in the prompt? |
-| `duplicate-node-names` | two nodes share a `name=` | grep the `name=` values |
+| `read-before-write` | raise `KeyError` (or read a stale/empty value) when the reader runs before any producer | differentiator true-bug **if** raw LangGraph errors/misbehaves; trace `.child` order to confirm the producer is not upstream |
+| `read-undeclared` | raise `KeyError` / read nothing — no node writes the key and it isn't an input | differentiator true-bug if LangGraph would error/misbehave; grep for a `writes=`/`output_field=` of that key |
+| `dangling-choice` | route to a destination not in the edge map → routing `KeyError` | differentiator true-bug if the unwired choice is reachable; check `decision["<choice>"] > x` for every choice |
+| `concurrent-write-no-reducer` | raise `InvalidUpdateError` — parallel branches write one reducer-less key in a step | differentiator true-bug if both writers are under one `fanout(...)`/`[a, b]` writing the same plain key |
+| `prompt-placeholder-mismatch` | **N/A** — cannot occur in raw LangGraph | pttai-DSL-internal; report separately, not a differentiator |
+| `dead-end-node` | run fine (childless node = legal implicit terminal) | pttai DSL-strictness; report separately, not a differentiator |
+| `duplicate-node-names` | **also** raise `ValueError('… already present')` at build | caught by both; not a differentiator |
 
-If the answer is "yes, the bug is real", label `true-bug`. Only label
-`false-positive` if you can show the pipeline would have run fine.
+Label `true-bug` only when the pipeline genuinely fails/misbehaves under LangGraph
+semantics (outcome 1). Label `false-positive` only when you can show it would have
+run fine and produced the right result (outcome 3). DSL-strictness and
+DSL-internal flags are recorded in the `note` (and their bug class) so they are
+visibly excluded from the differentiator tally — do **not** mark them `true-bug`.
+
+**Second rater recommended.** For the judgment-bearing flags (anything where the
+LangGraph verdict is not mechanical), a **second, non-author rater** should label
+independently; disagreements are the honest signal about how decidable the flags
+really are.
 
 ## How to record labels
 
