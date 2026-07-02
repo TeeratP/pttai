@@ -9,8 +9,20 @@ The core is a forward dataflow over a tagged edge list (recorded during the
 build): ``may`` (any-path availability, a monotone-increasing union fixpoint)
 and ``must`` (guaranteed-on-all-paths, a monotone-decreasing fixpoint that
 UNIONs across AND-parallel joins and INTERSECTs within an exclusive
-DecisionNode choice-group). Hard errors come from ``may`` (zero false
-positives); ``must`` only drives warnings.
+DecisionNode choice-group). Hard errors come from ``may``; ``must`` only drives
+warnings. Loop-back edges are excluded when computing incoming availability, so
+loop-carried reads (a key produced only by a downstream node that cycles back)
+are caught as read-before-write on the first iteration rather than silently
+credited.
+
+This is a may/must dataflow analysis, not a soundness proof. It reasons over
+DECLARED node ``reads``/``writes`` and the graph's edges — it does NOT read the
+code inside ``ConditionNode`` predicates (arbitrary lambdas), tool bodies, or
+other custom callables, so a state key touched only inside such a callable is
+invisible to it unless the node declares it. Within those limits it flags
+read-before-write and undeclared reads/writes; no false positives have been
+observed on our example corpus, but "compiles" is not a guarantee of dataflow
+soundness.
 """
 
 import sys
@@ -74,6 +86,57 @@ def reduced_keys(state) -> set:
     return {k for k, v in hints.items() if hasattr(v, "__metadata__")}
 
 
+def _back_edges(edges):
+    """The set of loop-back edges ``(src, dst)`` — edges that close a cycle.
+
+    Detected by an iterative three-colour DFS from START: an edge into a node
+    still on the current DFS path (GRAY / on-stack) closes a cycle, so it is a
+    back-edge. Removing every back-edge yields the graph's acyclic condensation.
+
+    Why this matters for availability: a back-edge carries LOOP-CARRIED keys —
+    values that only exist after the loop body has run at least once. On the
+    FIRST entry into a cycle they are absent, so a node that reads a key written
+    ONLY by a downstream node that loops back would KeyError on iteration one.
+    Excluding back-edges when computing incoming availability makes the analysis
+    reflect that first-iteration reality (loop-carried keys are never counted as
+    guaranteed, and not even as some-path available for the first read)."""
+    adj = {}
+    for s, d, _ in edges:
+        if d == END:
+            continue
+        adj.setdefault(s, []).append(d)
+    WHITE, GRAY, BLACK = 0, 1, 2
+    color = {}
+    back = set()
+    # Root the DFS at START, then sweep any remaining nodes so a cycle sitting
+    # in an unreachable-from-START component is still recognised (its nodes are
+    # reported unreachable elsewhere; here we just avoid leaking loop-carried
+    # availability into them).
+    roots = [START] + [n for n in adj if n != START]
+    for root in roots:
+        if color.get(root, WHITE) != WHITE:
+            continue
+        color[root] = GRAY
+        stack = [(root, iter(adj.get(root, ())))]
+        while stack:
+            node, it = stack[-1]
+            pushed = False
+            for nxt in it:
+                c = color.get(nxt, WHITE)
+                if c == GRAY:                 # edge into an on-stack node: back-edge
+                    back.add((node, nxt))
+                elif c == WHITE:              # tree edge: descend
+                    color[nxt] = GRAY
+                    stack.append((nxt, iter(adj.get(nxt, ()))))
+                    pushed = True
+                    break
+                # BLACK (already finished): forward/cross edge — ignore
+            if not pushed:
+                color[node] = BLACK
+                stack.pop()
+    return back
+
+
 def compute_availability(initial, edges, writes, send_workers=None, spread_collectors=None):
     """Forward dataflow fixpoint over the tagged edge list.
 
@@ -104,10 +167,17 @@ def compute_availability(initial, edges, writes, send_workers=None, spread_colle
         names.add(d)
     names.discard(END)
 
+    # Loop-back edges carry loop-carried keys that do NOT exist on the first
+    # iteration; excluding them means a node's incoming availability is computed
+    # over the acyclic condensation, so a read of a key produced ONLY by a
+    # downstream node that loops back is correctly flagged (not credited as
+    # available on first entry). Keys produced upstream-before-the-cycle, or
+    # earlier in the same loop body via a forward edge, are unaffected.
+    back = _back_edges(edges)
     seq_preds = {n: set() for n in names}
     cond_groups = {n: {} for n in names}  # dst -> {src: set(src)}  (one group per source)
     for s, d, kind in edges:
-        if d == END:
+        if d == END or (s, d) in back:
             continue
         if kind == "seq":
             seq_preds[d].add(s)

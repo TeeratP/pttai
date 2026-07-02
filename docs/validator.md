@@ -24,8 +24,15 @@ tokens, latency, and (with tools) real side effects on a run that was doomed at
 build time.
 
 The validator turns those runtime `KeyError`s and `InvalidUpdateError`s into a
-**build-time exception with zero token cost**. The whole point of the "Keras
-compiler" promise is: if the graph compiles, its dataflow is sound.
+**build-time exception with zero token cost**. It is a may/must dataflow
+analysis over your *declared* node reads/writes and the graph edges — not a
+soundness proof. It catches read-before-write (including loop-carried reads in
+cyclic graphs), undeclared reads/writes, and the structural bugs below, and we
+have observed no false positives on our example corpus. It does **not** see
+state keys touched only inside opaque callables — `ConditionNode` predicates
+(arbitrary lambdas), tool bodies, or other custom functions — so those are
+checked by declared annotations only, not by reading their code. "Compiles" is
+therefore a strong signal, not a guarantee, that the dataflow is sound.
 
 ## What it checks
 
@@ -33,7 +40,8 @@ The core is a **forward dataflow fixpoint** over a tagged edge list recorded
 during the build. It computes, per node:
 
 - `may` — keys available on *some* path into the node (drives hard **errors**;
-  zero false positives).
+  no false positives observed on our corpus). Loop-back edges are excluded, so
+  a key produced only after the loop cycles back is not counted as available.
 - `must` — keys guaranteed on *all* paths (drives **warnings**).
 
 `may`/`must` union across AND-parallel joins (`fanout`) and intersect within an

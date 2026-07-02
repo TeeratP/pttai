@@ -22,6 +22,14 @@ class SummaryState(TypedDict):
     summary: str
 
 
+class LoopState(TypedDict):
+    messages: Annotated[list[AnyMessage], add_messages]
+    log: Annotated[list[str], operator.add]
+    decision: str
+    summary: str  # produced before the loop
+    draft: str    # produced inside the loop body
+
+
 class XYState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     log: Annotated[list[str], operator.add]
@@ -218,4 +226,60 @@ def test_produced_upstream_passes(t):
     c = _agent(t, "c", reads=["summary"])
     p > c
     g = AgenticGraph(state=SummaryState, start_node=p, end_nodes=c)
+    assert g.validate().ok is True
+
+
+# --- cyclic dataflow: loop-carried read-before-write (issue #34) ---
+#
+# Back-edges carry loop-carried keys that do NOT exist on the first iteration.
+# Before the fix, the availability fixpoint treated a loop-back edge like any
+# forward predecessor, so a node reading a key produced ONLY by a downstream
+# node that loops back was credited with it -> PASSED validation, then KeyError'd
+# on iteration one. These tests pin that the analysis now excludes back-edges.
+
+
+def test_cyclic_loop_carried_read_before_write_caught(t):
+    # gen reads `summary`, but its ONLY writer `writer` is DOWNSTREAM and loops
+    # back to gen via the gate. On first entry `summary` does not exist yet ->
+    # runtime KeyError. This was a FALSE NEGATIVE before the back-edge fix
+    # (the loop-back gate->gen edge wrongly made summary "available" at gen).
+    from pttai import ConditionNode
+
+    gen = _agent(t, "gen", reads=["messages", "summary"])   # loop-carried read
+    writer = _agent(t, "writer", output_field="summary")     # sole producer, downstream
+    gate = ConditionNode(name="gate", condition=lambda s: "refine", choices=["refine", "accept"])
+    fin = _agent(t, "fin")
+
+    gen > writer > gate
+    gate["refine"] > gen        # back-edge: closes the cycle gen->writer->gate->gen
+    gate["accept"] > fin
+
+    with pytest.raises(GraphValidationError) as ei:
+        AgenticGraph(state=SummaryState, start_node=gen, end_nodes=fin)
+    msg = str(ei.value)
+    assert "summary" in msg          # names the loop-carried key
+    assert "writer" in msg           # names the downstream (loop-back) producer
+    assert "upstream" in msg.lower() # explains it's an ordering problem
+
+
+def test_cyclic_legitimate_reads_pass(t):
+    # A genuinely-valid loop must still validate clean (no false positive):
+    #  - `gen` reads `summary`, produced by `pre` UPSTREAM-before-the-cycle;
+    #  - `evaluate` reads `draft`, produced by `gen` EARLIER in the same loop
+    #    body via a forward edge (gen->evaluate).
+    # Neither read depends on a back-edge, so both are available on entry.
+    from pttai import ConditionNode
+
+    pre = _agent(t, "pre", output_field="summary")               # before the loop
+    gen = _agent(t, "gen", reads=["messages", "summary"],        # reads upstream key
+                 writes={"draft": str})
+    evaluate = _agent(t, "evaluate", reads=["messages", "draft"])  # reads same-loop-body key
+    gate = ConditionNode(name="gate", condition=lambda s: "accept", choices=["refine", "accept"])
+    fin = _agent(t, "fin")
+
+    pre > gen > evaluate > gate
+    gate["refine"] > gen        # back-edge; the loop body is gen->evaluate->gate
+    gate["accept"] > fin
+
+    g = AgenticGraph(state=LoopState, start_node=pre, end_nodes=fin)
     assert g.validate().ok is True
