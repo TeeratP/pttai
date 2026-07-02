@@ -54,23 +54,41 @@ offline `get_llm()` resolve from source.)
   mismatch. Each **fails the build** and paints the offending node red — raw
   LangGraph would compile these and only fail at runtime.
 
-## Sandbox (safe for public hosting)
+## Sandbox
 
 The demo `exec`s the code you paste, so the pasted snippet is hardened before it
-runs:
+runs. This is a **hardened best-effort sandbox** — good enough for a public
+playground, but *not* a substitute for OS-level isolation (containers, seccomp,
+a locked-down user). Host accordingly.
+
+**What the sandbox does:**
 
 - **Input size cap** — snippets over 20 000 chars are rejected.
 - **AST allow-list** — imports are restricted to `pttai` / `typing` /
-  stdlib-safe roots; dunder attribute access (`__class__`, `__globals__`, …) and
-  dangerous builtins (`eval`, `exec`, `open`, `__import__(...)`, `getattr`, …)
-  are rejected statically.
+  stdlib-safe roots. Escape-prone modules are deliberately kept *off* the
+  list — notably `operator` and `functools`, because
+  `operator.attrgetter('__globals__')` reaches a dunder attribute through a
+  *string* the AST check can't see, chaining to `__globals__ → __builtins__ →
+  __import__ → os`.
+- **Static rejection** of literal dunder attribute access (`__class__`,
+  `__globals__`, …) and of dangerous builtins (`eval`, `exec`, `open`,
+  `__import__(...)`, `getattr`, `vars`, `globals`, `locals`,
+  `attrgetter`/`methodcaller`, …).
 - **Restricted builtins** — the exec namespace exposes only a safe subset of
   builtins.
-- **Per-request timeout** — a snippet that never returns is aborted (building a
-  graph never calls a model, so it is instant).
+- **Terminable timeout** — the code runs in a **separate process** that is
+  force-terminated once it exceeds the per-request timeout. A runaway
+  `while True:` is killed and its CPU core reclaimed (a plain thread could not be
+  interrupted). Building + validating a graph never calls a model, so the normal
+  case returns instantly.
 
-A malicious snippet such as `__import__('os').system(...)` is refused before it
-executes.
+A malicious snippet such as `__import__('os').system(...)` or the `operator`
+reach above is refused *before* it executes (verified by `_selftest()`, which
+runs at startup).
+
+**What it does not guarantee:** it is not a defense against every possible
+CPython escape or resource-exhaustion vector (memory, file descriptors, fork
+bombs). For untrusted traffic at scale, run it behind real OS-level isolation.
 
 ## Deploy to Hugging Face Spaces
 

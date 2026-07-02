@@ -21,10 +21,16 @@ model, so no API key is needed), and two things are rendered:
 
 Sandbox (safe for public hosting): the pasted code is size-capped, AST-checked
 (imports are allow-listed to pttai/typing/stdlib-safe roots; dunder access and
-dangerous builtins like ``eval``/``open``/``__import__(...)`` are rejected),
-run with a restricted ``__builtins__``, and executed under a per-request
-timeout. A malicious snippet (e.g. ``__import__('os').system(...)``) is refused
-before it runs.
+dangerous builtins like ``eval``/``open``/``__import__(...)``/``getattr`` are
+rejected — and escape-prone modules like ``operator`` are kept off the import
+allow-list, since ``operator.attrgetter('__globals__')`` would otherwise reach
+dunder attributes through a *string* the AST check can't see), run with a
+restricted ``__builtins__``, and executed in a **separate process that is
+force-terminated past a per-request timeout** (so a runaway ``while True:``
+cannot keep burning a CPU core). A malicious snippet (e.g.
+``__import__('os').system(...)`` or the ``operator`` reach above) is refused
+before it runs. This is hardened best-effort — not a substitute for OS-level
+isolation.
 
     pip install -r demo/requirements.txt
     python demo/app.py
@@ -32,10 +38,11 @@ before it runs.
 
 import ast
 import io
+import multiprocessing as mp
 import os
+import queue
 import re
 import sys
-import threading
 import traceback
 import builtins as _builtins
 
@@ -47,8 +54,6 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(_HERE)
 sys.path.insert(0, _ROOT)
 sys.path.insert(0, os.path.join(_ROOT, "examples"))
-
-import gradio as gr
 
 
 # --- offline LLM -----------------------------------------------------------
@@ -102,17 +107,27 @@ EXEC_TIMEOUT_S = 8.0
 
 # Import roots the AST allow-list permits. Everything else (os, sys,
 # subprocess, socket, importlib, ...) is rejected before exec runs.
+#
+# NOTE: ``operator`` and ``functools`` are deliberately EXCLUDED. The AST check
+# only blocks dunder attributes written literally (``x.__globals__``); it cannot
+# see a dunder passed as a *string*. ``operator.attrgetter('__globals__')`` (or
+# ``methodcaller``/``functools`` equivalents) would reach ``__globals__`` ->
+# ``__builtins__`` -> ``__import__`` -> ``os`` through that string, bypassing the
+# check entirely. Building a pttai graph never needs them, so they stay out.
 _ALLOWED_IMPORT_ROOTS = {
-    "pttai", "typing", "typing_extensions", "dataclasses", "operator",
-    "enum", "collections", "functools", "itertools", "math",
+    "pttai", "typing", "typing_extensions", "dataclasses",
+    "enum", "collections", "itertools", "math",
     "langchain_core", "pydantic", "_llm",
 }
 
 # Names that must never be called from a pasted snippet (escape / IO vectors).
+# ``getattr``/``vars``/``globals``/``locals`` and the ``operator`` string-based
+# attribute reachers (``attrgetter``/``methodcaller``) are included so that even
+# if such a name became reachable it is rejected before exec.
 _FORBIDDEN_NAMES = {
     "eval", "exec", "compile", "open", "__import__", "input", "breakpoint",
     "globals", "locals", "vars", "getattr", "setattr", "delattr", "memoryview",
-    "help", "exit", "quit", "license", "credits",
+    "attrgetter", "methodcaller", "help", "exit", "quit", "license", "credits",
 }
 
 # The only builtins exposed inside the exec namespace. ``__import__`` and
@@ -184,32 +199,16 @@ def _validate_ast(code: str) -> None:
 
 
 def _safe_exec(code: str, ns: dict) -> None:
-    """AST-check, then exec ``code`` in ``ns`` under a per-request timeout.
+    """AST-check, then exec ``code`` in ``ns``.
 
-    Runs the exec in a daemon thread and joins with a timeout; a snippet that
-    never returns (e.g. ``while True: pass``) yields a SafetyError while the
-    process stays responsive."""
+    The runaway-code timeout is NOT enforced here: a daemon thread cannot be
+    interrupted, so a ``while True:`` would keep burning a core after ``join()``
+    returned. Instead ``build_and_report`` runs this whole path in a separate
+    process it can ``terminate()``. This function only vets + executes."""
     _validate_ast(code)
     ns["__builtins__"] = _safe_builtins()
     compiled = compile(code, "<pttai-demo>", "exec")
-
-    box: dict = {}
-
-    def _run():
-        try:
-            exec(compiled, ns)
-        except BaseException as e:  # noqa: BLE001 — surfaced to caller below
-            box["exc"] = e
-
-    t = threading.Thread(target=_run, daemon=True)
-    t.start()
-    t.join(EXEC_TIMEOUT_S)
-    if t.is_alive():
-        raise SafetyError(
-            f"snippet timed out after {EXEC_TIMEOUT_S:.0f}s (building + "
-            f"validating a graph never calls a model, so it should be instant)")
-    if "exc" in box:
-        raise box["exc"]
+    exec(compiled, ns)
 
 
 # --- exec namespace with a tracing AgenticGraph ----------------------------
@@ -399,8 +398,12 @@ def _render_failed(captured):
 
 # --- build + report --------------------------------------------------------
 
-def build_and_report(code: str):
-    """AST-check + exec the snippet, then return ``(mermaid_md, validator_md)``."""
+def _build_and_report_impl(code: str):
+    """AST-check + exec the snippet, then return ``(mermaid_md, validator_md)``.
+
+    Runs inside the sandbox subprocess spawned by ``build_and_report``. Only its
+    two return strings cross the process boundary (they are picklable; the live
+    graph/LLM objects it builds are not)."""
     from pttai import AgenticGraph as _RealAgenticGraph
     from pttai.validation import GraphValidationError
 
@@ -461,10 +464,54 @@ def build_and_report(code: str):
     return mer, val
 
 
+def _report_worker(code: str, q) -> None:
+    """Subprocess entrypoint: run the build and hand the two strings back."""
+    q.put(_build_and_report_impl(code))
+
+
+def build_and_report(code: str):
+    """Vet the snippet, then run the build in a terminable subprocess.
+
+    Returns ``(mermaid_md, validator_md)``. The AST vetting runs in-parent so
+    refusals are instant and the child only ever executes already-vetted code;
+    the child is force-terminated if it runs past ``EXEC_TIMEOUT_S`` (a runaway
+    ``while True:`` is killed, reclaiming the core, instead of leaking a thread)."""
+    try:
+        _validate_ast(code)
+    except SafetyError as e:
+        return (
+            "<p><i>Snippet rejected by the sandbox.</i></p>",
+            "### Rejected by the sandbox\n\n```\n" + str(e) + "\n```",
+        )
+
+    ctx = mp.get_context("spawn")
+    q = ctx.Queue()
+    p = ctx.Process(target=_report_worker, args=(code, q), daemon=True)
+    p.start()
+    p.join(EXEC_TIMEOUT_S)
+    if p.is_alive():
+        p.terminate()
+        p.join()
+        return (
+            "<p><i>Snippet timed out and was terminated.</i></p>",
+            "### Rejected by the sandbox\n\n```\n"
+            f"snippet ran past {EXEC_TIMEOUT_S:.0f}s and was force-terminated "
+            "(building + validating a graph never calls a model, so it should be "
+            "instant)\n```",
+        )
+    try:
+        return q.get_nowait()
+    except queue.Empty:
+        return (
+            "<p><i>The sandbox process exited without a result.</i></p>",
+            "### Error running snippet\n\n```\n"
+            "the sandbox process exited unexpectedly\n```",
+        )
+
+
 # --- preset gallery --------------------------------------------------------
 
-# One WORKING preset per examples/nlp pipeline. RAG QA is first — the first
-# thing a reviewer sees is a real NLP pipeline compiling clean.
+# One WORKING preset per examples/nlp pipeline.
 WORKING_PRESETS = {
     "RAG QA  (retrieve → rerank → answer)": '''\
 # RAG QA pipeline: retrieve passages, rerank them, then answer grounded in them.
@@ -649,7 +696,9 @@ MERMAID_HEAD = """
 """
 
 
-def build_ui() -> gr.Blocks:
+def build_ui() -> "gr.Blocks":
+    import gradio as gr
+
     with gr.Blocks(title="pttai playground", head=MERMAID_HEAD) as demo:
         gr.Markdown(
             "# pttai playground\n"
@@ -685,5 +734,28 @@ def build_ui() -> gr.Blocks:
     return demo
 
 
+def _selftest() -> None:
+    """Assert the sandbox statically refuses known escape vectors. Fast (AST
+    only, no subprocess) — a guard that fails loudly if the policy regresses."""
+    must_reject = [
+        # the operator string-reach escape: blocked at the import, since operator
+        # is no longer on the allow-list
+        "import operator\noperator.attrgetter('__globals__')(print)",
+        "from operator import attrgetter",
+        "import functools",
+        "__import__('os').system('echo x')",
+        "import os",
+        "getattr(object, '__globals__')",
+        "().__class__.__bases__",
+    ]
+    for src in must_reject:
+        try:
+            _validate_ast(src)
+        except SafetyError:
+            continue
+        raise AssertionError(f"sandbox failed to reject: {src!r}")
+
+
 if __name__ == "__main__":
+    _selftest()  # fail fast if the sandbox policy has regressed
     build_ui().launch()
