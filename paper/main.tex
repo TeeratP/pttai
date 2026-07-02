@@ -56,13 +56,17 @@ analysis~\citep{kildall,dragon,jls}: hard errors are raised only from the \may\
 (some-path) set, so it does not reject a pipeline that would have run---we observe
 \textbf{0} false positives on 19 valid pipelines, which we report as a
 measurement, not a guarantee. On a controlled 17-item bug suite \code{pttai}
-fails the build on all 17; on the 12-item subset that raw LangGraph does not also
-catch at build, LangGraph surfaces every case only at run time. Our primary,
-non-circular evaluation applies the same validator to pipelines a small OpenAI
-model (\code{gpt-5.4-nano}) generates from NLP task specs---a static guardrail for AI-written agent code
-(numbers pending a keyed generation run; \S\ref{sec:eval}). The demonstration is
-an interactive playground that paints the offending node red at build time,
-before any model call.
+fails the build on all 17 with \textbf{0} false positives on 19 valid pipelines;
+on the 12-item subset that raw LangGraph does not also catch at build, LangGraph
+surfaces every case only at run time. A survey of six independent, publicly
+reported wild bugs against raw LangGraph shows the targeted classes occur in
+practice, and the demonstration is an interactive playground that paints the
+offending node red at build time, before any model call. As an exploratory
+secondary probe we apply the same validator to 100 pipelines a small OpenAI
+model (\code{gpt-5.4-nano}) generates from NLP task specs: 65 build, of which 16
+are flagged with no false positives---\textbf{5} genuine shared-state dataflow
+bugs LangGraph would surface only at run time---while a 35\% malformed-generation
+rate is itself a finding about LLMs writing DSL code.
 \end{abstract}
 
 \section{Introduction}
@@ -100,7 +104,7 @@ that makes the shared-state dataflow explicit enough to analyze at build time.
 
 We present \code{pttai}, a declarative layer over
 LangGraph.\footnote{Source, examples, benchmark, and demo:
-\url{https://github.com/TeeratP/agentic-framework}.}
+\url{https://github.com/TeeratP/pttai}.}
 Our contributions are:
 \begin{enumerate}[noitemsep,topsep=2pt]
   \item \textbf{A declarative \code{>} DSL over LangGraph}
@@ -115,9 +119,11 @@ Our contributions are:
   calls, when a node reads a key no upstream node produces, a branch is unwired,
   or parallel branches write an unreduced key. Because hard errors come only from
   the \may\ (some-path) set, we observe no false positives on our valid corpus.
-  \item \textbf{An evaluation} (\S\ref{sec:eval}) whose primary, non-circular
-  arm applies the validator to \emph{LLM-generated} pipelines, supported by a
-  controlled bug suite and a survey of wild bugs.
+  \item \textbf{An evaluation} (\S\ref{sec:eval}) whose primary arms are a
+  controlled bug suite, a survey of real (wild) bugs, and an interactive
+  demonstration that catches bugs at build time with zero model calls, plus an
+  exploratory secondary study applying the validator to \emph{LLM-generated}
+  pipelines.
 \end{enumerate}
 \code{pttai} borrows the ``ergonomic layer over a powerful runtime'' idea from
 Keras~\citep{keras}, but the ergonomics are not the contribution; the validator
@@ -291,44 +297,20 @@ call. A \textless2.5-minute screencast will accompany the final submission.
 \label{sec:eval}
 
 All evaluations run offline (no API key); the harness is in the repository under
-\code{eval/}. The controlled suite and wild-bug survey are authored by us and are
-therefore vulnerable to the objection that a validator catches only the bugs its
-author planted. Our \emph{primary} evaluation is designed to remove that
-objection.
-
-\subsection{Primary: LLM-generated pipelines}
-\label{sec:llmgen}
-
-The most 2026-relevant question is whether the validator is a useful static
-guardrail for \emph{AI-written} agent code. We therefore designed a study
-(\code{eval/llmgen/}) in which a small OpenAI model (\code{gpt-5.4-nano}) generates \code{pttai} pipelines
-from short NLP task specs---given only the docs, and \textbf{never told to write
-bugs}---after which every generated pipeline is built through the validator and
-every flag is author-adjudicated as a true bug or a false positive per a fixed
-protocol (\code{adjudicate.md}). Because the bug distribution comes from a model
-solving ordinary tasks, whatever the validator catches, misses, or wrongly flags
-is a fact about real AI-written code, not about a hand-picked corpus. The
-protocol targets $N\!\ge\!100$ generated pipelines; construction alone scores a
-pipeline (the validator runs inside \code{AgenticGraph.\_\_init\_\_}), so scoring
-needs no model call, only the generation step does. The scoring path is verified
-offline on a committed 9-pipeline sample set (4 clean, 5 flagged, 0 false
-positives), but that is a harness self-test, not the study.
-
-\begin{quote}\small
-\textbf{TODO(author):} populate from \code{eval/llmgen/run\_study.sh}. Report
-$N$, the fraction of \emph{buildable} pipelines flagged, the
-\emph{author-adjudicated} false-positive rate among flags, and the split of flags
-by the LangGraph phase (runtime / silent / also-at-build). These require an
-\code{OPENAI\_API\_KEY} and a keyed generation run that the build environment
-cannot perform; \textbf{we do not report or claim them here}.
-\end{quote}
+\code{eval/}. Our primary evidence is three-fold: a controlled bug suite
+(\S\ref{sec:bugbench}) that pins the validator's behavior per bug class, a survey
+of independently reported wild bugs (\S\ref{sec:wild}) showing the targeted
+classes occur in practice, and the interactive demonstration (\S\ref{sec:demo})
+that draws the build-time catch with zero model calls. We then report an
+\emph{exploratory} secondary study (\S\ref{sec:llmgen}) that applies the same
+validator to LLM-generated pipelines, with its caveats stated up front.
 
 \subsection{Controlled bug suite}
 \label{sec:bugbench}
 
 \code{bugbench} is a labeled unit-test suite of 17 buggy and 19 valid pipelines
-that pins the validator's behavior per bug class; it is not the headline result.
-For each item we record whether \code{pttai} fails the build and---using an
+that pins the validator's behavior per bug class---the anchor of the primary
+evaluation. For each item we record whether \code{pttai} fails the build and---using an
 offline fake model---in which phase raw LangGraph would surface the same bug.
 \code{pttai} fails the build on \textbf{all 17} buggy pipelines with the correct
 diagnostic (median build time under 1\,ms) and \textbf{0} false positives on the
@@ -418,6 +400,46 @@ build, and the latter is a \code{pttai}-internal reformulation of a generic
   \label{tab:wild}
 \end{table}
 
+\subsection{Interactive demonstration}
+The demo-track centerpiece is the playground (\S\ref{sec:demo}). A reviewer takes
+a working RAG-QA pipeline and reorders two nodes so the answer step reads
+\code{passages} before the retriever runs; \code{pttai} rejects the build,
+redrawing the pre-compile wiring with the offending node \textbf{painted red} and
+the exact read-before-write error attached, \emph{with zero model calls made}.
+Raw LangGraph would compile the same pipeline and fail only after the retrieval
+model call. The reviewer sees the picture of the bug before running anything---the
+build-time catch made tangible, which is the point the controlled and wild-bug
+evidence supports.
+
+\subsection{Exploratory: the validator on LLM-generated code (secondary)}
+\label{sec:llmgen}
+As an exploratory probe of whether the validator is a useful static guardrail for
+AI-written agent code, we had a small OpenAI model (\code{gpt-5.4-nano})---not a
+large one---generate \code{pttai} pipelines from short NLP task specs, given only
+the docs and an API cheatsheet and \textbf{never told to write bugs}, then built
+every generated pipeline through the validator (\code{eval/llmgen/}). Of
+\textbf{100} generated pipelines, \textbf{65} build and \textbf{35} are malformed
+(syntax / import / API-misuse errors, excluded from the precision math). Among the
+65 buildable, the validator flags \textbf{16} with \textbf{no false positives}. We
+adjudicate the 16 flags into three groups: \textbf{5} are genuine shared-state
+dataflow bugs raw LangGraph would hit only at run time
+(concurrent-write-no-reducer $\times3$, dangling-choice $\times1$,
+read-of-undeclared-key $\times1$); \textbf{3} are \code{pttai}-DSL-internal
+prompt-templating errors (a \code{\{placeholder\}} with no matching scalar read)
+that cannot arise in raw LangGraph and we count separately; and \textbf{8} are
+dead-end DSL-strictness rejections, excluded from the differentiator claim exactly
+as in \S\ref{sec:bugbench}.
+
+We do \emph{not} present this as a clean, non-circular measurement, for three
+reasons. (i) The generation harness was \emph{revised after} an initial docs-only
+run that produced mostly malformed output: we added an accurate API cheatsheet and
+broadened the spec set, which coaches valid API usage and suppresses some error
+classes (pre-registered vs.\ revised---disclosed). (ii) The 16 flags are
+author-adjudicated. (iii) The generator is a small model, so the 35\% malformed
+rate partly reflects its difficulty writing the DSL---which is itself a finding
+about LLMs generating framework-specific code, not noise we hide. We therefore
+read this arm as suggestive, not as a headline result.
+
 \subsection{Conciseness and overhead}
 As a side effect of folding \code{add\_node}/\code{add\_edge}/structured-output
 routing/the tool-call loop into the node abstractions, the \code{pttai} versions
@@ -477,9 +499,12 @@ unconditional edge, which can only \emph{under}-warn, never produce a wrong hard
 error. (5) Requiring \code{reads=}/\code{writes=} declarations means an undeclared
 but genuinely-produced input can be rejected until it is declared, and the DSL
 itself has wiring footguns (e.g.\ \code{[b,c] > [d,e]}). (6) The wild-bug survey
-is an illustrative sample, not a census; and the primary LLM-generation study is
-designed and its scoring path verified, but its headline numbers await a keyed
-generation run (\S\ref{sec:eval})---we do not report or claim them here.
+is an illustrative sample, not a census; and the LLM-generation study
+(\S\ref{sec:llmgen}) is exploratory, not a clean non-circular measurement---its
+generation harness was revised after an initial run (an API cheatsheet was added
+and the spec set broadened, which coaches valid usage), its 16 flags are
+author-adjudicated, and the generator is a small model, so its numbers are
+suggestive rather than a headline result.
 
 \section*{Ethics and Broader Impact}
 
@@ -507,10 +532,10 @@ All controlled numbers are produced offline (no API key) from the repository:
 buggy / 19 valid outcomes, per-class categories, and simulated wasted-call
 counts); \code{eval/loc\_compare.py} regenerates \code{eval/loc\_results.csv} (the
 113 vs.\ 281 line counts over 12 pipelines); \code{eval/overhead.py} prints the
-build-time and runtime-parity measurements; and
-\code{eval/llmgen/score.py --gen-dir samples} runs the offline sample-set
-self-test of the primary study. The primary study's headline numbers require an
-\code{OPENAI\_API\_KEY} and \code{eval/llmgen/run\_study.sh}. The wild-bug reports
+build-time and runtime-parity measurements. The exploratory LLM-generation
+numbers (\S\ref{sec:llmgen}) are in \code{eval/llmgen/results.json} and scored
+offline by \code{eval/llmgen/score.py}; regenerating the pipelines requires an
+\code{OPENAI\_API\_KEY} via \code{eval/llmgen/run\_study.sh}. The wild-bug reports
 with issue links are in \code{docs/EVIDENCE.md}.
 
 \section{Example: a validated NLP pipeline}
