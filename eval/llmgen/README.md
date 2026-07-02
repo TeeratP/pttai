@@ -19,11 +19,11 @@ broken AI-generated agent pipelines before they ever run.**
 ## How it works
 
 1. **`gen.py`** — prompts a frontier model (via `examples/_llm.py` `get_llm()`,
-   real `ChatOpenAI` when `OPENAI_API_KEY` is set) with the pttai docs
-   (`docs/*.md`) + a short task spec (RAG QA, multi-hop, extract→summarize,
-   triage, rerank, tool-use, reflect/revise, plan/execute, sentiment routing,
-   map-reduce). Each reply is saved as a standalone module in `generated/`
-   defining `build_graph(llm) -> AgenticGraph`.
+   real `ChatOpenAI` when `OPENAI_API_KEY` is set) with a compact **API
+   cheatsheet** + the pttai prose docs (`docs/*.md`) + one short, natural task
+   spec drawn from the **20-spec set** (see [What the model is given](#what-the-model-is-given)).
+   Each reply is saved as a standalone module in `generated/` defining
+   `build_graph(llm) -> AgenticGraph`.
 2. **`score.py`** — builds every pipeline (pttai's validator runs inside
    `AgenticGraph.__init__`, so **construction alone scores it — no API key, no
    model call**) and buckets each outcome:
@@ -38,6 +38,66 @@ broken AI-generated agent pipelines before they ever run.**
    `false-positive` (mostly decidable by inspection). Labels go in
    `adjudication.csv`; `score.py` reads it and reports the human-adjudicated
    false-positive rate.
+
+## What the model is given
+
+To keep the study honest, this is disclosed in full — the strengthening is about
+giving the model an **accurate** picture of the API and a **broader** set of
+tasks, *not* about steering it toward (or away from) any bug.
+
+**It IS given:**
+
+- **An accurate, compact API cheatsheet** (`API_CHEATSHEET` in `gen.py`): the real
+  top-level exports, each node type's real constructor signature and accepted
+  kwargs (e.g. `DecisionNode` takes `choices=` and does **not** take `writes`;
+  `ConditionNode`/`HumanNode` take no `llm`/`tools`), the `>` wiring rules
+  (`router["choice"] > node`, `fanout(...)`, `.map(...)`), `reads`/`writes`
+  semantics, the rule that tools can't combine with multi-field structured
+  `writes`, and the instruction to use the injected `llm`. Every line is verified
+  against the pttai source. This exists so the model stops **hallucinating the
+  API** (which is generation noise, not a dataflow bug) — it does not test the
+  model's memory of our API.
+- **The full prose docs** (`docs/*.md`), as before.
+- **One short, natural task spec** per generation, from the 20-spec set below.
+
+**It is NOT given (deliberately):**
+
+- **No complete, bug-free, copyable pipelines.** The cheatsheet is API surface +
+  1–2 line snippets only. Handing over whole validated pipelines would suppress
+  the natural dataflow mistakes the study exists to observe.
+- **No mention of bugs, of any state key to use, or of the validator.** The specs
+  are goals, never graphs. The model is **never told to introduce bugs** — every
+  bug that appears is model-produced.
+
+**The 20 task specs** (terse goals; grouped only for readability — the model sees
+one at a time with no group label):
+
+| id | goal |
+|---|---|
+| `rag_qa` | retrieve passages with a search tool, answer from them only |
+| `multi_hop` | two sequential lookups: find an intermediate fact, then the final answer |
+| `extract_summarize` | extract entities/claims, then summarize using them |
+| `rerank` | retrieve candidates, rerank by relevance, answer from the top one |
+| `plan_execute` | plan a research question, execute step by step, synthesize |
+| `translate_glossary` | detect language, translate to English, build a term glossary |
+| `fact_check` | gather supporting + contradicting evidence, issue a verdict |
+| `dialogue_next_turn` | infer requested action + missing details, write the next turn |
+| `triage` | classify a support message (billing/technical/other), route to a handler |
+| `sentiment_route` | classify review sentiment, route to a matching responder |
+| `intent_router` | classify a chat message into one of several intents, route it |
+| `change_review_route` | decide bug-fix/feature/refactor, route to a fitting reviewer |
+| `escalation` | judge severity, then auto-resolve / clarify / escalate to a human |
+| `map_reduce_summ` | summarize several docs in parallel, reduce to one summary |
+| `aspect_review` | review writing on clarity/grammar/tone in parallel, merge notes |
+| `entity_dedup` | extract entities from docs in parallel, reconcile + deduplicate |
+| `reflect_revise` | draft, critique, then revise using the critique |
+| `refine_until_good` | draft, score, loop refining until good enough or rounds run out |
+| `tool_use_math` | calculator agent: call add/multiply tools in a loop to the answer |
+| `interview_grader` | grade an answer on rubric dimensions, give a hire recommendation |
+
+The set spans chains, multi-branch routing, parallel fan-out/join, map-reduce,
+reflection/evaluator loops, tool use, and human-in-the-loop — so model mistakes
+can land across many bug classes rather than concentrating in one.
 
 ## Reproduce (one command, needs your key)
 
