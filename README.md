@@ -300,6 +300,26 @@ Nodes return deltas and never mutate state in place — that's what keeps
 checkpointing, parallel-branch merges, and subgraph composition correct rather
 than racy.
 
+### Free observability: the `token` and `log` channels
+
+Total token spend and a per-node trace come **automatically — no callbacks, no
+custom reducers**. Every LLM call's usage is summed into `token`; every node
+appends a trace line to `log`:
+
+```python
+out = graph.invoke({"messages": ["..."], "log": []})   # seed log=[] to capture it
+print(out["token"])   # {'gpt-5.4-nano': {'input_tokens': 42, 'output_tokens': 88, 'total_tokens': 130, ...}}
+print(out["log"])     # ['frame:...', 'optimist:...', ...] — one line per node/tool call
+```
+
+`token` is the **run total** — it accumulates across every node, tool-loop
+call, and parallel branch, deep-summed per model. In raw LangGraph you'd hand-wire
+a usage callback plus a custom summing channel to get this. (Offline, with no
+`OPENAI_API_KEY`, the fake model reports no usage, so `token` is an empty `{}` —
+the accounting runs, there's just nothing to count; a real model fills it as
+shown.) Side-by-side vs. raw LangGraph:
+[`examples/basics/13_token_and_log.py`](https://github.com/TeeratP/agentic-framework/blob/main/examples/basics/13_token_and_log.py).
+
 ## Limitations
 
 Kept honest on purpose:

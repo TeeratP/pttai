@@ -67,7 +67,12 @@ pragmatist  AgentNode  messages  log,messages  decision,log,messages,token
 
 `out["token"]` is a `{model: {total_tokens / input_tokens / output_tokens}}`
 breakdown accumulated across every node in the run — per-model, so a graph that
-mixes models keeps them separate.
+mixes models keeps them separate. It's tracked **automatically — no callbacks,
+no custom reducer**; every LLM call (including tool-loop and parallel-branch
+calls) is deep-summed into the total. Offline (no `OPENAI_API_KEY`) the fake
+model reports no usage, so `token` is an empty `{}`; a real model fills it.
+Side-by-side vs. the hand-wired raw-LangGraph equivalent:
+[`examples/basics/13_token_and_log.py`](https://github.com/TeeratP/agentic-framework/blob/main/examples/basics/13_token_and_log.py).
 
 ## Prompt caching
 
