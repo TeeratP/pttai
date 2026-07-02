@@ -925,14 +925,22 @@ has already run, once execution reaches the broken node. By then you've spent
 tokens, latency, and (with tools) real side effects on a run that was doomed at
 build time.</p>
 <p>The validator turns those runtime <code>KeyError</code>s and <code>InvalidUpdateError</code>s into a
-<strong>build-time exception with zero token cost</strong>. The whole point of the "Keras
-compiler" promise is: if the graph compiles, its dataflow is sound.</p>
+<strong>build-time exception with zero token cost</strong>. It is a may/must dataflow
+analysis over your <em>declared</em> node reads/writes and the graph edges — not a
+soundness proof. It catches read-before-write (including loop-carried reads in
+cyclic graphs), undeclared reads/writes, and the structural bugs below, and we
+have observed no false positives on our example corpus. It does <strong>not</strong> see
+state keys touched only inside opaque callables — <code>ConditionNode</code> predicates
+(arbitrary lambdas), tool bodies, or other custom functions — so those are
+checked by declared annotations only, not by reading their code. "Compiles" is
+therefore a strong signal, not a guarantee, that the dataflow is sound.</p>
 <h2 id="what-it-checks">What it checks<a class="headerlink" href="#what-it-checks" title="Permanent link">&para;</a></h2>
 <p>The core is a <strong>forward dataflow fixpoint</strong> over a tagged edge list recorded
 during the build. It computes, per node:</p>
 <ul>
 <li><code>may</code> — keys available on <em>some</em> path into the node (drives hard <strong>errors</strong>;
-  zero false positives).</li>
+  no false positives observed on our corpus). Loop-back edges are excluded, so
+  a key produced only after the loop cycles back is not counted as available.</li>
 <li><code>must</code> — keys guaranteed on <em>all</em> paths (drives <strong>warnings</strong>).</li>
 </ul>
 <p><code>may</code>/<code>must</code> union across AND-parallel joins (<code>fanout</code>) and intersect within an

@@ -590,6 +590,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Part 1 — Wild-bug mining">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-pttai-does-not-catch-honest-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What pttai does NOT catch (honest limitations)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -652,10 +669,17 @@ corpus already reproduces the verbatim LangGraph runtime error
 <code>InvalidUpdateError: At key 'result': Can receive only one value per step. Use an
 Annotated key to handle multiple values.</code> — that string anchored the search below.</p>
 <h2 id="part-1-wild-bug-mining">Part 1 — Wild-bug mining<a class="headerlink" href="#part-1-wild-bug-mining" title="Permanent link">&para;</a></h2>
-<p>Every row is a real, publicly reported issue/discussion (verified to resolve).
-Each maps to one of the four dataflow/structural bug classes pttai fails the
-build on, that raw LangGraph surfaces only at runtime (after burning model calls)
-or not at all.</p>
+<blockquote>
+<p><strong>This is an illustrative sample, not a frequency claim.</strong> These are hand-picked
+public reports that each map to a bug class pttai fails the build on — they show
+the classes are <em>real and hit in the wild</em>, but there is <strong>no denominator</strong>
+(they are 6 issues drawn from thousands, not a measured incidence rate). Read
+this as existence proof, not prevalence.</p>
+</blockquote>
+<p>Every row is a real, publicly reported issue/discussion (verified to resolve as
+of 2026-07). Each maps to one of <strong>three</strong> dataflow/structural bug classes pttai
+fails the build on, that raw LangGraph surfaces only at runtime (after burning
+model calls).</p>
 <table>
 <thead>
 <tr>
@@ -678,12 +702,7 @@ or not at all.</p>
 <tr>
 <td><strong>concurrent-write / no reducer</strong> (<code>InvalidUpdateError</code>)</td>
 <td><a href="https://github.com/langchain-ai/langgraph/issues/2336">langgraph #2336</a></td>
-<td><code>InvalidUpdateError: At key 'count_b': Can receive only one value per step</code> — parallel branches write the same plain key in one step.</td>
-</tr>
-<tr>
-<td><strong>concurrent-write / no reducer</strong></td>
-<td><a href="https://github.com/langchain-ai/langgraph/issues/6446">langgraph #6446</a></td>
-<td><code>InvalidUpdateError</code> when parallel subgraphs + parent concurrently update shared state with no reducer.</td>
+<td><code>InvalidUpdateError: … Can receive only one value per step</code> — parallel branches write the same plain key in one step.</td>
 </tr>
 <tr>
 <td><strong>concurrent-write / no reducer</strong></td>
@@ -693,31 +712,21 @@ or not at all.</p>
 <tr>
 <td><strong>dangling conditional edge</strong> (<code>dangling-choice</code>)</td>
 <td><a href="https://github.com/langchain-ai/langgraph/issues/987">langgraph #987</a></td>
-<td><code>add_conditional_edges(...)</code> with no <code>path_map</code>: routing targets are unresolved, so branches go where they shouldn't / nowhere.</td>
+<td><code>add_conditional_edges(...)</code> with no <code>path_map</code>: routing fans out to <em>all</em> nodes instead of the router's real destinations — a mis-wired graph structure.</td>
 </tr>
 <tr>
 <td><strong>dangling conditional edge</strong></td>
 <td><a href="https://github.com/langchain-ai/langgraph/issues/450">langgraph #450</a></td>
 <td><code>KeyError: 'action'</code> — the routing function returns a destination that isn't in the graph's edge map.</td>
 </tr>
-<tr>
-<td><strong>dead-end / non-terminating graph</strong></td>
-<td><a href="https://github.com/langchain-ai/langgraph/issues/6731">langgraph #6731</a></td>
-<td>Agent never hits a stop condition; loops until the recursion limit — a never-terminating graph.</td>
-</tr>
-<tr>
-<td><strong>dead-end / non-terminating graph</strong></td>
-<td><a href="https://github.com/langchain-ai/langgraphjs/issues/242">langgraphjs #242</a></td>
-<td>A node with only a conditional edge is treated as a dead end (no valid path established) until a plain edge is added.</td>
-</tr>
 </tbody>
 </table>
-<p><strong>Genuine instances found: 9</strong>, across all four targeted classes:</p>
+<p><strong>Genuine instances shown: 6</strong>, across three classes (two independent reports each):</p>
 <table>
 <thead>
 <tr>
 <th>Bug class</th>
-<th style="text-align: center;">Genuine wild reports</th>
+<th style="text-align: center;">Wild reports shown</th>
 </tr>
 </thead>
 <tbody>
@@ -727,26 +736,28 @@ or not at all.</p>
 </tr>
 <tr>
 <td>concurrent-write / no reducer (<code>InvalidUpdateError</code>)</td>
-<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
 </tr>
 <tr>
 <td>dangling conditional edge</td>
 <td style="text-align: center;">2</td>
 </tr>
-<tr>
-<td>dead-end / non-terminating graph</td>
-<td style="text-align: center;">2</td>
-</tr>
 </tbody>
 </table>
-<p>Every class has at least two real, independent reports — none is author-imagined.
-The remaining two pttai classes in the taxonomy were <strong>out of scope for this
-search</strong> and are not padded here: <em>duplicate node names</em> is caught at build by
-<strong>both</strong> frameworks (see <a href="../COMPARISON/"><code>docs/COMPARISON.md</code></a> §d — LangGraph
-raises <code>ValueError('Node \</code>x` already present.')<code>), so it isn't a differentiator;
+<p>Each class here has at least two real, independent reports — none is
+author-imagined, and each maps to a bug pttai fails the <strong>build</strong> on while raw
+LangGraph only surfaces at runtime. The other pttai classes were <strong>out of scope
+for this search</strong> and are not padded: <em>cyclic-read-before-write</em> is the loop-carried
+case of the first class; <em>duplicate node names</em> is caught at build by <strong>both</strong>
+frameworks (see <a href="../COMPARISON/"><code>docs/COMPARISON.md</code></a> §d — LangGraph raises
+<code>ValueError('Node \</code>x` already present.')<code>), so it isn't a differentiator; and
 *prompt-placeholder / scalar-read mismatch* is a pttai-internal reformulation of a
-generic Python</code>str.format<code></code>KeyError` and has no dedicated LangGraph-specific
-wild report to cite.</p>
+generic Python</code>str.format<code></code>KeyError` with no dedicated LangGraph-specific report.</p>
+<h3 id="what-pttai-does-not-catch-honest-limitations">What pttai does NOT catch (honest limitations)<a class="headerlink" href="#what-pttai-does-not-catch-honest-limitations" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Non-termination / runaway loops</strong> (e.g. <a href="https://github.com/langchain-ai/langgraph/issues/6731">langgraph #6731</a> — an agent that never hits its stop condition and loops to the recursion limit) is <strong>not</strong> a class pttai catches. Cycles validate clean, and the dead-end check is a structural terminal check, <strong>not</strong> a termination-guarantee analysis. A graph that loops forever passes pttai's build.</li>
+<li><strong><code>dead-end-node</code></strong> (a non-end node with no outgoing edge) is a pttai <strong>DSL-strictness</strong> rejection, not a LangGraph bug: in LangGraph a node with no outgoing edge is a <em>legal implicit terminal</em> that compiles and runs (verified empirically — see footnote 1). It is therefore excluded from the differentiator numbers in <a href="../eval/bugbench/"><code>eval/bugbench/</code></a>.</li>
+</ul>
 <h2 id="part-2-framework-feature-matrix">Part 2 — Framework feature matrix<a class="headerlink" href="#part-2-framework-feature-matrix" title="Permanent link">&para;</a></h2>
 <p>Qualitative only. <strong>No LOC ports</strong> to DSPy/Haystack/etc. — different execution
 models make line counts apples-to-oranges and invite methodological attack. This
@@ -818,6 +829,14 @@ table is about <em>what class of static checking each framework does before it r
 <td style="text-align: center;">own runtime</td>
 </tr>
 <tr>
+<td><strong>pydantic-graph (PydanticAI)</strong></td>
+<td style="text-align: center;">yes</td>
+<td style="text-align: center;"><strong>yes (type-check time)</strong>¹²</td>
+<td style="text-align: center;"><strong>no</strong>¹²</td>
+<td style="text-align: center;">n/a</td>
+<td style="text-align: center;">own runtime</td>
+</tr>
+<tr>
 <td><strong>pttai</strong></td>
 <td style="text-align: center;"><strong>yes</strong></td>
 <td style="text-align: center;"><strong>yes</strong></td>
@@ -827,12 +846,21 @@ table is about <em>what class of static checking each framework does before it r
 </tr>
 </tbody>
 </table>
-<p><strong>pttai is the only "yes" in the build-time DATAFLOW column</strong> — and the only one
-with a false-positive guarantee, because it's the only one running a state-key
-dataflow analysis to be sound <em>about</em>.</p>
+<p><strong>The narrow, defensible claim: pttai is the only framework we surveyed that
+performs a build-time <em>state-key availability (dataflow)</em> check</strong> — verifying that
+every key a node reads is produced upstream and that concurrent writes to a plain
+key have a reducer. We do <strong>not</strong> claim to be the first build-time check of <em>any</em>
+kind: <strong>pydantic-graph</strong> already does a genuine build-time graph-<strong>structure</strong>
+check (its node edges are encoded in <code>run</code>-method return-type annotations, so a
+standard static type checker flags mis-wired edges before the graph runs¹²), and
+LlamaIndex/Haystack/AutoGen validate event/socket/graph structure at build. What
+none of them do is a per-node <em>dataflow</em> availability analysis over shared state —
+that is pttai's distinct contribution, and it is the only one with a
+false-positive guarantee (measured 0 FPs on 19 valid pipelines) because it is the
+only one running a state-key dataflow analysis to be sound <em>about</em>.</p>
 <h3 id="notes-citations">Notes &amp; citations<a class="headerlink" href="#notes-citations" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>LangGraph — structural: partial.</strong> <code>compile()</code> runs "basic checks on the structure" and <em>does</em> raise on a node with no path to <code>END</code>, but does <strong>not</strong> flag orphan/unreachable nodes; adding that is an open feature request. → <a href="https://docs.langchain.com/oss/python/langgraph/graph-api">Graph API docs</a>, <a href="https://github.com/langchain-ai/langgraph/issues/6735">feature request #6735</a>. Dataflow: <code>compile()</code> explicitly does <strong>not</strong> validate which state keys are produced before they're read — that's the entire premise of <a href="../COMPARISON/"><code>docs/COMPARISON.md</code></a>.</li>
+<li><strong>LangGraph — structural: partial.</strong> <code>compile()</code> runs "basic checks on the structure" but does <strong>not</strong> raise on a node with no outgoing edge / no path to <code>END</code>: such a node is a <em>legal implicit terminal</em> that compiles and runs the graph to a normal halt (verified empirically on LangGraph 1.2.x — <code>compile()</code> does not raise and <code>invoke()</code> returns without error; see <a href="../eval/bugbench/"><code>eval/bugbench/</code></a> <code>de-*</code> items). It also does <strong>not</strong> flag orphan/unreachable nodes; adding richer structural validation is an open feature request. → <a href="https://docs.langchain.com/oss/python/langgraph/graph-api">Graph API docs</a>, <a href="https://github.com/langchain-ai/langgraph/issues/6735">feature request #6735</a>. Dataflow: <code>compile()</code> explicitly does <strong>not</strong> validate which state keys are produced before they're read — that's the entire premise of <a href="../COMPARISON/"><code>docs/COMPARISON.md</code></a>.</li>
 <li><strong>LangGraph — is the runtime.</strong> pttai compiles <em>to</em> LangGraph's <code>StateGraph</code>/Pregel engine; LangGraph doesn't lower to anything further. → <a href="https://docs.langchain.com/oss/python/langgraph/graph-api">Graph API docs</a>. (Be fair: pttai adds a validation pass <em>on top of</em> LangGraph, then hands the compiled graph to it — streaming, async, checkpointers all still work.)</li>
 <li><strong>DSPy — declarative signatures, imperative topology.</strong> Signatures/modules are declarative, but control flow is "arbitrary Python — you compose modules using standard Python statements." There is no declared graph to statically check. → <a href="https://dspy.ai/">dspy.ai</a>, <a href="https://arxiv.org/abs/2310.03714">DSPy paper</a>.</li>
 <li><strong>DSPy — compiles to prompts, not a runtime.</strong> "Compile" optimizes prompts/demos against a metric until quality converges; it does not lower to a graph execution engine. → <a href="https://dspy.ai/">dspy.ai</a>.</li>
@@ -842,7 +870,8 @@ dataflow analysis to be sound <em>about</em>.</p>
 <li><strong>Haystack — dataflow: partial (type-level only).</strong> <code>connect()</code> validates that a producer's output socket <strong>type</strong> is compatible with the consumer's input socket type before running — a type check on explicit connections, not a state-key availability analysis (its explicit-DAG model makes read-before-write structurally different from LangGraph's shared-state model). → <a href="https://docs.haystack.deepset.ai/docs/creating-pipelines">Creating Pipelines</a>.</li>
 <li><strong>CrewAI — no declared graph.</strong> Orchestration is a <code>Process</code> (sequential or hierarchical/manager-delegated), not a declared node/edge graph; docs describe no build-time graph or dataflow validation. → <a href="https://docs.crewai.com/en/concepts/processes">Processes</a>.</li>
 <li><strong>AutoGen (GraphFlow) — structural: yes.</strong> <code>DiGraphBuilder(...).build()</code> validates the directed graph's structure (entry points, cycles) before use; it does not validate shared-state dataflow. → <a href="https://microsoft.github.io/autogen/stable//user-guide/agentchat-user-guide/graph-flow.html">GraphFlow docs</a>.</li>
-<li><strong>pttai — all yes.</strong> Declarative <code>&gt;</code> wiring; structural checks (dead-end, dangling choice, duplicate names, unreachable); a <code>may</code>/<code>must</code> dataflow fixpoint (read-before-write, concurrent-write-no-reducer, prompt-placeholder); sound <code>may</code>-set errors with <strong>0 false positives measured</strong> on 19 valid pipelines; and it compiles down to a plain LangGraph <code>StateGraph</code>. → <a href="../validator/"><code>docs/validator.md</code></a>, <a href="../eval/bugbench/results.csv"><code>eval/bugbench/results.csv</code></a>.</li>
+<li><strong>pttai — all yes.</strong> Declarative <code>&gt;</code> wiring; structural checks (dead-end, dangling choice, duplicate names, unreachable); a <code>may</code>/<code>must</code> dataflow fixpoint (read-before-write incl. the cyclic loop-carried case, concurrent-write-no-reducer, prompt-placeholder); sound <code>may</code>-set errors with <strong>0 false positives measured</strong> on 19 valid pipelines; and it compiles down to a plain LangGraph <code>StateGraph</code>. → <a href="../validator/"><code>docs/validator.md</code></a>, <a href="../eval/bugbench/results.csv"><code>eval/bugbench/results.csv</code></a>.</li>
+<li><strong>pydantic-graph (PydanticAI) — structural: yes (type-check time); dataflow: no.</strong> In <code>pydantic-graph</code>, "nodes and edges are defined using type hints", and "the return type of the node's <code>run</code> method … is used to determine the outgoing edges of the node." Because edges <em>are</em> return-type annotations, a standard static type checker (mypy/pyright) flags a node that returns an undeclared successor — a build-time graph-<strong>structure</strong> check. But state is a single shared object (<code>GraphRunContext[StateT]</code>, "an optional way to access and mutate an object … as nodes run") passed uniformly to every node; there is <strong>no</strong> per-node read/write availability or state-key dataflow analysis. So it checks <em>wiring</em>, not <em>dataflow</em>. → <a href="https://pydantic.dev/docs/ai/graph/graph/">pydantic-graph docs</a>.</li>
 </ol>
 
 

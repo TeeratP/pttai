@@ -616,10 +616,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#c-a-non-end-node-whose-child-is-none" class="md-nav__link">
+  <a href="#c-a-non-end-node-whose-child-is-none-pttai-dsl-strictness-not-a-langgraph-bug" class="md-nav__link">
     <span class="md-ellipsis">
       
-        c. A non-end node whose .child is None
+        c. A non-end node whose .child is None (pttai DSL strictness — NOT a LangGraph bug)
       
     </span>
   </a>
@@ -745,7 +745,7 @@ first invoke.</p>
 </code></pre></div>
 <p>Raw LangGraph: if your <code>add_conditional_edges</code> path map omits <code>"b"</code>, the model
 returning <code>"b"</code> dead-ends at runtime — a bug that hides until that branch is hit.</p>
-<h3 id="c-a-non-end-node-whose-child-is-none">c. A non-end node whose <code>.child</code> is <code>None</code><a class="headerlink" href="#c-a-non-end-node-whose-child-is-none" title="Permanent link">&para;</a></h3>
+<h3 id="c-a-non-end-node-whose-child-is-none-pttai-dsl-strictness-not-a-langgraph-bug">c. A non-end node whose <code>.child</code> is <code>None</code> (pttai DSL strictness — NOT a LangGraph bug)<a class="headerlink" href="#c-a-non-end-node-whose-child-is-none-pttai-dsl-strictness-not-a-langgraph-bug" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">a</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">llm</span><span class="o">=</span><span class="n">get_llm</span><span class="p">(),</span> <span class="n">node_prompt</span><span class="o">=</span><span class="s2">&quot;one&quot;</span><span class="p">)</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">b</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">llm</span><span class="o">=</span><span class="n">get_llm</span><span class="p">(),</span> <span class="n">node_prompt</span><span class="o">=</span><span class="s2">&quot;two&quot;</span><span class="p">)</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">a</span> <span class="o">&gt;</span> <span class="n">b</span>                                 <span class="c1"># forgot to declare b as an end node</span>
@@ -754,8 +754,13 @@ returning <code>"b"</code> dead-ends at runtime — a bug that hides until that 
 <p><strong>pttai raises <code>ValueError</code> at build:</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Node &#39;b&#39; has no children and is not an end node.
 </code></pre></div>
-<p>Raw LangGraph: a node with no outgoing edge and no edge to <code>END</code> is a structural
-dead-end you must remember to wire yourself.</p>
+<p><strong>This is not a LangGraph defect.</strong> In raw LangGraph a node with no outgoing edge
+is a <em>legal implicit terminal</em>: the graph compiles and runs to a normal halt
+(verified empirically on LangGraph 1.2.x — <code>compile()</code> does not raise and
+<code>invoke()</code> returns without error). pttai rejects it only because its DSL
+<em>requires</em> every terminal to be declared in <code>end_nodes</code>. It is a useful
+guardrail, but it is <strong>pttai DSL strictness, not a bug LangGraph misses</strong> — so it
+is <em>excluded</em> from the differentiator numbers below.</p>
 <h3 id="d-duplicate-node-names-caught-by-both-frameworks-not-a-differentiator">d. Duplicate node names — caught by BOTH frameworks (not a differentiator)<a class="headerlink" href="#d-duplicate-node-names-caught-by-both-frameworks-not-a-differentiator" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">a</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;dup&quot;</span><span class="p">,</span> <span class="n">llm</span><span class="o">=</span><span class="n">get_llm</span><span class="p">(),</span> <span class="n">node_prompt</span><span class="o">=</span><span class="s2">&quot;one&quot;</span><span class="p">)</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">b</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;dup&quot;</span><span class="p">,</span> <span class="n">llm</span><span class="o">=</span><span class="n">get_llm</span><span class="p">(),</span> <span class="n">node_prompt</span><span class="o">=</span><span class="s2">&quot;two&quot;</span><span class="p">)</span>
@@ -773,21 +778,26 @@ is friendlier, but the guarantee is the same. (This was previously described her
 as a silent overwrite; that was wrong for LangGraph 1.0 — corrected after
 measuring it in <code>eval/bugbench/</code>.)</p>
 <blockquote>
-<p>There are more genuine pttai-only-at-build catches (concurrent writes to a
-reducer-less key across parallel branches; a <code>node_prompt</code> placeholder with no
-matching scalar read; unreachable nodes) — all in
+<p>There are more genuine pttai-only-at-build catches (the cyclic / loop-carried
+read-before-write case; concurrent writes to a reducer-less key across parallel
+branches; a <code>node_prompt</code> placeholder with no matching scalar read) — all in
 <code>pttai/validation.py::collect_issues</code>, and all measured in <code>eval/bugbench/</code>. Of
-the four classes above, <strong>three (a, b, c) are caught only by pttai at build</strong>;
-raw LangGraph surfaces them at runtime (after wasting model calls) or not at
-all. Duplicate names (d) is the one caught by both.</p>
+the four classes above, <strong>two (a, b) are caught only by pttai at build</strong> while
+raw LangGraph surfaces them at runtime after wasting model calls; the dead-end
+(c) is pttai DSL strictness, not a LangGraph bug (legal implicit terminal); and
+duplicate names (d) is caught by both.</p>
 </blockquote>
-<p>Measured over the full <code>eval/bugbench/</code> corpus (15 buggy + 19 valid pipelines),
-pttai catches <strong>13/13</strong> pttai-only dataflow bugs at build with <strong>0</strong> false
-positives; raw LangGraph catches <strong>0</strong> of those at build (10 surface at runtime,
-3 silently) after burning <strong>15</strong> wasted model calls:</p>
+<p>Measured over the full <code>eval/bugbench/</code> corpus (17 buggy + 19 valid pipelines),
+pttai catches <strong>12/12</strong> pttai-only dataflow bugs at build with <strong>0</strong> false
+positives; raw LangGraph catches <strong>0</strong> of those at build (all 12 surface at
+runtime) after burning <strong>8</strong> model calls — a <strong>simulated, worst-case-ordered</strong>
+figure from the offline fake LLM, not measured real-model cost (see
+<a href="../eval/bugbench/README.md"><code>eval/bugbench/README.md</code></a>). The <code>dead-end-node</code>
+class is <em>excluded</em> from these numbers because it is legal LangGraph behavior, not
+a defect:</p>
 <p align="center">
   <img src="../figures/bug_catch.png" width="90%"
-       alt="pttai catches 13/13 pttai-only bugs at build with 0 wasted calls; raw LangGraph catches 0 at build (10 runtime, 3 silent) and wastes 15 LLM calls; 0 pttai false positives on 19 valid pipelines.">
+       alt="pttai catches 12/12 pttai-only dataflow bugs at build with 0 wasted calls; raw LangGraph catches 0 at build (all 12 surface at runtime) and burns 8 simulated LLM calls; 0 pttai false positives on 19 valid pipelines.">
 </p>
 
 <p align="center"><em>Regenerate from the committed data with <code>python figures/make_charts.py</code>.</em></p>
