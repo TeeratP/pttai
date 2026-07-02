@@ -1,0 +1,117 @@
+{
+  "summary": {
+    "backend": "offline fake",
+    "adjudicated": false,
+    "counts": {
+      "total": 9,
+      "buildable": 9,
+      "clean": 4,
+      "flagged": 5,
+      "malformed_excluded": 0
+    },
+    "flag_rate_over_buildable": 0.5555555555555556,
+    "false_positive_rate_among_flags": 0.0,
+    "false_positives": [],
+    "true_bugs_among_flags": 5,
+    "langgraph_would": {
+      "runtime_only": 4,
+      "silent": 1,
+      "build_too": 0,
+      "runtime_or_silent": 5
+    },
+    "flags_by_class": {
+      "concurrent-write-no-reducer": 1,
+      "dangling-choice": 1,
+      "dead-end-node": 1,
+      "prompt-placeholder-mismatch": 1,
+      "read-before-write": 1
+    },
+    "flags_by_langgraph_phase": {
+      "runtime": 4,
+      "silent": 1
+    }
+  },
+  "items": [
+    {
+      "id": "bug_concurrent_write",
+      "file": "bug_concurrent_write.py",
+      "bucket": "flagged",
+      "bug_class": "concurrent-write-no-reducer",
+      "langgraph_phase": "runtime",
+      "error_type": "GraphValidationError",
+      "message": "[error] b: concurrently writes 'result' with node 'c', but 'result' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime"
+    },
+    {
+      "id": "bug_dangling_choice",
+      "file": "bug_dangling_choice.py",
+      "bucket": "flagged",
+      "bug_class": "dangling-choice",
+      "langgraph_phase": "runtime",
+      "error_type": "GraphValidationError",
+      "message": "[error] triage: choice 'technical' has no connected node; wire it, e.g. `decision['technical'] > some_node`"
+    },
+    {
+      "id": "bug_dead_end",
+      "file": "bug_dead_end.py",
+      "bucket": "flagged",
+      "bug_class": "dead-end-node",
+      "langgraph_phase": "silent",
+      "error_type": "ValueError",
+      "message": "Node 'writeup' has no children and is not an end node."
+    },
+    {
+      "id": "bug_prompt_placeholder",
+      "file": "bug_prompt_placeholder.py",
+      "bucket": "flagged",
+      "bug_class": "prompt-placeholder-mismatch",
+      "langgraph_phase": "runtime",
+      "error_type": "GraphValidationError",
+      "message": "[error] reader: node_prompt references placeholder {subject} but 'subject' is not a declared scalar read ['topic']; this raises KeyError when the prompt is interpolated"
+    },
+    {
+      "id": "bug_read_before_write",
+      "file": "bug_read_before_write.py",
+      "bucket": "flagged",
+      "bug_class": "read-before-write",
+      "langgraph_phase": "runtime",
+      "error_type": "GraphValidationError",
+      "message": "[error] summarize: reads computed key 'draft' but no upstream node produces it before this node (produced by: ['drafter'], none of which are upstream); available keys here: ['decision', 'log', 'messages', 'token']"
+    },
+    {
+      "id": "clean_extract_summarize",
+      "file": "clean_extract_summarize.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "clean_panel_parallel",
+      "file": "clean_panel_parallel.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "clean_rag_qa",
+      "file": "clean_rag_qa.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "clean_triage_routing",
+      "file": "clean_triage_routing.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    }
+  ]
+}

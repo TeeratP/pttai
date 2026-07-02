@@ -1,0 +1,10 @@
+id,file,bucket,bug_class,langgraph_phase,error_type,message
+bug_concurrent_write,bug_concurrent_write.py,flagged,concurrent-write-no-reducer,runtime,GraphValidationError,"[error] b: concurrently writes 'result' with node 'c', but 'result' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime"
+bug_dangling_choice,bug_dangling_choice.py,flagged,dangling-choice,runtime,GraphValidationError,"[error] triage: choice 'technical' has no connected node; wire it, e.g. `decision['technical'] > some_node`"
+bug_dead_end,bug_dead_end.py,flagged,dead-end-node,silent,ValueError,Node 'writeup' has no children and is not an end node.
+bug_prompt_placeholder,bug_prompt_placeholder.py,flagged,prompt-placeholder-mismatch,runtime,GraphValidationError,[error] reader: node_prompt references placeholder {subject} but 'subject' is not a declared scalar read ['topic']; this raises KeyError when the prompt is interpolated
+bug_read_before_write,bug_read_before_write.py,flagged,read-before-write,runtime,GraphValidationError,"[error] summarize: reads computed key 'draft' but no upstream node produces it before this node (produced by: ['drafter'], none of which are upstream); available keys here: ['decision', 'log', 'messages', 'token']"
+clean_extract_summarize,clean_extract_summarize.py,clean,,,,
+clean_panel_parallel,clean_panel_parallel.py,clean,,,,
+clean_rag_qa,clean_rag_qa.py,clean,,,,
+clean_triage_routing,clean_triage_routing.py,clean,,,,
