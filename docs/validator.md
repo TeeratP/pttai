@@ -12,7 +12,7 @@ graph = AgenticGraph(start_node=a, end_nodes={z})   # validate() runs HERE
 
 If validation finds an error, the constructor raises `GraphValidationError`; if
 it finds only warnings, the graph builds but you can inspect them with
-[`summary()`](api-notes.md). Pass `validate=False` to skip the check (escape
+[`summary()`](api/graph.md). Pass `validate=False` to skip the check (escape
 hatch), or call `graph.validate(strict=True)` to promote warnings to errors.
 
 ## Why this matters for LLM pipelines
@@ -70,14 +70,14 @@ AgenticGraph(start_node=reader, end_nodes={writer})
 
 ```
 pttai.validation.GraphValidationError: AgenticGraph 'graph': 1 error(s), 0 warning(s)
-  [error] reader: reads computed key 'summary' but no upstream node produces it before this node (produced by: ['writer'], none of which are upstream); available keys here: ['log', 'messages']
+  [error] reader: reads computed key 'summary' but no upstream node produces it before this node (produced by: ['writer'], none of which are upstream); available keys here: ['log', 'messages', 'token']
 ```
 
 If the key is declared in the schema but **no node writes it at all** (and it
 isn't an input), the message instead points you to `inputs=`:
 
 ```
-  [error] reader: reads 'summary' but no node produces it and it is not an input key; produce it upstream or declare it in inputs=... if you supply it at invoke(); available keys here: ['log', 'messages']
+  [error] reader: reads 'summary' but no node produces it and it is not an input key; produce it upstream or declare it in inputs=... if you supply it at invoke(); available keys here: ['log', 'messages', 'token']
 ```
 
 ### 2. Undeclared key (typo)
@@ -107,17 +107,23 @@ Two nodes on parallel branches (`fanout`) write the same plain key. At runtime
 LangGraph raises `InvalidUpdateError`; pttai catches it at build time.
 
 ```python
+from typing import Annotated, TypedDict
+import operator
+from langgraph.graph.message import add_messages
 from pttai import AgentNode, AgenticGraph, fanout
 
 class S(TypedDict):
     messages: Annotated[list, add_messages]
+    log: Annotated[list, operator.add]
     result: str                    # plain — no reducer
 
+start = AgentNode(name="start", llm=llm)
 a = AgentNode(name="a", llm=llm, writes=["result"])
 b = AgentNode(name="b", llm=llm, writes=["result"])
 join = AgentNode(name="join", llm=llm)
 
 start > fanout(a, b) > join        # a and b write `result` concurrently
+AgenticGraph(start_node=start, end_nodes={join}, state=S)
 ```
 
 ```
@@ -145,7 +151,7 @@ AgenticGraph(start_node=decide, end_nodes={happy})
 ```
 
 ```
-  [error] decide: choice 'negative' has no connected node; wire it, e.g. `decide['negative'] > some_node`
+  [error] decide: choice 'negative' has no connected node; wire it, e.g. `decision['negative'] > some_node`
 ```
 
 ### 5. Non-end node with no child (dead end)
@@ -237,4 +243,4 @@ frame   AgentNode  messages  log,messages   log,messages
 5 nodes · 0 errors · 0 warning(s)
 ```
 
-See [API notes](api-notes.md) for the full state-channel model.
+See the [State reference](api/state.md) for the full state-channel model.

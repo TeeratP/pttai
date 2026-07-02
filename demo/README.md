@@ -48,7 +48,7 @@ offline `get_llm()` resolve from source.)
   (`retrieve > rerank > answer`), **Extract → Summarize** (typed structured
   output), **Doc triage** (decision routing). Each compiles clean with a green
   validator.
-- **Broken presets** (one per bug class in `eval/bugbench/corpus.py`):
+- **Broken presets** (one example per validator bug class):
   read-before-write, dangling decision choice, dead-end node, duplicate node
   names, concurrent write to a reducer-less key, and prompt-placeholder
   mismatch. Each **fails the build** and paints the offending node red — raw
@@ -92,8 +92,7 @@ bombs). For untrusted traffic at scale, run it behind real OS-level isolation.
 
 ## Deploy to Hugging Face Spaces
 
-This folder is a self-contained Gradio Space (`app_file: app.py`,
-`requirements.txt` installs `pttai` from git). To deploy:
+This folder is a self-contained Gradio Space (`app_file: app.py`). To deploy:
 
 ```bash
 # 1. create a Gradio Space (once), then clone it
@@ -103,11 +102,15 @@ git clone https://huggingface.co/spaces/<you>/pttai-playground && cd pttai-playg
 # 2. copy the demo files in (this README carries the Space metadata header)
 cp /path/to/pttai/demo/{app.py,requirements.txt,README.md} .
 
-# 3. push
+# 3. uncomment the `pttai @ git+https://...` line in requirements.txt so the
+#    Space installs pttai (it isn't on the Space's Python path otherwise)
+
+# 4. push
 git add -A && git commit -m "pttai playground" && git push
 ```
 
-The Space installs `pttai` from git per `requirements.txt`; `app.py` falls back
-to a vendored offline `get_llm()` when `examples/_llm.py` isn't present, so the
-Space needs nothing from the rest of the repo. mermaid.js loads from its CDN at
-runtime (Spaces have network).
+`requirements.txt` ships with the `pttai` install line commented out (so a
+local clone resolves `pttai` from source instead); uncomment it before pushing
+to a Space. `app.py` falls back to a vendored offline `get_llm()` when
+`examples/_llm.py` isn't present, so the Space needs nothing else from the rest
+of the repo. mermaid.js loads from its CDN at runtime (Spaces have network).

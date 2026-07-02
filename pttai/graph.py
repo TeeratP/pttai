@@ -1,5 +1,14 @@
-"""
-Graph implementation for the Agentic Framework.
+"""`AgenticGraph` — compile the wired `>`-DSL into a LangGraph `StateGraph`.
+
+This module turns the deferred `.children` pointers that the `>` operator builds
+(see `node.py`) into a real, compiled LangGraph graph. `AgenticGraph` subclasses
+`StateGraph`: at construction it collects the nodes, resolves names, infers/augments
+the state schema, runs the compile-time dataflow validator, then walks the wiring
+to emit the `add_node` / `add_edge` / `add_conditional_edges` / `Send` calls and
+compiles. It also owns the input-normalization helpers (the `message=` / str /
+list / dict / `Command` shorthands), subgraph composition (an `AgenticGraph` can
+be a node in a larger one), OpenAI prompt-cache threading, and the `summary()`
+topology table.
 """
 
 import sys
@@ -9,7 +18,7 @@ from langgraph.graph import StateGraph, START, END, MessagesState
 from langgraph.types import CachePolicy, RetryPolicy, Send
 from langgraph.cache.memory import InMemoryCache
 from langchain_core.messages import HumanMessage
-from pttai.node import Branch, Spread
+from pttai.node import Node, Branch, Spread
 from pttai.nodes import AgentNode, HumanNode, DecisionNode, RouterNode, ConditionNode
 from pttai.nodes._fields import prompt_placeholders, is_history_annotation
 from pttai.state import AgenticState, RESERVED, accumulate
@@ -20,11 +29,11 @@ from pttai.validation import (
 
 
 def _augment_schema(base, extra):
-    """Return a TypedDict like ``base`` plus one channel per item of ``extra``, a
-    ``{key: annotation}`` map. The annotation is used verbatim — ``Any`` for a
-    plain (last-writer-wins) channel, ``Annotated[list, accumulate]`` for a
+    """Return a TypedDict like `base` plus one channel per item of `extra`, a
+    `{key: annotation}` map. The annotation is used verbatim — `Any` for a
+    plain (last-writer-wins) channel, `Annotated[list, accumulate]` for a
     map-worker collection channel. Existing reduced channels keep their reducers
-    (their resolved annotations are copied). Returns ``base`` unchanged when
+    (their resolved annotations are copied). Returns `base` unchanged when
     there is nothing to add."""
     if not extra:
         return base
@@ -38,10 +47,10 @@ _UNSET = object()  # sentinel: "no positional input given"
 
 
 def _check_extra_keys(extra, schema_keys_set):
-    """Guard the ``**extra`` invoke kwargs (NOT the positional dict form, which
-    stays back-compat for ``invoke({"messages":..., "log":[]})``):
+    """Guard the `**extra` invoke kwargs (NOT the positional dict form, which
+    stays back-compat for `invoke({"messages":..., "log":[]})`):
 
-    - a RESERVED framework channel (``log``/``token``) cannot be
+    - a RESERVED framework channel (`log`/`token`) cannot be
       seeded as an extra kwarg — it is managed internally; and
     - a key that maps to no channel in the (augmented) schema is a helpful error
       naming the key, not LangGraph's silent drop.
@@ -66,18 +75,18 @@ def _check_extra_keys(extra, schema_keys_set):
 def _normalize_input(input=_UNSET, *, message=None, _schema=None, **extra):
     """Coerce a run-method input into a full state dict and auto-seed boilerplate.
 
-    Source of the input is either the positional ``input`` or the keyword
-    ``message`` (str | list of messages) — supplying both is an error.
+    Source of the input is either the positional `input` or the keyword
+    `message` (str | list of messages) — supplying both is an error.
 
-    - ``str``  -> ``{"messages": [HumanMessage(content=input)]}``
-    - ``list`` -> ``{"messages": list(input)}`` (a list of messages)
-    - ``dict`` -> a shallow copy (the full-state form; behaves as before)
-    Any ``**extra`` keys are merged in as additional state entries (after the
-    reserved/unknown-key guard in ``_check_extra_keys``; ``_schema`` is the set
-    of augmented-schema keys passed by the run methods, ``None`` to skip the
+    - `str`  -> `{"messages": [HumanMessage(content=input)]}`
+    - `list` -> `{"messages": list(input)}` (a list of messages)
+    - `dict` -> a shallow copy (the full-state form; behaves as before)
+    Any `**extra` keys are merged in as additional state entries (after the
+    reserved/unknown-key guard in `_check_extra_keys`; `_schema` is the set
+    of augmented-schema keys passed by the run methods, `None` to skip the
     unknown-key check on direct unit-test calls). Finally the reduced channels
-    that need an empty start are seeded if absent (at minimum ``log: []``).
-    Anything that is not str/list/dict (e.g. a ``Command`` resume) is passed
+    that need an empty start are seeded if absent (at minimum `log: []`).
+    Anything that is not str/list/dict (e.g. a `Command` resume) is passed
     through untouched so interrupt/resume keeps working.
     """
     _check_extra_keys(extra, _schema)
@@ -109,38 +118,67 @@ def _make_send_fn(worker, field):
     return send
 
 class AgenticGraph(StateGraph):
+    """Compile nodes wired with the `>` DSL into a runnable LangGraph graph.
+
+    Hand it the `start_node` and `end_nodes` of a graph you built with the
+    `>` operator and it materializes and compiles a native LangGraph
+    `StateGraph`. The DSL it understands:
+
+    - **`a > b > c`** — sequential chain (each node appends to the shared state).
+    - **`a > fanout(b, c) > d`** (or `a > [b, c] > d`) — parallel fan-out; the
+      join node `d` is deferred and runs once after both branches finish.
+    - **`worker.map("items") > collector`** — map-reduce: `worker` runs once per
+      item of `state["items"]` via LangGraph `Send`, replies join into `collector`.
+    - **`decision["choice"] > handler`** — conditional routing off a
+      `DecisionNode`/`ConditionNode`.
+    - **subgraph composition** — an `AgenticGraph` may itself be a node in a
+      larger `AgenticGraph` (`graph_0 > graph_1`).
+
+    Build-time behavior: the schema is inferred (undeclared keys a node reads/writes
+    are auto-registered) so you rarely pass `state=`, and a forward dataflow
+    validator FAILS the build (`GraphValidationError`) if a node reads a key nothing
+    produces upstream. Run it with `invoke` / `stream` / `ainvoke` / `astream`.
+
+    Examples:
+        ```python
+        from pttai import AgentNode, AgenticGraph
+
+        outline = AgentNode(llm=llm, node_prompt="Outline the answer.")
+        draft = AgentNode(llm=llm, node_prompt="Write a draft from the outline.")
+        polish = AgentNode(llm=llm, node_prompt="Polish the draft.")
+
+        outline > draft > polish
+
+        graph = AgenticGraph(start_node=outline, end_nodes={polish})
+        graph.invoke("Explain what a monad is.")
+        ```
     """
-    A graph implementation for managing agent and decision nodes in a workflow.
     
-    This class extends the base Graph class to provide specialized handling of
-    AgentNode and DecisionNode types, allowing for the construction of complex
-    agent-based workflows.
-    """
-    
-    def __init__(self, state=None, start_node=None, end_nodes=None, name: "str | None" = None,
-                 checkpointer=None, cache=None, validate: bool = True,
-                 inputs=None, prompt_cache: bool = False,
+    def __init__(self, state: "type | None" = None, start_node: "Node | None" = None,
+                 end_nodes: "Node | set | list | tuple | None" = None, name: "str | None" = None,
+                 checkpointer: "Any" = None, cache: "Any" = None, validate: bool = True,
+                 inputs: "list | set | None" = None, prompt_cache: bool = False,
                  prompt_cache_key: "str | None" = None) -> None:
         """
         Initialize the AgenticGraph.
 
         Args:
             state: The state schema (a TypedDict). OPTIONAL — defaults to the
-                standard ``AgenticState`` (messages/log/token). Any
-                scalar key a node ``writes``, and any non-optional key a node
-                ``reads`` that no node writes (a graph INPUT seeded at invoke),
+                standard `AgenticState` (messages/log/token). Any
+                scalar key a node `writes`, and any non-optional key a node
+                `reads` that no node writes (a graph INPUT seeded at invoke),
                 is auto-registered as a PLAIN (last-writer-wins) channel when the
                 schema doesn't already declare it — so you rarely need a
-                hand-written schema. Pass an explicit ``state=`` (with reducers)
+                hand-written schema. Pass an explicit `state=` (with reducers)
                 when you want to type/reduce a key precisely.
             start_node: The initial node in the graph
             end_nodes: Set of nodes that represent terminal states
             checkpointer: Optional LangGraph checkpointer (e.g. InMemorySaver).
                 Required for HumanNode interrupt/resume. When set, every invoke
-                must pass a config with a ``thread_id``.
+                must pass a config with a `thread_id`.
             cache: Optional LangGraph cache backend. Defaults to an InMemoryCache
-                when any node sets ``cache_ttl``; pass explicitly to override.
-            inputs: Keys you pass at ``invoke()`` that are PLAIN (non-reduced) AND
+                when any node sets `cache_ttl`; pass explicitly to override.
+            inputs: Keys you pass at `invoke()` that are PLAIN (non-reduced) AND
                 written by some node — declare them here so the validator treats
                 them as provided at entry, not produced. (Reduced channels and
                 keys no node writes are already inferred as inputs; you only need
@@ -148,9 +186,9 @@ class AgenticGraph(StateGraph):
             validate: When True (default), statically check that every key each
                 node reads is produced upstream/in the schema and every key it
                 writes is declared, FAILING the build (GraphValidationError) on a
-                hard error. Set False to skip (escape hatch). See ``validate()``.
+                hard error. Set False to skip (escape hatch). See `validate()`.
             prompt_cache: Opt-in (default False). When True AND a node's model is
-                OpenAI, every model call passes a ``prompt_cache_key`` so OpenAI
+                OpenAI, every model call passes a `prompt_cache_key` so OpenAI
                 routes the shared SystemMessage/history prefix to one cache. No
                 effect on non-OpenAI models.
             prompt_cache_key: The cache key to use verbatim for the whole run.
@@ -241,15 +279,15 @@ class AgenticGraph(StateGraph):
         self._mark_parallel_joins()
         self._build_graph(self.start_node, START)
         
-    def __call__(self, state, config=None, durability=None):
+    def __call__(self, state: "AgenticState", config: "dict | None" = None, durability=None) -> dict:
         """
         Process the current state through the graph.
 
         Args:
-            state: Initial state, or a ``Command`` (e.g. ``Command(resume=...)``)
+            state: Initial state, or a `Command` (e.g. `Command(resume=...)`)
                 to resume an interrupted run.
             config: Optional LangGraph config, e.g.
-                ``{"configurable": {"thread_id": "abc"}}`` (required when a
+                `{"configurable": {"thread_id": "abc"}}` (required when a
                 checkpointer is set).
 
         Returns:
@@ -257,25 +295,26 @@ class AgenticGraph(StateGraph):
         """
         return self.compiled_graph.invoke(state, config=config, durability=durability)
 
-    def invoke(self, input=_UNSET, /, *, message=None, config=None, durability=None, **extra):
+    def invoke(self, input: "Any" = _UNSET, /, *, message: "str | list | None" = None,
+               config: "dict | None" = None, durability=None, **extra: "Any") -> dict:
         """
         Process an input through the graph.
 
         Args:
-            input: A plain ``str`` (wrapped to a ``HumanMessage`` on ``messages``),
-                a ``list`` of messages (placed on ``messages``), a full state
-                ``dict`` (used as-is, back-compat), or a ``Command``
-                (e.g. ``Command(resume=...)``) to resume an interrupted run. For
+            input: A plain `str` (wrapped to a `HumanMessage` on `messages`),
+                a `list` of messages (placed on `messages`), a full state
+                `dict` (used as-is, back-compat), or a `Command`
+                (e.g. `Command(resume=...)`) to resume an interrupted run. For
                 the str/list/dict forms, boilerplate channels are auto-seeded
-                (at minimum ``log: []``).
+                (at minimum `log: []`).
             message: Keyword form of the str/list shorthand, e.g.
-                ``invoke(message="hi")``. Mutually exclusive with a positional
-                ``input`` (passing both raises ValueError).
+                `invoke(message="hi")`. Mutually exclusive with a positional
+                `input` (passing both raises ValueError).
             config: Optional LangGraph config, e.g.
-                ``{"configurable": {"thread_id": "abc"}}`` (required when a
+                `{"configurable": {"thread_id": "abc"}}` (required when a
                 checkpointer is set).
             **extra: Additional state keys to seed alongside the shorthand input,
-                e.g. ``invoke("hi", topic="product")``.
+                e.g. `invoke("hi", topic="product")`.
 
         Returns:
             Updated state after processing through the graph
@@ -287,24 +326,40 @@ class AgenticGraph(StateGraph):
         """
         Stream graph execution, yielding updates as nodes complete.
 
-        Normalizes ``input``/``message`` like ``invoke`` (str/list/dict/Command +
-        ``**extra`` state keys), then passes through to the compiled graph's stream.
+        Normalizes `input`/`message` like `invoke` (str/list/dict/Command +
+        `**extra` state keys), then passes through to the compiled graph's stream.
+        See [`invoke`][pttai.AgenticGraph.invoke] for the full input/config contract.
         """
         return self.compiled_graph.stream(
             _normalize_input(input, message=message, _schema=self._schema_keys, **extra), config=config, durability=durability)
 
     async def ainvoke(self, input=_UNSET, /, *, message=None, config=None, durability=None, **extra):
-        """Async variant of invoke. Sync nodes run in LangGraph's threadpool."""
+        """Async variant of invoke. Sync nodes run in LangGraph's threadpool.
+
+        See [`invoke`][pttai.AgenticGraph.invoke] for the full input/config contract.
+        """
         return await self.compiled_graph.ainvoke(
             _normalize_input(input, message=message, _schema=self._schema_keys, **extra), config=config, durability=durability)
 
     async def astream(self, input=_UNSET, /, *, message=None, config=None, durability=None, **extra):
-        """Async streaming variant of stream."""
+        """Async streaming variant of stream.
+
+        See [`invoke`][pttai.AgenticGraph.invoke] for the full input/config contract.
+        """
         async for chunk in self.compiled_graph.astream(
                 _normalize_input(input, message=message, _schema=self._schema_keys, **extra), config=config, durability=durability):
             yield chunk
 
     def compile(self, checkpointer = None, *, cache = None, store = None, interrupt_before = None, interrupt_after = None, debug = False):
+        """Compile the built graph into a runnable LangGraph `CompiledStateGraph`.
+
+        Thin override of `StateGraph.compile` that keeps `checkpointer` as the
+        first positional argument for convenience; all other options
+        (`cache`, `store`, `interrupt_before`, `interrupt_after`, `debug`) pass
+        through unchanged. `AgenticGraph.__init__` calls this for you, so you
+        rarely invoke it directly — the compiled result is stored on
+        `self.compiled_graph` and used by `invoke` / `stream` / `ainvoke` / `astream`.
+        """
         return super().compile(checkpointer, cache=cache, store=store, interrupt_before=interrupt_before, interrupt_after=interrupt_after, debug=debug)
             
     def _repr_mimebundle_(self, **kwargs):
@@ -350,13 +405,13 @@ class AgenticGraph(StateGraph):
     def _mark_parallel_joins(self) -> None:
         """Flag fan-in joins so they defer to the end of the Pregel super-step.
 
-        Counts static (non-decision) in-edges per node over the ``.children``
+        Counts static (non-decision) in-edges per node over the `.children`
         DAG; a node with in-degree >= 2 is a fan-in join and gets
-        ``_defer = True`` (so an unbalanced diamond fires it once, not once per
+        `_defer = True` (so an unbalanced diamond fires it once, not once per
         arriving branch). A DecisionNode's out-edges are conditional, so they
         are excluded from the count — a node reached only as a choice target is
-        not a static join. ``Branch.__gt__`` may also flag a join explicitly
-        via ``_is_join``. A visited set keeps cycles/diamonds finite.
+        not a static join. `Branch.__gt__` may also flag a join explicitly
+        via `_is_join`. A visited set keeps cycles/diamonds finite.
         """
         indeg: dict = {}
         nodes: dict = {}
@@ -530,11 +585,11 @@ class AgenticGraph(StateGraph):
             taken.add(nm)
 
     def _collect_nodes(self, start) -> dict:
-        """Walk the ``.children`` / choice / spread graph from ``start`` and
-        return ``{id(node): node}`` for every node, BEFORE the StateGraph is
+        """Walk the `.children` / choice / spread graph from `start` and
+        return `{id(node): node}` for every node, BEFORE the StateGraph is
         built (so key auto-registration and name resolution can run before
-        ``super().__init__``). Keyed by identity — names may still be unresolved
-        (``None``) here; callers use only ``.values()``."""
+        `super().__init__`). Keyed by identity — names may still be unresolved
+        (`None`) here; callers use only `.values()`."""
         seen: dict = {}
 
         def children_of(node):
@@ -563,9 +618,9 @@ class AgenticGraph(StateGraph):
         return seen
 
     def _collect_spreads(self, start) -> list:
-        """Walk the same ``.children`` / choice / Spread structure as
-        ``_collect_nodes`` and return ``[(field, worker), ...]`` — one tuple per
-        ``Spread`` encountered (the data ``_collect_nodes`` discards). Captures
+        """Walk the same `.children` / choice / Spread structure as
+        `_collect_nodes` and return `[(field, worker), ...]` — one tuple per
+        `Spread` encountered (the data `_collect_nodes` discards). Captures
         nested/sequential spreads; a seen-set keyed by node identity keeps cycles
         finite."""
         seen: set = set()
@@ -597,20 +652,20 @@ class AgenticGraph(StateGraph):
         return spreads
 
     def _auto_register_keys(self, base_state) -> dict:
-        """``{key: annotation}`` for undeclared keys to add to ``base_state``:
+        """`{key: annotation}` for undeclared keys to add to `base_state`:
 
         - every key some node WRITES (so undeclared writes aren't rejected), and
         - every NON-OPTIONAL key some node READS that NO node writes (a
           never-written read is a graph INPUT seeded at invoke, not a
-          dangling-read error) — each as ``Any`` (a plain last-writer-wins
-          channel). Optional (``key?``) reads are excluded so they stay warn-only.
-        - each ``.map(field)`` spread ``field`` as ``Any`` (a plain input the
+          dangling-read error) — each as `Any` (a plain last-writer-wins
+          channel). Optional (`key?`) reads are excluded so they stay warn-only.
+        - each `.map(field)` spread `field` as `Any` (a plain input the
           Send machinery reads), and each map-worker scalar write key as
-          ``Annotated[list, accumulate]`` (N parallel writers accumulate into one
+          `Annotated[list, accumulate]` (N parallel writers accumulate into one
           list). The accumulate channel wins over a plain entry for the same key.
 
-        Keys already declared in ``base_state`` are SKIPPED throughout — an
-        explicit ``state=`` always wins.
+        Keys already declared in `base_state` are SKIPPED throughout — an
+        explicit `state=` always wins.
         """
         base = schema_keys(base_state)
         writes, required_reads = set(), set()
@@ -634,13 +689,13 @@ class AgenticGraph(StateGraph):
 
     def _check_reserved(self) -> None:
         """Reject USER-declared node reads/writes that collide with a reserved
-        framework channel (``log``/``token``).
+        framework channel (`log`/`token`).
 
-        ``messages`` is exempt — it is the standard conversation channel and the
-        default node read/write. The framework's OWN reserved writes (``log`` for
-        every node, ``decision_{name}`` for a router node, ``token`` from the agent
-        delta) are injected in ``_node_io``/``__call__``, never in
-        ``node.writes``/``node.reads``, so they are not seen here — only genuine
+        `messages` is exempt — it is the standard conversation channel and the
+        default node read/write. The framework's OWN reserved writes (`log` for
+        every node, `decision_{name}` for a router node, `token` from the agent
+        delta) are injected in `_node_io`/`__call__`, never in
+        `node.writes`/`node.reads`, so they are not seen here — only genuine
         user declarations are."""
         guarded = RESERVED - {"messages"}
         for node in self._all_nodes.values():
@@ -689,10 +744,10 @@ class AgenticGraph(StateGraph):
     def _input_keys(self, schema, reduced, writes):
         """Keys guaranteed available at invoke (the dataflow seed).
 
-        ``input_keys = reduced ∪ (schema − written) ∪ inputs``:
+        `input_keys = reduced ∪ (schema − written) ∪ inputs`:
           - a reduced channel (messages/log/…) is seeded/accumulated at invoke;
           - a schema key NO node writes must be supplied at invoke;
-          - ``inputs`` lets the user declare extra plain entry keys they seed.
+          - `inputs` lets the user declare extra plain entry keys they seed.
         Everything else (plain keys written by ≥1 node) is COMPUTED and must be
         produced upstream of any reader.
         """
@@ -753,16 +808,16 @@ class AgenticGraph(StateGraph):
 
     def _reachable_from_start(self):
         """Names actually BUILT into the compiled graph — the genuine reachable
-        set. ``_seen_nodes`` is populated by ``_build_graph`` as it walks the
-        ``.child``/``.children`` / ``RouterNode.choices`` / Spread structure from
-        ``start_node`` and STOPS at end nodes, so its keys are exactly the nodes
-        that received edges. Diffing the full node universe (``_all_nodes``, which
+        set. `_seen_nodes` is populated by `_build_graph` as it walks the
+        `.child`/`.children` / `RouterNode.choices` / Spread structure from
+        `start_node` and STOPS at end nodes, so its keys are exactly the nodes
+        that received edges. Diffing the full node universe (`_all_nodes`, which
         also walks past end nodes and includes map workers) against this surfaces
         collected-but-never-built orphans — e.g. a node hung off an end node's
         children. Reusing the build's own record guarantees an EXACT mirror of the
         build traversal, so the diff never false-positives a reachable node.
 
-        (Was dead code: the old version rebuilt adjacency from ``self._edges``,
+        (Was dead code: the old version rebuilt adjacency from `self._edges`,
         which is itself emitted only by the outward build walk, so it equalled the
         reachable set by construction and never flagged anything.)"""
         return set(self._seen_nodes)
@@ -771,7 +826,7 @@ class AgenticGraph(StateGraph):
         """Statically check state availability; returns a ValidationReport.
 
         Raises nothing itself (the build path raises on errors). With
-        ``strict=True`` the returned report has its warnings promoted to errors.
+        `strict=True` the returned report has its warnings promoted to errors.
         """
         # LangGraph's StateGraph.compile() calls self.validate(interrupt=...) for
         # its own structural check; delegate that to the base class.
@@ -847,8 +902,8 @@ class AgenticGraph(StateGraph):
         return ValidationReport(issues, self.name)
 
     def summary(self, file=sys.stdout) -> None:
-        """Print a Keras-``model.summary()``-style table of every node's reads,
-        writes, and available (``must``) keys (``may``\\``must`` keys suffixed ``?``)."""
+        """Print a Keras-`model.summary()`-style table of every node's reads,
+        writes, and available (`must`) keys (`may`\\`must` keys suffixed `?`)."""
         schema = schema_keys(self.state_schema)
         reduced = reduced_keys(self.state_schema)
         node_io = {name: self._node_io(node) for name, node in self._seen_nodes.items()}
@@ -894,7 +949,7 @@ class AgenticGraph(StateGraph):
         for wline in report.warnings:
             print(f"  ! {wline}", file=file)
 
-    def __gt__(self, other):
+    def __gt__(self, other: "Node | list | Branch") -> "Node | Branch":
         """
         Wire this graph forward to one child, or fan out to several.
 
@@ -903,8 +958,8 @@ class AgenticGraph(StateGraph):
                 (parallel fan-out — each becomes a child).
 
         Returns:
-            The single child (chain building), or a ``Branch`` wrapping the
-            fan-out heads whose own ``>`` wires the fan-in/join.
+            The single child (chain building), or a `Branch` wrapping the
+            fan-out heads whose own `>` wires the fan-in/join.
         """
         if isinstance(other, Branch):
             self.children = [t._head for t in other.tails]

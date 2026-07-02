@@ -2,9 +2,9 @@
 LLMNode: shared base for nodes that call a language model.
 
 Owns the LLM handle, tool normalization/registry, the tool-call loop, and the
-OpenAI prompt-cache fields. ``AgentNode`` and ``DecisionNode`` both subclass it
-(the latter via multiple inheritance with the ``RouterNode`` routing mixin) and
-reuse ``_run_tool_loop``.
+OpenAI prompt-cache fields. `AgentNode` and `DecisionNode` both subclass it
+(the latter via multiple inheritance with the `RouterNode` routing mixin) and
+reuse `_run_tool_loop`.
 """
 import json
 from typing import Any, List, Optional
@@ -16,8 +16,8 @@ from langchain_core.tools import StructuredTool, BaseTool
 
 
 def _usage_delta(response):
-    """Return ``{model_name: usage_metadata}`` for one LLM response, or ``{}``
-    when it carries no ``usage_metadata`` (fakes / structured-output path)."""
+    """Return `{model_name: usage_metadata}` for one LLM response, or `{}`
+    when it carries no `usage_metadata` (fakes / structured-output path)."""
     usage = getattr(response, "usage_metadata", None)
     if not usage:
         return {}
@@ -26,7 +26,7 @@ def _usage_delta(response):
 
 
 def _is_openai(llm) -> bool:
-    """Duck-type whether ``llm`` is a langchain_openai ChatOpenAI, WITHOUT
+    """Duck-type whether `llm` is a langchain_openai ChatOpenAI, WITHOUT
     importing langchain_openai. Unwraps the RunnableBinding that binding tools
     produces so detection still works after tools are bound."""
     target = getattr(llm, "bound", llm)  # RunnableBinding -> underlying model
@@ -38,13 +38,13 @@ class LLMNode(Node):
     """Base for LLM-backed nodes.
 
     Holds the model, the normalized tool list / lookup, the tool-loop cap, and
-    the prompt-cache fields, and provides ``_run_tool_loop`` — the shared
-    tool-call loop that both ``AgentNode`` (free-form) and ``DecisionNode``
+    the prompt-cache fields, and provides `_run_tool_loop` — the shared
+    tool-call loop that both `AgentNode` (free-form) and `DecisionNode`
     (two-phase, to gather context before routing) run.
 
-    Subclasses decide how tools bind to the model: ``AgentNode`` binds them onto
-    ``self.llm``; ``DecisionNode`` keeps the base model and binds a separate
-    ``_tool_llm`` so tools never share a call with structured output.
+    Subclasses decide how tools bind to the model: `AgentNode` binds them onto
+    `self.llm`; `DecisionNode` keeps the base model and binds a separate
+    `_tool_llm` so tools never share a call with structured output.
     """
 
     def __init__(self,
@@ -55,6 +55,22 @@ class LLMNode(Node):
                  max_tool_iterations: int = 25,
                  cache_ttl: Optional[int] = None,
                  retry: bool = False) -> None:
+        """Initialize the shared LLM-node plumbing.
+
+        Args:
+            name: Unique identifier for the node (inferred from the assignment
+                target when omitted; see [Node][pttai.node.Node]).
+            llm: Language model instance this node calls.
+            node_prompt: System prompt prepended to the history on each call.
+            tools: Tools the node may call. Each is normalized to a LangChain
+                tool (`StructuredTool`/`BaseTool` as-is; a plain callable via
+                `StructuredTool.from_function`) and stored with a name lookup for
+                the tool-call loop. Subclasses decide how they bind to the model.
+            max_tool_iterations: Safety cap on the tool-call loop in
+                `_run_tool_loop`; exceeding it raises `RuntimeError`.
+            cache_ttl: see [Node][pttai.node.Node] — node-level result caching.
+            retry: see [Node][pttai.node.Node] — node-level retry on exception.
+        """
         super().__init__(name, llm, node_prompt, cache_ttl=cache_ttl, retry=retry)
         self.max_tool_iterations = max_tool_iterations
         self.tools = self._normalize_tools(tools) if tools else []
@@ -66,10 +82,10 @@ class LLMNode(Node):
 
     @staticmethod
     def _normalize_tools(tools) -> list:
-        """Normalize ``tools`` to a list of LangChain tool objects.
+        """Normalize `tools` to a list of LangChain tool objects.
 
-        A ``StructuredTool``/``BaseTool`` is used as-is; a plain callable is
-        wrapped via ``StructuredTool.from_function``. Accepts a single tool or a
+        A `StructuredTool`/`BaseTool` is used as-is; a plain callable is
+        wrapped via `StructuredTool.from_function`. Accepts a single tool or a
         list of tools.
         """
         if not isinstance(tools, List):
@@ -89,10 +105,10 @@ class LLMNode(Node):
         return normalized
 
     def _run_tool_loop(self, llm, sys, history, invoke_kwargs=None):
-        """Invoke ``llm`` on ``[System(sys)] + history`` and run the tool-call
+        """Invoke `llm` on `[System(sys)] + history` and run the tool-call
         loop until the model stops requesting tools.
 
-        Returns ``(messages, log, token)``: every message produced this turn (the
+        Returns `(messages, log, token)`: every message produced this turn (the
         AIMessage, any ToolMessages, and follow-up AIMessages), the matching trace
         lines, and the merged per-model token usage.
         """

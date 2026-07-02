@@ -15,7 +15,7 @@ def _format_docs(docs) -> str:
     return "\n\n".join(getattr(d, "page_content", str(d)) for d in docs)
 
 
-def make_retriever_tool(retriever,
+def make_retriever_tool(retriever: object,
                         name: str = "search_documents",
                         description: str = "Search the knowledge base for relevant context.") -> StructuredTool:
     """Wrap a LangChain retriever as a StructuredTool bindable to an AgentNode.
@@ -38,7 +38,7 @@ class ChromaRAG:
     Requires the optional `rag` extra: `pip install -e .[rag]`.
     """
 
-    def __init__(self, embeddings, collection_name: str = "agentic", persist_directory=None):
+    def __init__(self, embeddings, collection_name: str = "pttai", persist_directory=None):
         from langchain_chroma import Chroma  # lazy import: optional dependency
         self.store = Chroma(
             collection_name=collection_name,

@@ -1,5 +1,12 @@
-"""
-Agent node implementation for the Agentic Framework.
+"""The `AgentNode` — pttai's workhorse LLM node.
+
+Prepends `node_prompt` as a `SystemMessage` to the message history, calls the
+model, and returns a state delta. On top of the plain call it wraps two modes
+inherited/extended from `LLMNode`: an automatic tool-call loop (`tools=[...]`,
+which folds together the model node, tool execution, and the loop-back edge that
+raw LangGraph makes you wire by hand) and structured output (`writes=[...]` /
+`writes={key: type}`) that returns native-typed fields instead of appending to
+the conversation.
 """
 from typing import Any, Optional, List, Dict, Union
 from pttai.nodes.llm_node import LLMNode, _usage_delta, _is_openai
@@ -9,11 +16,38 @@ from pydantic import create_model
 
 
 class AgentNode(LLMNode):
-    """
-    A node that represents an agent capable of processing messages and generating responses.
+    """An LLM agent: prompt the model over the history and return a delta.
 
-    AgentNode uses a language model to process incoming messages and generate appropriate
-    responses based on its configured prompt and system message.
+    Prepends `node_prompt` as a `SystemMessage` to the history (read from
+    `input_field`, default `messages`), calls the LLM, and returns only the keys
+    it updates. Two optional modes change what it does with the response:
+
+    - **Tool-call loop** (`tools=[...]`): every requested tool is executed,
+      `ToolMessage`s are appended, and the model is re-invoked until it stops
+      calling tools (capped by `max_tool_iterations`) — all of it folded into one
+      `{"messages": [...]}` delta. Cannot be combined with multi-field structured
+      `writes`.
+    - **Structured output** (`writes=[...]` with two+ keys, or a
+      `writes={key: type}` dict): the model is wrapped with
+      `with_structured_output`, so it returns one field per key. The dict form
+      types each field, so values come back native (`{"score": int}` -> `9`, an
+      int) rather than stringified.
+
+    A non-default single `output_field`/`writes` key writes the final response's
+    *content* to that key instead of appending to `messages` (a transform node).
+
+    Examples:
+        ```python
+        from pttai import AgentNode, AgenticGraph
+
+        def add(a: int, b: int) -> int:      return a + b
+        def multiply(a: int, b: int) -> int: return a * b
+
+        agent = AgentNode(llm=llm, tools=[add, multiply])   # name inferred -> "agent"
+        graph = AgenticGraph(start_node=agent, end_nodes={agent})
+
+        graph.invoke(message="What is 21 + 21, then times 3?")   # -> 126
+        ```
     """
 
     def __init__(self,
@@ -36,11 +70,11 @@ class AgentNode(LLMNode):
             name: Unique identifier for the node
             llm: Language model instance to be used by this node
             node_prompt: System prompt/instructions for the language model
-            tools: Tools this agent can call. A ``StructuredTool``/``BaseTool`` is
+            tools: Tools this agent can call. A `StructuredTool`/`BaseTool` is
                 used as-is; a plain callable is wrapped via
-                ``StructuredTool.from_function``. When set, the node runs an
-                internal tool-call loop (capped by ``max_tool_iterations``).
-                Cannot be combined with multi-field structured ``writes``.
+                `StructuredTool.from_function`. When set, the node runs an
+                internal tool-call loop (capped by `max_tool_iterations`).
+                Cannot be combined with multi-field structured `writes`.
             max_tool_iterations: Safety cap on the internal tool-call loop; a
                 model that keeps requesting tools beyond this raises RuntimeError.
             input_field: State key to read the message history from.
@@ -67,7 +101,8 @@ class AgentNode(LLMNode):
                 (e.g. "low"/"medium"/"high" on gpt-5.x). Passed as a per-call
                 kwarg to the LLM. (DecisionNode does not expose this — reasoning
                 effort conflicts with structured output on current OpenAI models.)
-            cache_ttl/retry: see Node — node-level caching/retry.
+            cache_ttl: see [Node][pttai.node.Node] — node-level result caching.
+            retry: see [Node][pttai.node.Node] — node-level retry on exception.
         """
         super().__init__(name=name, llm=llm, node_prompt=node_prompt, tools=None,
                          max_tool_iterations=max_tool_iterations,
@@ -101,15 +136,15 @@ class AgentNode(LLMNode):
             self.llm = self.llm.bind_tools(self.tools)
 
     def _is_structured(self, scalar_writes) -> bool:
-        """Whether this node uses structured/typed output for ``scalar_writes``.
+        """Whether this node uses structured/typed output for `scalar_writes`.
 
         Two or more scalar keys always go structured (today's rule). A dict-form
-        ``writes`` ("typed" mode) goes structured even for a single key; a
+        `writes` ("typed" mode) goes structured even for a single key; a
         list-form single scalar key keeps the .content-write behavior.
         """
         return len(scalar_writes) >= 2 or (self._writes_typed and len(scalar_writes) >= 1)
 
-    def __call__(self, state):
+    def __call__(self, state: dict) -> dict:
         """
         Process the current state and generate a response.
 

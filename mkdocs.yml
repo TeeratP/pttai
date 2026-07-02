@@ -34,6 +34,19 @@ theme:
 exclude_docs: |
   project.md
 
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            merge_init_into_class: true
+            show_root_heading: true
+            show_source: false
+            separate_signature: true
+            show_signature_annotations: true
+
 markdown_extensions:
   - admonition
   - attr_list
@@ -56,4 +69,8 @@ nav:
   - Examples:
       - Basics: examples/basics.md
       - Architectures: examples/architectures.md
-  - API notes: api-notes.md
+  - API Reference:
+      - Graph: api/graph.md
+      - Nodes: api/nodes.md
+      - State: api/state.md
+      - Advanced: api/advanced.md

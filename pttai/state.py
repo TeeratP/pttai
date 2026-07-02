@@ -1,5 +1,14 @@
-"""
-State management for the Agentic Framework.
+"""Default state schema and channel reducers for pttai.
+
+Defines `AgenticState`, the `TypedDict` of reduced channels every graph uses
+unless you pass your own `state=`: `messages` (the conversation, via LangGraph's
+`add_messages`), `log` (per-node trace lines, concatenated), and `token`
+(per-model usage totals). The reducers are the merge functions that make
+parallel branches, subgraph composition, and checkpointing correct rather than
+racy — `merge_token_usage` deep-sums usage across every LLM call, and
+`accumulate` collects one value per parallel writer into a list (used for
+auto-registered map-reduce collection channels). `RESERVED` lists the
+framework-managed channels a user schema/invoke must not clobber.
 """
 
 import operator
@@ -18,8 +27,8 @@ RESERVED = {"messages", "log", "token"}
 
 
 def _deep_sum(a: dict, b: dict) -> dict:
-    """Recursively add ``b`` into ``a``: numeric fields are summed, nested dicts
-    (e.g. ``input_token_details``) are deep-summed, other values take ``b``."""
+    """Recursively add `b` into `a`: numeric fields are summed, nested dicts
+    (e.g. `input_token_details`) are deep-summed, other values take `b`."""
     out = dict(a)
     for k, v in b.items():
         cur = out.get(k)
@@ -33,12 +42,12 @@ def _deep_sum(a: dict, b: dict) -> dict:
 
 
 def merge_token_usage(left, right) -> dict:
-    """Reducer for the ``token`` channel: merge two ``{model_name: usage}`` dicts.
+    """Reducer for the `token` channel: merge two `{model_name: usage}` dicts.
 
     Union by model key; when the same model appears on both sides its usage
-    breakdown is deep-summed (top-level token counts AND nested ``*_details``).
+    breakdown is deep-summed (top-level token counts AND nested `*_details`).
     Associative/commutative so parallel fan-in merges cleanly. A missing/None
-    ``left`` (the first update) is treated as ``{}``.
+    `left` (the first update) is treated as `{}`.
     """
     merged = dict(left or {})
     for model, usage in (right or {}).items():

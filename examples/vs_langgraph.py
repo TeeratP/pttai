@@ -30,7 +30,10 @@ counted — see the comment block at the bottom of this file):
 
 import sys
 
+from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+
+load_dotenv()
 
 QUESTION = "What is 21 + 21, then times 3?"
 
@@ -55,7 +58,7 @@ def pttai_version() -> str:
 
     llm = ChatOpenAI(model="gpt-5.4-nano")
 
-    # --- graph code (2 lines) ---
+    # --- graph code (3 lines) ---
     agent = AgentNode(name="agent", llm=llm, tools=[add, multiply])
     graph = AgenticGraph(start_node=agent, end_nodes={agent})  # schema-free
 
@@ -105,7 +108,7 @@ if __name__ == "__main__":
 
 # -- Honest line count (graph-building code only) ---------------------------
 #
-# pttai_version() graph code — 2 lines:
+# pttai_version() graph code — 3 lines:
 #     agent = AgentNode(name="agent", llm=llm, tools=[add, multiply])
 #     graph = AgenticGraph(start_node=agent, end_nodes={agent})
 #

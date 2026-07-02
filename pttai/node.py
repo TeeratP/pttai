@@ -1,5 +1,12 @@
-"""
-Base node implementation for the Agentic Framework.
+"""Node base class and the `>`-DSL wiring primitives.
+
+Home of `Node` — the abstract base every node type subclasses — plus the objects
+the wiring operators return: `Branch` (from `a > [b, c]` and `fanout(...)`, whose
+own `>` wires the fan-in/join) and `Spread` (from `worker.map(field)`, the
+map-reduce wrapper). Wiring is deferred: `a > b` just records `.children`
+pointers in memory; `AgenticGraph` walks them at construction and emits the
+actual LangGraph edges. This module also holds `_infer_name`, the best-effort
+inference of a node's name from its assignment target, and the `fanout` helper.
 """
 
 import ast
@@ -71,8 +78,8 @@ class Node(ABC):
                 node's name is inferred from the assignment target at the call
                 site (`reviewer = AgentNode()` -> "reviewer"); the graph resolves
                 it (with collision suffixing) at build time. An explicit name
-                always wins. ``_name_base`` keeps the unresolved base so a rebuild
-                is idempotent; ``_auto_name`` flags an inferred/numbered name.
+                always wins. `_name_base` keeps the unresolved base so a rebuild
+                is idempotent; `_auto_name` flags an inferred/numbered name.
             llm: Language model instance to be used by this node
             node_prompt: System prompt/instructions for the language model
             cache_ttl: Seconds to cache this node's result (LangGraph CachePolicy).
@@ -109,18 +116,18 @@ class Node(ABC):
         """
         pass
     
-    def __gt__(self, other):
+    def __gt__(self, other: "Node | list | Branch") -> "Node | Branch":
         """
         Wire this node forward to one child, or fan out to several.
 
         Args:
             other: A single node (sequential edge), a list of nodes, or a
-                ``Branch`` (parallel fan-out). Branch members may be chain
-                *tails* (e.g. ``b>c>d``); each fans out from its chain *head*.
+                `Branch` (parallel fan-out). Branch members may be chain
+                *tails* (e.g. `b>c>d`); each fans out from its chain *head*.
 
         Returns:
-            The single child (chain building), or the ``Branch`` whose own
-            ``>`` wires the fan-in/join.
+            The single child (chain building), or the `Branch` whose own
+            `>` wires the fan-in/join.
         """
         if isinstance(other, Branch):       # a > fanout(b>c, d)
             self.children = [t._head for t in other.tails]   # a -> each branch HEAD
@@ -133,23 +140,32 @@ class Node(ABC):
         return other
 
     def map(self, field):
-        """Run this node once per item of ``state[field]`` in parallel (map-reduce).
+        """Run this node once per item of `state[field]` in parallel (map-reduce).
 
-        Use as ``a > worker.map("items") > collector``: the worker fans out via
-        LangGraph ``Send`` over the items, then all replies join into the
+        Use as `a > worker.map("items") > collector`: the worker fans out via
+        LangGraph `Send` over the items, then all replies join into the
         collector (which runs once, after).
 
         A mapped worker's scalar write key becomes a LIST channel — one entry per
         item (a 1-element list for a single item; arrival order, not input order)
-        — and ``state=`` is not required: the channel and its accumulate reducer
+        — and `state=` is not required: the channel and its accumulate reducer
         are inferred at build time.
 
         v1 limitation: workers return their REPLY only, not the source item (the
-        ``Send`` payload is the worker's input, never a state update).
+        `Send` payload is the worker's input, never a state update).
         """
         return Spread(self, field)
 
     def __lt__(self, other):
+        """Fan-in join: wire a list of branch tails INTO this node.
+
+        This is the reflected half of `[tails] > self`. Python evaluates
+        `x > [a, b] > self` as a chained comparison `(x > [a,b]) and ([a,b] > self)`;
+        the second term is `list.__gt__(self)`, which returns `NotImplemented`,
+        so Python falls back to `self.__lt__([a, b])` — landing here. It points
+        every tail's child at `self` and marks `self` a join, mirroring
+        `Branch.__gt__`. Only `[..] > node` is supported (not `[..] > [..]`).
+        """
         # Reflected from `[tails] > self` (Python chained comparison
         # `x > [a,b] > self` calls list.__gt__ -> NotImplemented -> self.__lt__(list)).
         # Wires the branch tails as a fan-in/join into self. Mirrors Branch.__gt__.
@@ -168,10 +184,21 @@ class Branch:
     """Group returned by `node > [a, b, ...]`; its members are branch *tails*,
     and its `>` wires the fan-in/join."""
 
-    def __init__(self, tails):
+    def __init__(self, tails: list) -> None:
+        """Hold the fan-out branches (`tails`) so the next `>` can join them.
+
+        Args:
+            tails: The branch nodes (each may be a chain tail such as `b > c`).
+        """
         self.tails = tails
 
     def __gt__(self, join):
+        """Wire every branch tail into `join` (the fan-in).
+
+        Points each tail's child at `join` and marks `join` a deferred join so it
+        runs once, after all branches complete (see `graph.py`). Returns `join`
+        so the chain continues.
+        """
         for t in self.tails:
             t.children = [join]      # tail -> join
         join._is_join = True   # marks it for defer (see graph.py)
@@ -179,12 +206,18 @@ class Branch:
 
 
 class Spread:
-    """Map-reduce wrapper: ``worker.map(field)`` fans ``worker`` across
-    ``state[field]`` via LangGraph ``Send``, joining into the collector wired by
-    ``> collector``. Built specially in ``AgenticGraph._build_graph`` — a Spread
+    """Map-reduce wrapper: `worker.map(field)` fans `worker` across
+    `state[field]` via LangGraph `Send`, joining into the collector wired by
+    `> collector`. Built specially in `AgenticGraph._build_graph` — a Spread
     has no graph identity of its own; the worker is the real node."""
 
-    def __init__(self, worker, field):
+    def __init__(self, worker: "Node", field: str) -> None:
+        """Capture the map-reduce intent from `worker.map(field)`.
+
+        Args:
+            worker: The node to run once per item of `state[field]`.
+            field: The state key whose items are fanned out (one `Send` each).
+        """
         self.worker = worker
         self.field = field
         self.collector = None
@@ -192,6 +225,11 @@ class Spread:
         self._head = self       # so `a > spread` (single path) can set _head
 
     def __gt__(self, collector):
+        """Wire the map's fan-in: all worker replies join into `collector`.
+
+        Records `collector` and marks it a deferred join so it runs exactly once,
+        after every `Send`-fanned worker has finished. Returns `collector`.
+        """
         self.collector = collector
         self.children = [collector]
         collector._is_join = True   # collector defers (runs once after all sends)
@@ -202,5 +240,23 @@ def fanout(*tails):
     """Explicit parallel fan-out: `a > fanout(b, c) > d` is equivalent to
     `a > [b, c] > d`. Returns a Branch (a single object), so it composes in a
     chained `>` without relying on list semantics. Members may be chain tails
-    (e.g. `fanout(b>c>d, e>f)`)."""
+    (e.g. `fanout(b>c>d, e>f)`).
+
+    The branches run concurrently; the join node (`d`) is deferred and runs once,
+    after every branch finishes.
+
+    Examples:
+        ```python
+        from pttai import AgentNode, AgenticGraph, fanout
+
+        start = AgentNode(llm=llm, node_prompt="Restate the task.")
+        pros = AgentNode(llm=llm, node_prompt="List the pros.")
+        cons = AgentNode(llm=llm, node_prompt="List the cons.")
+        combine = AgentNode(llm=llm, node_prompt="Weigh the pros and cons.")
+
+        start > fanout(pros, cons) > combine
+
+        graph = AgenticGraph(start_node=start, end_nodes={combine})
+        ```
+    """
     return Branch(list(tails))

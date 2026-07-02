@@ -34,12 +34,17 @@ opening a PR**, and add tests for any new behavior.
 ```bash
 pip install -e ".[docs]"
 mkdocs serve            # live preview at http://127.0.0.1:8000
-mkdocs build --strict   # what CI/the docs deploy runs — must pass with no warnings
+mkdocs build --strict   # what CI runs on docs changes — must pass with no warnings
 ```
 
 New pages must be added to the `nav:` in `mkdocs.yml`, and `mkdocs build
 --strict` must pass with no warnings (broken links and orphaned pages fail the
 build).
+
+> **Maintenance note:** the site uses Material for MkDocs, which entered
+> maintenance mode in early 2026; it still builds fine and is the right choice
+> for this site today. The successor, Zensical, reads the existing
+> `mkdocs.yml` and is the later migration target.
 
 ## Submitting a pull request
 
@@ -60,8 +65,8 @@ build).
   in `pttai/nodes/__init__.py`. Add an `isinstance` branch in
   `AgenticGraph._build_graph` only if the node needs non-default edge handling.
 - Keep the LLM injected per-node (`llm=`), and preserve the compile-time
-  validator's guarantees — if you add a node that reads/writes state, teach
-  `_node_io` about it so the dataflow analysis stays sound.
+  validator's checks — if you add a node that reads/writes state, teach
+  `_node_io` about it so the dataflow analysis stays accurate.
 
 See [`CLAUDE.md`](CLAUDE.md) for the architecture overview and
 [`docs/`](docs/) for the user-facing documentation.

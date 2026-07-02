@@ -1,5 +1,11 @@
-"""
-Decision node implementation for the Agentic Framework.
+"""LLM-driven routing nodes for pttai.
+
+Defines the routing machinery shared by every branching node: `Choice` (a named
+branch you wire with `decision["label"] > handler`), the `RouterNode` mixin
+(owns the choice list, the `route()` conditional-edge callback, and the wiring
+operators), and `DecisionNode` — the LLM router that returns a constrained
+`Literal[*choices]` structured output so the model can only pick a valid branch.
+`ConditionNode` (the code-only sibling) reuses `RouterNode` from its own module.
 """
 
 from typing import Any, List, Literal, Optional
@@ -49,18 +55,18 @@ class Choice:
 class RouterNode:
     """
     Routing mixin for nodes that pick the next node instead of appending to the
-    conversation. Owns the ``Choice`` list, ``route()``, the ``node["choice"] >
-    handler`` wiring (``__getitem__``), and the ``__gt__`` override that forbids a
+    conversation. Owns the `Choice` list, `route()`, the `node["choice"] >
+    handler` wiring (`__getitem__`), and the `__gt__` override that forbids a
     direct edge off the router.
 
     It is a MIXIN (not a Node subclass): concrete routers combine it with their
-    real base — ``ConditionNode(RouterNode, Node)`` and
-    ``DecisionNode(RouterNode, LLMNode)`` — and call ``_setup_choices`` explicitly
-    from their own ``__init__``. Subclasses decide HOW the label is chosen
-    (``DecisionNode`` via an LLM, ``ConditionNode`` via a Python callable) and
-    both write it to a dedicated per-node ``decision_{name}`` state field (read by
-    ``route()``), never into ``messages``. Because ``RouterNode`` stays in the MRO of both,
-    ``graph.py``'s ``isinstance(node, RouterNode)`` conditional-edge handling
+    real base — `ConditionNode(RouterNode, Node)` and
+    `DecisionNode(RouterNode, LLMNode)` — and call `_setup_choices` explicitly
+    from their own `__init__`. Subclasses decide HOW the label is chosen
+    (`DecisionNode` via an LLM, `ConditionNode` via a Python callable) and
+    both write it to a dedicated per-node `decision_{name}` state field (read by
+    `route()`), never into `messages`. Because `RouterNode` stays in the MRO of both,
+    `graph.py`'s `isinstance(node, RouterNode)` conditional-edge handling
     treats them identically.
     """
 
@@ -68,6 +74,13 @@ class RouterNode:
                        choices: List[str],
                        input_field: str = "messages",
                        reads: Optional[List[str]] = None) -> None:
+        """Initialize the routing state shared by every router subclass.
+
+        Concrete routers call this from their own `__init__` (RouterNode is a
+        mixin, not a base with its own `__init__`). Stores the choice-name list,
+        the read config (`reads` wins over `input_field`), and builds one
+        `Choice` object per name so `node["label"] > handler` can wire it.
+        """
         assert choices, "a router requires choices"
         self.choices_name: List[str] = list(choices)
         self.input_field = input_field
@@ -75,7 +88,14 @@ class RouterNode:
         self.choices = [Choice(name) for name in self.choices_name]
 
     def route(self, state):
+        """Conditional-edge callback: map the chosen label to the next node name.
 
+        Registered with LangGraph via `add_conditional_edges(name, route, ...)`.
+        Reads the label this router wrote to `state["decision_{name}"]`, finds
+        the matching `Choice`, and returns the name of the node wired to it —
+        which LangGraph uses to pick the outgoing edge. Raises `ValueError` if
+        the label is unknown or its choice was never wired to a node.
+        """
         decision_choice = state[f"decision_{self.name}"]
         for choice in self.choices:
             if decision_choice == choice.name:
@@ -127,9 +147,30 @@ class DecisionNode(RouterNode, LLMNode):
     determining the next node in the graph based on the choice made.
 
     Tool use is two-phase so tools NEVER share a call with structured output: the
-    base model is bound as a separate ``_tool_llm`` (used to gather context via
-    the shared tool-call loop) and ``_route_llm`` is the structured-output model
-    that returns the forced ``choice``.
+    base model is bound as a separate `_tool_llm` (used to gather context via
+    the shared tool-call loop) and `_route_llm` is the structured-output model
+    that returns the forced `choice`.
+
+    Wire it by indexing a choice — `decision["positive"] > handler`; a bare
+    `decision > x` raises.
+
+    Examples:
+        ```python
+        from pttai import AgentNode, DecisionNode, AgenticGraph
+
+        classify = DecisionNode(
+            llm=llm,
+            node_prompt="Classify the sentiment of the message.",
+            choices=["positive", "negative"],
+        )
+        praise = AgentNode(llm=llm, node_prompt="Thank the happy customer.")
+        apologize = AgentNode(llm=llm, node_prompt="Apologize to the unhappy customer.")
+
+        classify["positive"] > praise
+        classify["negative"] > apologize
+
+        graph = AgenticGraph(start_node=classify, end_nodes={praise, apologize})
+        ```
     """
 
     def __init__(self,
@@ -160,7 +201,8 @@ class DecisionNode(RouterNode, LLMNode):
                 generalization of input_field). Reads are dispatched by VALUE
                 type just like AgentNode — message lists become history, scalars
                 are interpolated into node_prompt. Use reads OR input_field.
-            cache_ttl/retry: see Node — node-level caching/retry.
+            cache_ttl: see [Node][pttai.node.Node] — node-level result caching.
+            retry: see [Node][pttai.node.Node] — node-level retry on exception.
 
         Raises:
             AssertionError: If node_prompt or choices is empty
@@ -181,7 +223,7 @@ class DecisionNode(RouterNode, LLMNode):
         self._route_llm = self.llm.with_structured_output(OutputModel)
         self._tool_llm = self.llm.bind_tools(self.tools) if self.tools else None
 
-    def __call__(self, state):
+    def __call__(self, state: dict) -> dict:
         """
         Process the current state and make a decision.
 

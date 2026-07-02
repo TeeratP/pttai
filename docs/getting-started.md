@@ -3,9 +3,20 @@
 ## Install
 
 ```bash
-pip install pttai              # core
-pip install "pttai[openai]"    # + langchain-openai & python-dotenv (for live model calls)
+pip install pttai
+
+# pttai works with ANY LangChain chat model — install the provider you want:
+pip install langchain-openai python-dotenv   # OpenAI (used in the examples below)
+pip install langchain-anthropic              # Anthropic
+pip install langchain-google-genai           # Google
 ```
+
+Nodes take the model via `llm=` — pass any LangChain `BaseChatModel`. (A
+`pttai[openai]` extra exists as a shortcut for `langchain-openai` +
+`python-dotenv`, but it's convenience only, not a requirement.) Note:
+`reasoning_effort` and structured-output routing are tuned to OpenAI gpt-5.x
+semantics; core wiring, the tool-call loop, and routing are otherwise
+provider-neutral.
 
 Or from source (for development):
 
@@ -22,7 +33,8 @@ Pydantic 2). Other extras:
 - `[dev]` — `pytest`
 - `[docs]` — `mkdocs-material` (this site)
 
-For live model calls, set `OPENAI_API_KEY` in your environment or a `.env` file.
+For live model calls, set `OPENAI_API_KEY` (or your provider's key) in your
+environment or a `.env` file.
 
 ## pttai vs. raw LangGraph — 3 lines vs. 10
 
@@ -30,11 +42,25 @@ The same tool-using agent — an LLM that calls `add` / `multiply` in a loop unt
 it has the answer. Ask it *"What is 21 + 21, then times 3?"* and both print
 **126**. The only thing that differs is how much graph plumbing you write.
 
+Shared setup for both versions — the model and the two tools:
+
+```python
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-5.4-nano")
+# swap for any LangChain chat model, e.g.:
+#   from langchain_anthropic import ChatAnthropic;              llm = ChatAnthropic(model="claude-opus-4-8")
+#   from langchain_google_genai import ChatGoogleGenerativeAI;  llm = ChatGoogleGenerativeAI(model="gemini-...")
+
+def add(a: int, b: int) -> int:      return a + b
+def multiply(a: int, b: int) -> int: return a * b
+```
+
 ```python
 # pttai
 from pttai import AgentNode, AgenticGraph
 
-agent = AgentNode(name="agent", llm=llm, tools=[add, multiply])
+agent = AgentNode(llm=llm, tools=[add, multiply])   # name inferred from the variable -> "agent"
 graph = AgenticGraph(start_node=agent, end_nodes={agent})   # schema-free
 
 graph.invoke(message="What is 21 + 21, then times 3?")      # -> 126
@@ -78,7 +104,7 @@ ruling. The whole thing is the one wiring line in the middle.
 from pttai import AgentNode, AgenticGraph, fanout
 from langchain_openai import ChatOpenAI
 
-llm = ChatOpenAI(model="gpt-5.4-nano")
+llm = ChatOpenAI(model="gpt-5.4-nano")   # swap for any LangChain chat model — see Install above
 
 frame = AgentNode(name="frame", llm=llm, node_prompt=(
     "Restate the user's question as ONE sharp, concrete decision. One sentence."))

@@ -8,10 +8,19 @@ retriever tool, and the compile-time validator.
 ## 1. Install (1 min)
 
 ```bash
-pip install pttai              # core
-pip install "pttai[openai]"    # + langchain-openai & python-dotenv (for live model calls)
+pip install pttai
+
+# pttai works with ANY LangChain chat model — install the provider you want:
+pip install langchain-openai python-dotenv   # OpenAI (used in this walkthrough)
+pip install langchain-anthropic              # Anthropic
+pip install langchain-google-genai           # Google
+
 export OPENAI_API_KEY=sk-...   # or put it in a .env file
 ```
+
+Nodes take the model via `llm=` — pass any LangChain `BaseChatModel`. (A
+`pttai[openai]` extra exists as a shortcut for `langchain-openai` +
+`python-dotenv`, but it's convenience only, not a requirement.)
 
 Or from source for development:
 
@@ -72,6 +81,9 @@ from langchain_openai import ChatOpenAI
 from pttai import AgentNode, AgenticGraph
 
 llm = ChatOpenAI(model="gpt-5.4-nano")
+# swap for any LangChain chat model, e.g.:
+#   from langchain_anthropic import ChatAnthropic;              llm = ChatAnthropic(model="claude-opus-4-8")
+#   from langchain_google_genai import ChatGoogleGenerativeAI;  llm = ChatGoogleGenerativeAI(model="gemini-...")
 
 rag = AgentNode(
     name="rag",
@@ -102,10 +114,10 @@ graph.summary()
 ```
 AgenticGraph 'graph'   state=AgenticState
 initial: log, messages, token
-------------------------------------------------
+-----------------------------------------------------------
 node  type       reads     writes        available
-rag   AgentNode  messages  log,messages  log,messages
-------------------------------------------------
+rag   AgentNode  messages  log,messages  log,messages,token
+-----------------------------------------------------------
 1 nodes · 0 errors · 0 warning(s)
 ```
 

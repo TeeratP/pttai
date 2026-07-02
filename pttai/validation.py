@@ -1,23 +1,23 @@
 """Compile-time state-availability validation for AgenticGraph.
 
-The "Keras compiler" promise: when a graph is built we statically verify that
+The core promise: when a graph is built we statically verify that
 every state key a node READS is produced upstream (or present in the initial
 schema), and that every key it WRITES is declared in the schema. The build
 FAILS on a hard error.
 
 The core is a forward dataflow over a tagged edge list (recorded during the
-build): ``may`` (any-path availability, a monotone-increasing union fixpoint)
-and ``must`` (guaranteed-on-all-paths, a monotone-decreasing fixpoint that
+build): `may` (any-path availability, a monotone-increasing union fixpoint)
+and `must` (guaranteed-on-all-paths, a monotone-decreasing fixpoint that
 UNIONs across AND-parallel joins and INTERSECTs within an exclusive
-DecisionNode choice-group). Hard errors come from ``may``; ``must`` only drives
+DecisionNode choice-group). Hard errors come from `may`; `must` only drives
 warnings. Loop-back edges are excluded when computing incoming availability, so
 loop-carried reads (a key produced only by a downstream node that cycles back)
 are caught as read-before-write on the first iteration rather than silently
 credited.
 
 This is a may/must dataflow analysis, not a soundness proof. It reasons over
-DECLARED node ``reads``/``writes`` and the graph's edges — it does NOT read the
-code inside ``ConditionNode`` predicates (arbitrary lambdas), tool bodies, or
+DECLARED node `reads`/`writes` and the graph's edges — it does NOT read the
+code inside `ConditionNode` predicates (arbitrary lambdas), tool bodies, or
 other custom callables, so a state key touched only inside such a callable is
 invisible to it unless the node declares it. Within those limits it flags
 read-before-write and undeclared reads/writes; no false positives have been
@@ -50,7 +50,7 @@ class Issue:
 
 
 class ValidationReport:
-    """Collected issues for one graph; ``.ok`` is True when there are no errors."""
+    """Collected issues for one graph; `.ok` is True when there are no errors."""
 
     def __init__(self, issues, graph_name: str = "graph"):
         self.issues = list(issues)
@@ -81,13 +81,13 @@ def schema_keys(state) -> set:
 
 
 def reduced_keys(state) -> set:
-    """Keys whose annotation is ``Annotated[..., <reducer>]`` (i.e. have a reducer)."""
+    """Keys whose annotation is `Annotated[..., <reducer>]` (i.e. have a reducer)."""
     hints = get_type_hints(state, include_extras=True)
     return {k for k, v in hints.items() if hasattr(v, "__metadata__")}
 
 
 def _back_edges(edges):
-    """The set of loop-back edges ``(src, dst)`` — edges that close a cycle.
+    """The set of loop-back edges `(src, dst)` — edges that close a cycle.
 
     Detected by an iterative three-colour DFS from START: an edge into a node
     still on the current DFS path (GRAY / on-stack) closes a cycle, so it is a
@@ -137,26 +137,26 @@ def _back_edges(edges):
     return back
 
 
-def compute_availability(initial, edges, writes, send_workers=None, spread_collectors=None):
+def compute_availability(initial: set, edges: list, writes: dict, send_workers: "dict | None" = None, spread_collectors: "dict | None" = None) -> tuple:
     """Forward dataflow fixpoint over the tagged edge list.
 
     Args:
         initial: the INPUT keys — keys guaranteed available at invoke (reduced
-            channels, schema keys no node writes, and user-declared ``inputs``).
+            channels, schema keys no node writes, and user-declared `inputs`).
             Seeding with these (not all schema keys) is what makes the may/must
             analysis catch read-before-written on COMPUTED keys.
-        edges: list of ``(src, dst, kind)`` where kind is "seq" (AND,
+        edges: list of `(src, dst, kind)` where kind is "seq" (AND,
             unconditional) or "cond" (OR, exclusive — DecisionNode choices and
             the Send fan-out).
-        writes: ``{node_name: set(keys_written)}``.
-        send_workers: ``{worker_name: forwarded_keys}`` — a Send worker sees ONLY
+        writes: `{node_name: set(keys_written)}`.
+        send_workers: `{worker_name: forwarded_keys}` — a Send worker sees ONLY
             the forwarded payload, not global state.
-        spread_collectors: ``{collector_name: (spread_pred_name, worker_name)}`` —
+        spread_collectors: `{collector_name: (spread_pred_name, worker_name)}` —
             a collector's input is the state just before the spread plus the
             worker's writes.
 
     Returns:
-        ``(may, must)`` dicts: ``{node_name: set(available_keys)}``.
+        `(may, must)` dicts: `{node_name: set(available_keys)}`.
     """
     send_workers = send_workers or {}
     spread_collectors = spread_collectors or {}
@@ -251,20 +251,20 @@ def compute_availability(initial, edges, writes, send_workers=None, spread_colle
     return may, must
 
 
-def check_placeholders(name, node_prompt, scalar_reads, placeholders):
-    """Cross-check a node's scalar reads against its ``node_prompt`` placeholders.
+def check_placeholders(name, node_prompt, scalar_reads: set, placeholders: set):
+    """Cross-check a node's scalar reads against its `node_prompt` placeholders.
 
     A scalar read exists to be interpolated into the prompt. With no scalar
-    reads the node skips ``.format_map`` entirely (brace-heavy prompts pass
+    reads the node skips `.format_map` entirely (brace-heavy prompts pass
     untouched), so this check is skipped. Otherwise:
-      - Check A (hard error): every ``{name}`` placeholder must be a declared
-        scalar read — an undeclared one is a guaranteed runtime ``KeyError``.
+      - Check A (hard error): every `{name}` placeholder must be a declared
+        scalar read — an undeclared one is a guaranteed runtime `KeyError`.
       - Check B (warning): every scalar read should appear as a placeholder —
         an uninterpolated scalar read is a dead read.
 
     Args:
         scalar_reads: the node's reads that are NOT message-history channels.
-        placeholders: ``{name}`` field names parsed from ``node_prompt``.
+        placeholders: `{name}` field names parsed from `node_prompt`.
     """
     if not scalar_reads:
         return []
@@ -283,16 +283,16 @@ def check_placeholders(name, node_prompt, scalar_reads, placeholders):
     return issues
 
 
-def collect_issues(graph_name, schema, reduced, node_io, may, must,
-                   concurrency_pairs, decision_choices, end_with_children,
-                   unreachable):
+def collect_issues(graph_name, schema, reduced, node_io: dict, may, must,
+                   concurrency_pairs: set, decision_choices: dict, end_with_children: set,
+                   unreachable: set):
     """Run all checks and return a list of Issues. See module docstring / spec.
 
     Args:
-        node_io: ``{name: (reads, writes)}`` for every real node.
+        node_io: `{name: (reads, writes)}` for every real node.
         concurrency_pairs: set of frozenset({x, y}) node-name pairs that run in
             parallel (AND-parallel branches).
-        decision_choices: ``{decision_name: [(choice_name, has_child_bool)]}``.
+        decision_choices: `{decision_name: [(choice_name, has_child_bool)]}`.
         end_with_children: names of declared end nodes that still have children.
         unreachable: names of nodes not reachable from START.
     """

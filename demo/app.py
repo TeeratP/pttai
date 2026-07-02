@@ -583,7 +583,7 @@ graph = AgenticGraph(start_node=triage, end_nodes={bug, feature, question})
 ''',
 }
 
-# One BROKEN preset per bug class in eval/bugbench/corpus.py. Each fails the
+# One BROKEN preset per validator bug class. Each fails the
 # build and paints the offending node red.
 BROKEN_PRESETS = {
     "read-before-write": '''\

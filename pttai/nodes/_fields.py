@@ -40,11 +40,11 @@ def partition_reads(state, keys):
 
 
 def prompt_placeholders(prompt: str) -> set:
-    """The ``{name}`` field names referenced in ``prompt`` (``str.format`` style).
+    """The `{name}` field names referenced in `prompt` (`str.format` style).
 
-    Uses ``string.Formatter().parse`` so escaped braces (``{{`` / ``}}``) are
-    ignored and only the base name of dotted/indexed fields (``{a.b}``/``{a[0]}``)
-    is returned. Positional/empty fields (``{}``/``{0}``) are skipped.
+    Uses `string.Formatter().parse` so escaped braces (`{{` / `}}`) are
+    ignored and only the base name of dotted/indexed fields (`{a.b}`/`{a[0]}`)
+    is returned. Positional/empty fields (`{}`/`{0}`) are skipped.
     """
     names = set()
     for _, field, _, _ in string.Formatter().parse(prompt):
@@ -58,7 +58,7 @@ def prompt_placeholders(prompt: str) -> set:
 
 def is_history_annotation(annotation) -> bool:
     """True if a state schema annotation is a message-list/history channel
-    (reducer is ``add_messages``, or the type is ``list[AnyMessage|BaseMessage]``).
+    (reducer is `add_messages`, or the type is `list[AnyMessage|BaseMessage]`).
     Such reads become conversation history and are never interpolated."""
     meta = getattr(annotation, "__metadata__", ())
     if any(m is add_messages for m in meta):

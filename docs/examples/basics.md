@@ -34,6 +34,7 @@ for f in examples/basics/[0-9]*.py; do python "$f"; done    # all of them
 | [`10_graph_composition.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/10_graph_composition.py) | An `AgenticGraph` wired in as a node in a bigger graph |
 | [`11_node_policies.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/11_node_policies.py) | `cache_ttl` / `retry` / `reasoning_effort` per-node knobs |
 | [`12_validation_summary.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/12_validation_summary.py) | `graph.validate()` + `graph.summary()` introspection |
+| [`13_token_and_log.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/13_token_and_log.py) | `state['token']` / `state['log']` — automatic token accounting + per-node trace |
 
 None of the examples require an API key; real OpenAI is used automatically if
 `OPENAI_API_KEY` is set. Once you know the primitives, reach for the

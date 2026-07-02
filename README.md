@@ -34,6 +34,9 @@ Shared setup for both versions — the model and the two tools:
 from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(model="gpt-5.4-nano")
+# swap for any LangChain chat model, e.g.:
+#   from langchain_anthropic import ChatAnthropic;              llm = ChatAnthropic(model="claude-opus-4-8")
+#   from langchain_google_genai import ChatGoogleGenerativeAI;  llm = ChatGoogleGenerativeAI(model="gemini-...")
 
 def add(a: int, b: int) -> int:      return a + b
 def multiply(a: int, b: int) -> int: return a * b
@@ -123,9 +126,20 @@ build-time validator output side by side — no API key needed. See [`demo/`](ht
 ## Install
 
 ```bash
-pip install pttai              # core
-pip install "pttai[openai]"    # + langchain-openai & python-dotenv (for live model calls)
+pip install pttai
+
+# pttai works with ANY LangChain chat model — install the provider you want:
+pip install langchain-openai python-dotenv   # OpenAI (used in the examples below)
+pip install langchain-anthropic              # Anthropic
+pip install langchain-google-genai           # Google
 ```
+
+Nodes take the model via `llm=` — pass any LangChain `BaseChatModel`. (A
+`pttai[openai]` extra exists as a shortcut for `langchain-openai` +
+`python-dotenv`, but it's convenience only, not a requirement.) Note:
+`reasoning_effort` and structured-output routing are tuned to OpenAI gpt-5.x
+semantics; core wiring, the tool-call loop, and routing are otherwise
+provider-neutral.
 
 Or from source (for development):
 
@@ -137,8 +151,8 @@ pip install -e ".[openai,dev]"
 
 Requires **Python ≥ 3.10** (core deps: LangGraph ≥ 1.0, langchain-core ≥ 1.0,
 Pydantic 2). Other extras: `[rag]` (langchain-chroma for `ChromaRAG`), `[dev]`
-(pytest). For live model calls, set `OPENAI_API_KEY` in your environment or a
-`.env` file.
+(pytest). For live model calls, set `OPENAI_API_KEY` (or your provider's key)
+in your environment or a `.env` file.
 
 ## 30-second example: a multi-agent panel
 
@@ -151,7 +165,7 @@ ruling. The whole thing is the one wiring line at the bottom.
 from pttai import AgentNode, AgenticGraph, fanout
 from langchain_openai import ChatOpenAI
 
-llm = ChatOpenAI(model="gpt-5.4-nano")
+llm = ChatOpenAI(model="gpt-5.4-nano")   # swap for any LangChain chat model — see Install above
 
 # names are inferred from the variables (frame, optimist, ...) — no name= needed
 frame = AgentNode(llm=llm, node_prompt=(
@@ -319,8 +333,8 @@ Kept honest on purpose:
 - **Structured multi-write list fields are `str`-only.** `writes=["a", "b"]`
   produces one `str` field per key; use the dict form `writes={"a": int}` for
   native-typed structured output.
-- **Map workers don't echo their source item** and must output `messages` (the
-  default) — a non-message write would race N parallel workers on a plain key.
+- **Map workers don't echo their source item** — return only what you computed;
+  the item you mapped over doesn't need to appear in the worker's output.
 - **`[b, c] > [d, e]` isn't supported.** Two fan-outs chained directly is
   Python's element-wise list compare, not join wiring — insert a node between.
 - **Async is graph-level only.** `ainvoke`/`astream` run the sync nodes in
