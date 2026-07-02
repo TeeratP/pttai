@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pttai"
-version = "0.1.0"
-description = "Keras for LangGraph — parallel, typed agent graphs in Python, compiled to LangGraph"
+version = "0.1.1"
+description = "Pythonic Topology Tools for AI — a declarative >-DSL over LangGraph with a build-time dataflow validator, compiled to native LangGraph"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
