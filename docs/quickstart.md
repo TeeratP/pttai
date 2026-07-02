@@ -1,144 +1,132 @@
-# Quickstart: build + validate a RAG pipeline in 5 minutes
+# Quickstart
 
-This walkthrough builds a small **retrieval-augmented generation** agent, has
-pttai **validate** it at build time, then runs it. By the end you'll have seen
-the three things that make pttai worth using: the `>` wiring, `AgentNode` with a
-retriever tool, and the compile-time validator.
+This page takes you from install to a running multi-agent graph in a few
+minutes. It ends with the part that saves you real debugging time: the
+validator catching a bug before a single model call.
 
-## 1. Install (1 min)
+## 1. Install
 
 ```bash
 pip install pttai
 
-# pttai works with ANY LangChain chat model — install the provider you want:
-pip install langchain-openai python-dotenv   # OpenAI (used in this walkthrough)
+# pttai works with any LangChain chat model — install the provider you want:
+pip install langchain-openai python-dotenv   # OpenAI (used on this page)
 pip install langchain-anthropic              # Anthropic
 pip install langchain-google-genai           # Google
 
-export OPENAI_API_KEY=sk-...   # or put it in a .env file
+export OPENAI_API_KEY=sk-...   # or your provider's key, or a .env file
 ```
 
-Nodes take the model via `llm=` — pass any LangChain `BaseChatModel`. (A
-`pttai[openai]` extra exists as a shortcut for `langchain-openai` +
-`python-dotenv`, but it's convenience only, not a requirement.)
+Nodes take the model via `llm=` — pass any LangChain `BaseChatModel`. One
+caveat: `reasoning_effort` and structured-output routing are tuned to OpenAI
+gpt-5.x semantics; wiring, the tool-call loop, and routing are otherwise
+provider-neutral.
 
-Or from source for development:
+Requires Python ≥ 3.10. To work on pttai itself, clone the repo and
+`pip install -e ".[openai,dev]"` (extras: `[rag]` for `ChromaRAG`, `[docs]` for
+this site).
 
-```bash
-git clone https://github.com/TeeratP/pttai && cd pttai
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[openai]"
-```
+## 2. Hello, agent
 
-## 2. Wrap a retriever as a tool (1 min)
-
-pttai ships `make_retriever_tool`, which wraps **any** LangChain retriever
-(anything with `.invoke(query) -> docs`) as a tool an `AgentNode` can call. Here
-we use a tiny in-memory retriever so the example is self-contained — swap in
-Chroma, FAISS, or a managed vector store unchanged.
+Three lines make a complete graph: one node, one constructor, one invoke.
 
 ```python
-from langchain_core.documents import Document
-from langchain_core.retrievers import BaseRetriever
-from pttai.tools import make_retriever_tool
-
-DOCS = [
-    Document(page_content="pttai compiles a `>`-wired node graph to a LangGraph StateGraph."),
-    Document(page_content="AgenticGraph validates dataflow at build time and fails on read-before-write."),
-    Document(page_content="fanout(...) runs branches in parallel and joins once after all finish."),
-]
-
-class TinyRetriever(BaseRetriever):
-    def _get_relevant_documents(self, query, *, run_manager=None):
-        # naive keyword match — stand-in for a real vector store
-        return [d for d in DOCS if any(w in d.page_content.lower()
-                                       for w in query.lower().split())] or DOCS
-
-search = make_retriever_tool(
-    TinyRetriever(),
-    name="search_docs",
-    description="Search the pttai knowledge base for relevant context.",
-)
-```
-
-!!! tip "Using Chroma instead"
-    With the `[rag]` extra installed, use the bundled convenience wrapper:
-    ```python
-    from pttai.tools import ChromaRAG
-    rag = ChromaRAG(embeddings)          # any LangChain embeddings
-    rag.add_texts(["...", "..."])
-    search = rag.as_tool()               # same StructuredTool
-    ```
-
-## 3. Build the graph (1 min)
-
-A single `AgentNode` with the retriever tool bound is a complete RAG loop: the
-model decides when to search, reads the results, and answers. `AgenticGraph`
-compiles it — and runs the validator as it does.
-
-```python
+from pttai import AgentNode, AgenticGraph
 from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-5.4-nano")   # any LangChain chat model works
+
+hello = AgentNode(llm=llm, node_prompt="Answer in one concise paragraph.")
+graph = AgenticGraph(start_node=hello, end_nodes={hello})
+
+out = graph.invoke(message="What does a build-time graph validator buy me?")
+print(out["messages"][-1].content)
+```
+
+The node's name is inferred from the variable (`hello`), and the state schema
+is inferred too. Pass `tools=[...]` to give the node a built-in tool-call loop
+— see [Node types](node-types.md) for what each node can do.
+
+## 3. Fan out: a three-persona panel
+
+Now something raw wiring makes tedious: a question goes to `frame`, fans out to
+three personas that argue **concurrently**, and joins at `verdict`. The whole
+topology is the one wiring line near the bottom.
+
+```python
+from pttai import AgentNode, AgenticGraph, fanout
+
+frame = AgentNode(llm=llm, node_prompt=(
+    "Restate the user's question as ONE sharp, concrete decision. One sentence."))
+optimist = AgentNode(llm=llm, node_prompt=(
+    "Relentless optimist. Argue FOR the bold move — two strongest upsides."))
+skeptic = AgentNode(llm=llm, node_prompt=(
+    "Hard-nosed skeptic. Argue AGAINST — the two biggest risks."))
+pragmatist = AgentNode(llm=llm, node_prompt=(
+    "Pragmatist. Propose the smallest concrete next step that de-risks it."))
+verdict = AgentNode(llm=llm, node_prompt=(
+    "You are the chair. Weigh all three above into a balanced one-paragraph verdict."))
+
+frame > fanout(optimist, skeptic, pragmatist) > verdict   # parallel, then join
+
+panel = AgenticGraph(start_node=frame, end_nodes={verdict})
+
+out = panel.invoke(message="Should an early-stage SaaS rewrite its monolith into microservices?")
+print(out["messages"][-1].content)        # the verdict
+panel.summary()                           # the topology table
+print(out["token"])                       # per-model token totals
+```
+
+`fanout(...)` runs the three branches in parallel and defers the join, so
+`verdict` fires once after all three finish. `summary()` prints a topology
+table and `out["token"]` accumulates usage across every call — both covered in
+[State & observability](state.md). Full version:
+[`examples/panel.py`](https://github.com/TeeratP/pttai/blob/main/examples/panel.py).
+
+## 4. Break it — and let the validator tell you
+
+Wire a graph with a real dataflow bug: `early` reads a `summary` key that only
+`late`, downstream of it, produces.
+
+```python
 from pttai import AgentNode, AgenticGraph
 
-llm = ChatOpenAI(model="gpt-5.4-nano")
-# swap for any LangChain chat model, e.g.:
-#   from langchain_anthropic import ChatAnthropic;              llm = ChatAnthropic(model="claude-opus-4-8")
-#   from langchain_google_genai import ChatGoogleGenerativeAI;  llm = ChatGoogleGenerativeAI(model="gemini-...")
+early = AgentNode(llm=llm, reads=["summary"],
+                  node_prompt="Polish this summary: {summary}")
+late  = AgentNode(llm=llm, writes=["summary"],
+                  node_prompt="Summarize the conversation in two sentences.")
 
-rag = AgentNode(
-    name="rag",
-    llm=llm,
-    tools=[search],
-    node_prompt=(
-        "Answer the user's question. ALWAYS call search_docs first to ground "
-        "your answer in the knowledge base, then cite what you found."
-    ),
-)
-
-graph = AgenticGraph(start_node=rag, end_nodes={rag})   # schema-free; validates here
+early > late
+AgenticGraph(start_node=early, end_nodes={late})   # raises before any model call
 ```
 
-The `AgentNode` folds the model call, the tool execution, and the loop-back into
-one node — no `ToolNode`, no `tools_condition`, no manual edges.
+The constructor fails immediately, naming the node, the key, and the real
+producer:
 
-## 4. Validate before you spend a token (1 min)
+```
+pttai.validation.GraphValidationError: AgenticGraph 'graph': 1 error(s), 0 warning(s)
+  [error] early: reads computed key 'summary' but no upstream node produces it before this node (produced by: ['late'], none of which are upstream); available keys here: ['log', 'messages', 'token']
+```
 
-Validation already ran inside the constructor above (it raises
-`GraphValidationError` on a hard error). Inspect the topology and any warnings
-explicitly with `summary()`:
+Raw LangGraph compiles this graph and only fails at runtime, after `early` has
+already burned a model call. The fix is the wiring order — write before read:
 
 ```python
-graph.summary()
+late > early
+graph = AgenticGraph(start_node=late, end_nodes={early})   # builds cleanly
 ```
 
-```
-AgenticGraph 'graph'   state=AgenticState
-initial: log, messages, token
------------------------------------------------------------
-node  type       reads     writes        available
-rag   AgentNode  messages  log,messages  log,messages,token
------------------------------------------------------------
-1 nodes · 0 errors · 0 warning(s)
-```
+See [The validator](validator.md) for all seven bug classes it catches, each
+with its verbatim error message.
 
-To see the validator *catch* a bug, add a downstream node that reads a key
-nothing produces — the build fails immediately with a message naming the node
-and key (see the [validator page](validator.md) for every bug class it catches).
+## 5. Where to go next
 
-## 5. Run it
-
-```python
-out = graph.invoke(message="How does pttai handle parallel branches?")
-print(out["messages"][-1].content)   # grounded answer, citing the fanout doc
-print(out["token"])                  # per-model token usage for the whole run
-```
-
-## Where to go next
-
-- **[The validator](validator.md)** — every dataflow bug it catches, with the
-  verbatim error. This is the reason to build on pttai.
-- **[Node types](node-types.md)** — `DecisionNode` routing, `HumanNode`
-  interrupt/resume, typed multi-key `reads`/`writes`.
-- **[Examples → Architectures](examples/architectures.md)** — ReAct, routing,
-  orchestrator-workers, reflection, and more, each runnable offline.
+- **[Node types](node-types.md)** — routing with `DecisionNode` /
+  `ConditionNode`, human-in-the-loop with `HumanNode`, typed `reads`/`writes`.
+- **[Examples](examples.md)** — 21 runnable files, each with a raw-LangGraph
+  equivalent in the same file; they run offline with no API key.
 - **[Coming from LangGraph](coming-from-langgraph.md)** — a direct API mapping.
+- **Retrieval:** wrap any LangChain retriever as a tool with
+  `make_retriever_tool` (see [Node types](node-types.md#rag-tools)) — a
+  complete RAG pipeline is in
+  [`examples/nlp/rag_qa.py`](https://github.com/TeeratP/pttai/blob/main/examples/nlp/rag_qa.py).

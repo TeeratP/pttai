@@ -7,21 +7,23 @@ fan-out, map-reduce, structured-output routing, human-in-the-loop — and skip t
 `add_node` / `add_edge` / `add_conditional_edges` / `Send` boilerplate. It all
 compiles down to a native LangGraph `StateGraph`.
 
-pttai **builds on LangGraph, it doesn't replace it.** LangGraph is powerful and
-well worth learning directly — especially for experienced users who want full
-control. pttai's job is to make that power more *accessible*: the value is
+pttai **builds on LangGraph, it doesn't replace it.** LangGraph is well worth
+learning directly — especially for experienced users who want full control.
+pttai's job is to make that capability more *accessible*: the value is
 everything you *don't* write, folded into a small `>`-DSL. And because each node
 declares the state keys it reads and writes, pttai statically checks your graph
 for read-before-written dataflow bugs *before* you invoke. You keep the whole
 LangGraph ecosystem (streaming, async, checkpointers, LangSmith) and can drop
 down to raw LangGraph anytime — no lock-in.
 
+Full documentation: **[teeratp.github.io/pttai](https://teeratp.github.io/pttai/)**.
+
 [![PyPI](https://img.shields.io/pypi/v/pttai)](https://pypi.org/project/pttai/)
 [![Docs](https://img.shields.io/badge/docs-teeratp.github.io%2Fpttai-blue)](https://teeratp.github.io/pttai/)
 [![CI](https://github.com/TeeratP/pttai/actions/workflows/ci.yml/badge.svg)](https://github.com/TeeratP/pttai/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-%E2%89%A53.10-blue)
 ![LangGraph](https://img.shields.io/badge/LangGraph-1.0-orange)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/TeeratP/pttai/blob/main/LICENSE)
 
 ## pttai vs. raw LangGraph
 
@@ -40,8 +42,13 @@ llm = ChatOpenAI(model="gpt-5.4-nano")
 #   from langchain_anthropic import ChatAnthropic;              llm = ChatAnthropic(model="claude-opus-4-8")
 #   from langchain_google_genai import ChatGoogleGenerativeAI;  llm = ChatGoogleGenerativeAI(model="gemini-...")
 
-def add(a: int, b: int) -> int:      return a + b
-def multiply(a: int, b: int) -> int: return a * b
+def add(a: int, b: int) -> int:
+    """Add two numbers."""
+    return a + b
+
+def multiply(a: int, b: int) -> int:
+    """Multiply two numbers."""
+    return a * b
 ```
 
 ```python
@@ -100,7 +107,9 @@ AgenticGraph(start_node=early, end_nodes={late})
 
 Raw LangGraph compiles the same graph and only trips at runtime, on the first
 input that exercises the broken path. pttai names the offending node and key at
-build time; `graph.validate()` runs the same check on demand.
+build time; `graph.validate()` runs the same check on demand. Every bug class
+it catches, with the verbatim errors:
+**[The validator](https://teeratp.github.io/pttai/validator/)**.
 
 ## Examples
 
@@ -181,8 +190,7 @@ pragmatist = AgentNode(llm=llm, node_prompt=(
 verdict = AgentNode(llm=llm, node_prompt=(
     "You are the chair. Weigh all three above into a balanced one-paragraph verdict."))
 
-# The line that matters: the three personas run IN PARALLEL, then join at `verdict`.
-frame > fanout(optimist, skeptic, pragmatist) > verdict
+frame > fanout(optimist, skeptic, pragmatist) > verdict   # parallel, then join
 
 panel = AgenticGraph(start_node=frame, end_nodes={verdict})   # schema-free
 
@@ -192,8 +200,18 @@ panel.summary()                           # the topology table (below)
 print(out["token"])                       # per-model token totals
 ```
 
-Runs from a single paste with just `OPENAI_API_KEY` set. Full version:
+Runs from a single paste with only `OPENAI_API_KEY` set. Full version:
 [`examples/panel.py`](https://github.com/TeeratP/pttai/blob/main/examples/panel.py).
+
+The graph also renders itself. In a notebook, end a cell with the graph — or
+call `display(panel)` — and you get the compiled DAG:
+
+```python
+from IPython.display import display
+display(panel)    # or make `panel` the last expression of the cell
+```
+
+![pttai renders your graph](https://raw.githubusercontent.com/TeeratP/pttai/main/docs/assets/graph-example.png)
 
 ## What you get
 
@@ -259,7 +277,7 @@ hides the graph inside ordinary Python, so you lose the auditable DAG.
 
 ## How it works
 
-`a > b` doesn't build an edge — it just sets `a.children = [b]` and returns `b`,
+`a > b` doesn't build an edge — it sets `a.children = [b]` and returns `b`,
 so `a > b > c` builds a linked structure in memory. `AgenticGraph(...)` walks
 that structure **once** at construction, emits the real LangGraph
 `add_node`/`add_edge`/`Send` calls, runs the dataflow validator, and `compile()`s
@@ -270,43 +288,23 @@ included), and you can drop down to it anytime. No lock-in.
 
 ## Node types
 
-All nodes are callables (`__call__(state) -> delta`) invoked by LangGraph with
-the shared state. They return **only the keys they update**; reducers merge them.
-
-The two LLM-backed nodes (`AgentNode`, `DecisionNode`) share a common `LLMNode`
-base that owns the model binding and the tool-call loop.
-
-| Node | Purpose |
-|------|---------|
-| **`AgentNode`** | Prepends `node_prompt` as a `SystemMessage`, calls the LLM, returns a delta. Pass `tools=[...]` in the constructor to wrap bare callables as `StructuredTool`s and run an internal tool-call loop (capped by `max_tool_iterations`, default 25). `reads`/`writes` give typed multi-key IO. Optional `reasoning_effort` (`"low"`/`"medium"`/`"high"`) for gpt-5.x. |
-| **`DecisionNode`** | LLM branching. Reads from `input_field`, writes its choice to its per-node `decision_{name}` channel, routes via conditional edges over a `Literal[*choices]` structured output — the model can only return a valid branch. Also accepts `tools=[...]`: it runs a tool-gathering loop first, *then* routes via structured output (the two never share a call). Wired by indexing a choice (`decision["x"] > handler`); `decision > x` is an error. |
-| **`ConditionNode`** | Deterministic branching with **no LLM**. A Python predicate `condition(state) -> str` returns one of `choices`; routing is free, deterministic, and prompt-less. Wired like `DecisionNode` (`cond["x"] > handler`). |
-| **`HumanNode`** | Resumable human-in-the-loop via LangGraph's `interrupt()`. Surfaces a message (or a custom `show`) for review; the human's reply lands `into` `messages` (or any key a router can gate on). Resumes when the graph is built with a `checkpointer` and invoked with a `thread_id`, via `Command(resume=value)`. |
-
-All node types also accept `cache_ttl` (LangGraph `CachePolicy`) and `retry`
-(`RetryPolicy`); `AgenticGraph` auto-provides an `InMemoryCache` when any node
-sets `cache_ttl`. An `AgenticGraph` can itself be embedded as a node in a larger
-graph (`graph_0 > graph_1`), and RAG helpers (`make_retriever_tool`, optional
-`ChromaRAG`) wrap any LangChain retriever as a tool you hand to
-`AgentNode(tools=[...])`.
+Four node types cover the graphs above: **`AgentNode`** (an LLM step with an
+optional built-in tool-call loop, capped by `max_tool_iterations=25`),
+**`DecisionNode`** (LLM branching via structured output, constrained to valid
+choices), **`ConditionNode`** (deterministic branching from a plain Python
+predicate — no model call), and **`HumanNode`** (resumable human-in-the-loop
+via `interrupt()`). The LLM-backed nodes share an `LLMNode` base; all take
+`cache_ttl`/`retry`, and an `AgenticGraph` can itself be embedded as a node.
+Each type with a runnable snippet:
+**[Node types](https://teeratp.github.io/pttai/node-types/)**.
 
 ## State
 
-`AgenticState` is a `TypedDict` of reduced channels; custom schemas just add more:
-
-- **`messages`** — `add_messages` reducer: appends, replaces by matching `id`,
-  coerces bare strings to `HumanMessage`, and merges parallel branches.
-- **`log`** — `operator.add`: every node appends a trace line. Seed it with `[]`
-  on invoke to capture the trace.
-- **`decision_{name}`** — each router (`DecisionNode`/`ConditionNode`) writes its
-  choice to its OWN per-node channel `decision_{node_name}` (auto-registered as a
-  plain last-writer-wins key), read by that node's `route()`. There is no shared
-  `decision` channel, so multiple routers never clobber each other.
-- **`token`** — per-model usage totals accumulated across nodes.
-
-Nodes return deltas and never mutate state in place — that's what keeps
-checkpointing, parallel-branch merges, and subgraph composition correct rather
-than racy.
+`AgenticState` is a `TypedDict` of reduced channels — `messages`
+(`add_messages`), a `log` trace (`operator.add`), per-model `token` totals, and
+a private `decision_{name}` key per router. Nodes return deltas, never mutate
+state in place, and reducers merge them — the full channel model is in
+**[State & observability](https://teeratp.github.io/pttai/state/)**.
 
 ### Free observability: the `token` and `log` channels
 
@@ -321,11 +319,9 @@ print(out["log"])     # ['frame:...', 'optimist:...', ...] — one line per node
 ```
 
 `token` is the **run total** — it accumulates across every node, tool-loop
-call, and parallel branch, deep-summed per model. In raw LangGraph you'd hand-wire
-a usage callback plus a custom summing channel to get this. (Offline, with no
-`OPENAI_API_KEY`, the fake model reports no usage, so `token` is an empty `{}` —
-the accounting runs, there's just nothing to count; a real model fills it as
-shown.) Side-by-side vs. raw LangGraph:
+call, and parallel branch, deep-summed per model. In raw LangGraph you'd
+hand-wire a usage callback plus a custom summing channel to get this.
+Side-by-side vs. raw LangGraph:
 [`examples/basics/13_token_and_log.py`](https://github.com/TeeratP/pttai/blob/main/examples/basics/13_token_and_log.py).
 
 ## Limitations

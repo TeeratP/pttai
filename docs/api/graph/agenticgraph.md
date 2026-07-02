@@ -1,3 +1,1 @@
-# Graph
-
 ::: pttai.AgenticGraph

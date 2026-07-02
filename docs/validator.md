@@ -1,10 +1,10 @@
 # The compile-time validator
 
-**This is pttai's differentiator.** When you construct an `AgenticGraph`, it runs
-a static **dataflow analysis** over the wired nodes *before compiling*, and
-**fails the build** on a hard error. You find out a node reads a key nothing
-produces — or a decision branch is unwired — at construction time, not three LLM
-calls into a run.
+Every node in a pttai graph declares the state keys it reads and writes. That
+gives `AgenticGraph` enough information to run a static **dataflow analysis**
+over the wired nodes at construction, *before compiling* — so a node that reads
+a key nothing produces, or a decision branch left unwired, fails the build at
+construction time, not three LLM calls into a run.
 
 ```python
 graph = AgenticGraph(start_node=a, end_nodes={z})   # validate() runs HERE
@@ -12,8 +12,12 @@ graph = AgenticGraph(start_node=a, end_nodes={z})   # validate() runs HERE
 
 If validation finds an error, the constructor raises `GraphValidationError`; if
 it finds only warnings, the graph builds but you can inspect them with
-[`summary()`](api/graph.md). Pass `validate=False` to skip the check (escape
-hatch), or call `graph.validate(strict=True)` to promote warnings to errors.
+[`summary()`](api/graph/agenticgraph.md). Pass `validate=False` to skip the
+check (escape hatch), or call `graph.validate(strict=True)` to promote warnings
+to errors.
+
+!!! note
+    The snippets on this page assume `llm = ...` is any LangChain chat model.
 
 ## Why this matters for LLM pipelines
 
@@ -24,11 +28,10 @@ tokens, latency, and (with tools) real side effects on a run that was doomed at
 build time.
 
 The validator turns those runtime `KeyError`s and `InvalidUpdateError`s into a
-**build-time exception with zero token cost**. It is a may/must dataflow
-analysis over your *declared* node reads/writes and the graph edges — not a
-soundness proof. It catches read-before-write (including loop-carried reads in
-cyclic graphs), undeclared reads/writes, and the structural bugs below, and we
-have observed no false positives on our example corpus. It does **not** see
+**build-time exception with zero token cost**. It is a dataflow analysis over
+your *declared* node reads/writes and the graph edges — not a soundness proof.
+It catches read-before-write (including loop-carried reads in cyclic graphs),
+undeclared reads/writes, and the structural bugs below. It does **not** see
 state keys touched only inside opaque callables — `ConditionNode` predicates
 (arbitrary lambdas), tool bodies, or other custom functions — so those are
 checked by declared annotations only, not by reading their code. "Compiles" is
@@ -36,12 +39,18 @@ therefore a strong signal, not a guarantee, that the dataflow is sound.
 
 ## What it checks
 
-The core is a **forward dataflow fixpoint** over a tagged edge list recorded
-during the build. It computes, per node:
+In plain terms, the validator walks the graph from the start, tracking which
+state keys can exist at each node: keys that *might* be there (produced on at
+least one incoming path) and keys that are *certain* to be there (produced on
+every incoming path). A read of a key that might be missing is worth a warning;
+a read of a key that cannot be there yet is an error.
 
-- `may` — keys available on *some* path into the node (drives hard **errors**;
-  no false positives observed on our corpus). Loop-back edges are excluded, so
-  a key produced only after the loop cycles back is not counted as available.
+Formally, the core is a **forward dataflow fixpoint** over a tagged edge list
+recorded during the build. It computes, per node:
+
+- `may` — keys available on *some* path into the node (drives hard **errors**).
+  Loop-back edges are excluded, so a key produced only after the loop cycles
+  back is not counted as available.
 - `must` — keys guaranteed on *all* paths (drives **warnings**).
 
 `may`/`must` union across AND-parallel joins (`fanout`) and intersect within an
@@ -49,7 +58,9 @@ exclusive `DecisionNode` choice-group, so the analysis understands your
 branching. On top of that dataflow it runs a handful of structural checks.
 
 Each bug class below shows a minimal snippet and the **verbatim** message pttai
-raises.
+raises. Classes 1–4 and 7 are validator findings (`GraphValidationError`);
+classes 5 and 6 are caught earlier, while the graph is being wired, as plain
+**`ValueError`s** — you get them even with `validate=False`.
 
 ### 1. Read before write (the headline check)
 
@@ -228,9 +239,9 @@ These don't fail the build; they surface via `graph.validate()` /
 
 ## Inspecting the analysis: `summary()`
 
-`graph.summary()` prints a Keras-`model.summary()`-style table of every node's
-`reads`, `writes`, and available keys, plus the error/warning counts — the same
-`may`/`must` sets the validator computes:
+`graph.summary()` prints a table of every node's `reads`, `writes`, and
+available keys, plus the error/warning counts — the same `may`/`must` sets the
+validator computes:
 
 ```
 AgenticGraph 'graph'   state=AgenticState
@@ -243,4 +254,5 @@ frame   AgentNode  messages  log,messages   log,messages
 5 nodes · 0 errors · 0 warning(s)
 ```
 
-See the [State reference](api/state.md) for the full state-channel model.
+See [State & observability](state.md) for the full state-channel model the
+analysis runs over.

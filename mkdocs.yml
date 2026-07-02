@@ -55,22 +55,37 @@ markdown_extensions:
       permalink: true
   - pymdownx.highlight:
       anchor_linenums: true
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.inlinehilite
   - pymdownx.details
 
 nav:
   - Home: index.md
-  - The validator: validator.md
   - Quickstart: quickstart.md
-  - Getting started: getting-started.md
-  - Coming from LangGraph: coming-from-langgraph.md
   - Node types: node-types.md
-  - Examples:
-      - Basics: examples/basics.md
-      - Architectures: examples/architectures.md
+  - The validator: validator.md
+  - State & observability: state.md
+  - Examples: examples.md
+  - Coming from LangGraph: coming-from-langgraph.md
   - API Reference:
-      - Graph: api/graph.md
-      - Nodes: api/nodes.md
-      - State: api/state.md
-      - Advanced: api/advanced.md
+      - Graph:
+          - AgenticGraph: api/graph/agenticgraph.md
+      - Nodes:
+          - Node (base): api/nodes/node.md
+          - AgentNode: api/nodes/agentnode.md
+          - DecisionNode: api/nodes/decisionnode.md
+          - ConditionNode: api/nodes/conditionnode.md
+          - HumanNode: api/nodes/humannode.md
+          - fanout: api/nodes/fanout.md
+      - State:
+          - AgenticState: api/state/agenticstate.md
+      - Advanced:
+          - LLMNode (base): api/advanced/llmnode.md
+          - RouterNode (base): api/advanced/routernode.md
+          - Validation: api/advanced/validation.md
+          - RAG tools: api/advanced/tools.md
+          - Branch & Spread: api/advanced/wiring.md

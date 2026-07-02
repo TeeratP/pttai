@@ -1,10 +1,10 @@
 # Coming from LangGraph
 
 pttai *is* LangGraph underneath — `AgenticGraph` subclasses `StateGraph` and
-compiles down to one. So nothing you know is wasted; pttai just replaces the
-imperative `add_node`/`add_edge`/`add_conditional_edges`/`Send` plumbing with a
-declarative `>` layer, and adds a build-time validator on top. This page maps
-the LangGraph API you already use to its pttai equivalent.
+compiles down to one. Nothing you know is wasted: pttai replaces the imperative
+`add_node`/`add_edge`/`add_conditional_edges`/`Send` calls with a declarative
+`>` layer and adds a build-time validator on top. This page maps the LangGraph
+API you already use to its pttai equivalent.
 
 ## Mapping table
 
@@ -45,18 +45,45 @@ the LangGraph API you already use to its pttai equivalent.
   `StateGraph`, so streaming, async, `durability`, checkpointers, and LangSmith
   all work unchanged. No lock-in.
 
-## A worked comparison
+## Under the hood
 
-The canonical tool-using agent — 10 lines of LangGraph, 3 of pttai — is in
-[Getting started](getting-started.md), and every architecture in the
-[Architectures gallery](examples/architectures.md) shows the pttai version
-followed by a `# --- equivalent in raw LangGraph ---` block in the same file.
+`a > b` doesn't build an edge — it sets `a.children = [b]` and returns `b`, so
+`a > b > c` builds a linked structure in memory. `AgenticGraph(...)` walks that
+structure **once** at construction, emits the real LangGraph
+`add_node`/`add_edge`/`Send` calls, runs the dataflow validator, and
+`compile()`s to a native `StateGraph` — which `AgenticGraph` subclasses.
 
-## The reviewer's objection: "why not raw LangGraph?"
+So pttai is a build-time convenience that disappears at runtime: the execution
+underneath is plain LangGraph, and you can drop down to it anytime.
 
-You keep the entire LangGraph runtime — this is a build-time convenience that
-disappears at compile time. What you gain is: (1) far less wiring boilerplate,
-(2) an *inspectable* topology (`summary()` prints the DAG), and (3) a
-**dataflow validator that rejects read-before-write and unwired-branch bugs
-before you spend a single token**. That third item has no equivalent in raw
-LangGraph and is the reason to adopt pttai.
+## vs. LangChain's Functional API
+
+The closest comparison isn't raw graphs — it's LangChain's own Functional API
+(`@entrypoint` / `@task`), which also lets you skip explicit graph wiring. The
+difference is **visibility of control flow**:
+
+| | Functional API (`@entrypoint`/`@task`) | pttai |
+|---|---|---|
+| Control flow | hidden in plain Python (loops, `if`, `await`) | an explicit, declarative DAG |
+| Fan-out / join | you orchestrate futures by hand | `fanout(...)` / `.map("field")`, one line |
+| Inspect the topology | run it and trace | `summary()` prints the static DAG |
+| Catch dataflow bugs | at runtime | at **compile time**, before any invoke |
+
+Both are concise. The trade pttai makes is keeping the topology *inspectable
+and validatable*: you can see the fan-out/join/map-reduce structure, render it,
+and have the build reject read-before-written bugs — where the Functional API
+hides the graph inside ordinary Python.
+
+## Why not raw LangGraph?
+
+You keep the entire LangGraph runtime either way — pttai disappears at compile
+time. What it buys you: (1) less wiring boilerplate, (2) an inspectable
+topology (`summary()` prints the DAG, and the graph renders itself in a
+notebook), and (3) a [dataflow validator](validator.md) that rejects
+read-before-write and unwired-branch bugs before you spend a token — which has
+no equivalent in raw LangGraph.
+
+A worked comparison — the same tool-using agent in 3 lines vs. 10 — is on the
+[home page](index.md#the-same-agent-both-ways), and every file in the
+[Examples](examples.md) galleries pairs the pttai version with a
+`# --- equivalent in raw LangGraph ---` block.
