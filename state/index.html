@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://teeratp.github.io/pttai/quickstart/">
+        <link rel="canonical" href="https://teeratp.github.io/pttai/state/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../validator/">
       
       
-        <link rel="next" href="../node-types/">
+        <link rel="next" href="../examples/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Quickstart - pttai</title>
+        <title>State & observability - pttai</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#quickstart" class="md-skip">
+        <a href="#state-observability" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quickstart
+              State & observability
             
           </span>
         </div>
@@ -288,37 +288,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Quickstart
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
         
   
   
@@ -334,81 +307,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#1-install" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Install
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2-hello-agent" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Hello, agent
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3-fan-out-a-three-persona-panel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Fan out: a three-persona panel
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-break-it-and-let-the-validator-tell-you" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Break it — and let the validator tell you
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-where-to-go-next" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Where to go next
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -471,10 +369,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../state/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State & observability
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -490,6 +415,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-channels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The channels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#free-observability-token-and-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Free observability: token and log
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1226,10 +1204,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-install" class="md-nav__link">
+  <a href="#the-channels" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Install
+        The channels
       
     </span>
   </a>
@@ -1237,10 +1215,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-hello-agent" class="md-nav__link">
+  <a href="#free-observability-token-and-log" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Hello, agent
+        Free observability: token and log
       
     </span>
   </a>
@@ -1248,32 +1226,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-fan-out-a-three-persona-panel" class="md-nav__link">
+  <a href="#limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Fan out: a three-persona panel
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-break-it-and-let-the-validator-tell-you" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Break it — and let the validator tell you
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-where-to-go-next" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Where to go next
+        Limitations
       
     </span>
   </a>
@@ -1300,110 +1256,62 @@
   
 
 
-<h1 id="quickstart">Quickstart<a class="headerlink" href="#quickstart" title="Permanent link">&para;</a></h1>
-<p>This page takes you from install to a running multi-agent graph in a few
-minutes. It ends with the part that saves you real debugging time: the
-validator catching a bug before a single model call.</p>
-<h2 id="1-install">1. Install<a class="headerlink" href="#1-install" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pttai
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># pttai works with any LangChain chat model — install the provider you want:</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>pip<span class="w"> </span>install<span class="w"> </span>langchain-openai<span class="w"> </span>python-dotenv<span class="w">   </span><span class="c1"># OpenAI (used on this page)</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>pip<span class="w"> </span>install<span class="w"> </span>langchain-anthropic<span class="w">              </span><span class="c1"># Anthropic</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>pip<span class="w"> </span>install<span class="w"> </span>langchain-google-genai<span class="w">           </span><span class="c1"># Google</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>sk-...<span class="w">   </span><span class="c1"># or your provider&#39;s key, or a .env file</span>
-</code></pre></div>
-<p>Nodes take the model via <code>llm=</code> — pass any LangChain <code>BaseChatModel</code>. One
-caveat: <code>reasoning_effort</code> and structured-output routing are tuned to OpenAI
-gpt-5.x semantics; wiring, the tool-call loop, and routing are otherwise
-provider-neutral.</p>
-<p>Requires Python ≥ 3.10. To work on pttai itself, clone the repo and
-<code>pip install -e ".[openai,dev]"</code> (extras: <code>[rag]</code> for <code>ChromaRAG</code>, <code>[docs]</code> for
-this site).</p>
-<h2 id="2-hello-agent">2. Hello, agent<a class="headerlink" href="#2-hello-agent" title="Permanent link">&para;</a></h2>
-<p>Three lines make a complete graph: one node, one constructor, one invoke.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pttai</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentNode</span><span class="p">,</span> <span class="n">AgenticGraph</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langchain_openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChatOpenAI</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">ChatOpenAI</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-5.4-nano&quot;</span><span class="p">)</span>   <span class="c1"># any LangChain chat model works</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">hello</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span> <span class="n">node_prompt</span><span class="o">=</span><span class="s2">&quot;Answer in one concise paragraph.&quot;</span><span class="p">)</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">graph</span> <span class="o">=</span> <span class="n">AgenticGraph</span><span class="p">(</span><span class="n">start_node</span><span class="o">=</span><span class="n">hello</span><span class="p">,</span> <span class="n">end_nodes</span><span class="o">=</span><span class="p">{</span><span class="n">hello</span><span class="p">})</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">out</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot;What does a build-time graph validator buy me?&quot;</span><span class="p">)</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s2">&quot;messages&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
-</code></pre></div>
-<p>The node's name is inferred from the variable (<code>hello</code>), and the state schema
-is inferred too. Pass <code>tools=[...]</code> to give the node a built-in tool-call loop
-— see <a href="../node-types/">Node types</a> for what each node can do.</p>
-<h2 id="3-fan-out-a-three-persona-panel">3. Fan out: a three-persona panel<a class="headerlink" href="#3-fan-out-a-three-persona-panel" title="Permanent link">&para;</a></h2>
-<p>Now something raw wiring makes tedious: a question goes to <code>frame</code>, fans out to
-three personas that argue <strong>concurrently</strong>, and joins at <code>verdict</code>. The whole
-topology is the one wiring line near the bottom.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pttai</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentNode</span><span class="p">,</span> <span class="n">AgenticGraph</span><span class="p">,</span> <span class="n">fanout</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">frame</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span> <span class="n">node_prompt</span><span class="o">=</span><span class="p">(</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="s2">&quot;Restate the user&#39;s question as ONE sharp, concrete decision. One sentence.&quot;</span><span class="p">))</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">optimist</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span> <span class="n">node_prompt</span><span class="o">=</span><span class="p">(</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="s2">&quot;Relentless optimist. Argue FOR the bold move — two strongest upsides.&quot;</span><span class="p">))</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">skeptic</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span> <span class="n">node_prompt</span><span class="o">=</span><span class="p">(</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="s2">&quot;Hard-nosed skeptic. Argue AGAINST — the two biggest risks.&quot;</span><span class="p">))</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">pragmatist</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span> <span class="n">node_prompt</span><span class="o">=</span><span class="p">(</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="s2">&quot;Pragmatist. Propose the smallest concrete next step that de-risks it.&quot;</span><span class="p">))</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="n">verdict</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span> <span class="n">node_prompt</span><span class="o">=</span><span class="p">(</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    <span class="s2">&quot;You are the chair. Weigh all three above into a balanced one-paragraph verdict.&quot;</span><span class="p">))</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="n">frame</span> <span class="o">&gt;</span> <span class="n">fanout</span><span class="p">(</span><span class="n">optimist</span><span class="p">,</span> <span class="n">skeptic</span><span class="p">,</span> <span class="n">pragmatist</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">verdict</span>   <span class="c1"># parallel, then join</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="n">panel</span> <span class="o">=</span> <span class="n">AgenticGraph</span><span class="p">(</span><span class="n">start_node</span><span class="o">=</span><span class="n">frame</span><span class="p">,</span> <span class="n">end_nodes</span><span class="o">=</span><span class="p">{</span><span class="n">verdict</span><span class="p">})</span>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="n">out</span> <span class="o">=</span> <span class="n">panel</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot;Should an early-stage SaaS rewrite its monolith into microservices?&quot;</span><span class="p">)</span>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s2">&quot;messages&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>        <span class="c1"># the verdict</span>
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="n">panel</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>                           <span class="c1"># the topology table</span>
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s2">&quot;token&quot;</span><span class="p">])</span>                       <span class="c1"># per-model token totals</span>
-</code></pre></div>
-<p><code>fanout(...)</code> runs the three branches in parallel and defers the join, so
-<code>verdict</code> fires once after all three finish. <code>summary()</code> prints a topology
-table and <code>out["token"]</code> accumulates usage across every call — both covered in
-<a href="../state/">State &amp; observability</a>. Full version:
-<a href="https://github.com/TeeratP/pttai/blob/main/examples/panel.py"><code>examples/panel.py</code></a>.</p>
-<h2 id="4-break-it-and-let-the-validator-tell-you">4. Break it — and let the validator tell you<a class="headerlink" href="#4-break-it-and-let-the-validator-tell-you" title="Permanent link">&para;</a></h2>
-<p>Wire a graph with a real dataflow bug: <code>early</code> reads a <code>summary</code> key that only
-<code>late</code>, downstream of it, produces.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pttai</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentNode</span><span class="p">,</span> <span class="n">AgenticGraph</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">early</span> <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span> <span class="n">reads</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;summary&quot;</span><span class="p">],</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>                  <span class="n">node_prompt</span><span class="o">=</span><span class="s2">&quot;Polish this summary: </span><span class="si">{summary}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">late</span>  <span class="o">=</span> <span class="n">AgentNode</span><span class="p">(</span><span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span> <span class="n">writes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;summary&quot;</span><span class="p">],</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>                  <span class="n">node_prompt</span><span class="o">=</span><span class="s2">&quot;Summarize the conversation in two sentences.&quot;</span><span class="p">)</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">early</span> <span class="o">&gt;</span> <span class="n">late</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">AgenticGraph</span><span class="p">(</span><span class="n">start_node</span><span class="o">=</span><span class="n">early</span><span class="p">,</span> <span class="n">end_nodes</span><span class="o">=</span><span class="p">{</span><span class="n">late</span><span class="p">})</span>   <span class="c1"># raises before any model call</span>
-</code></pre></div>
-<p>The constructor fails immediately, naming the node, the key, and the real
-producer:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pttai.validation.GraphValidationError: AgenticGraph &#39;graph&#39;: 1 error(s), 0 warning(s)
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>  [error] early: reads computed key &#39;summary&#39; but no upstream node produces it before this node (produced by: [&#39;late&#39;], none of which are upstream); available keys here: [&#39;log&#39;, &#39;messages&#39;, &#39;token&#39;]
-</code></pre></div>
-<p>Raw LangGraph compiles this graph and only fails at runtime, after <code>early</code> has
-already burned a model call. The fix is the wiring order — write before read:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">late</span> <span class="o">&gt;</span> <span class="n">early</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">graph</span> <span class="o">=</span> <span class="n">AgenticGraph</span><span class="p">(</span><span class="n">start_node</span><span class="o">=</span><span class="n">late</span><span class="p">,</span> <span class="n">end_nodes</span><span class="o">=</span><span class="p">{</span><span class="n">early</span><span class="p">})</span>   <span class="c1"># builds cleanly</span>
-</code></pre></div>
-<p>See <a href="../validator/">The validator</a> for all seven bug classes it catches, each
-with its verbatim error message.</p>
-<h2 id="5-where-to-go-next">5. Where to go next<a class="headerlink" href="#5-where-to-go-next" title="Permanent link">&para;</a></h2>
+<h1 id="state-observability">State &amp; observability<a class="headerlink" href="#state-observability" title="Permanent link">&para;</a></h1>
+<p>Every pttai graph shares one state object across its nodes. By default that is
+<a href="../api/state/agenticstate/"><code>AgenticState</code></a>, a <code>TypedDict</code> of <strong>reduced
+channels</strong>: each key carries a reducer that merges node outputs, so parallel
+branches combine instead of overwriting each other.</p>
+<p>Nodes return deltas — only the keys they update — and never mutate state in
+place. The reducers do the merging, which is what keeps checkpointing,
+parallel-branch joins, and subgraph composition correct rather than racy.</p>
+<h2 id="the-channels">The channels<a class="headerlink" href="#the-channels" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong><a href="../node-types/">Node types</a></strong> — routing with <code>DecisionNode</code> /
-  <code>ConditionNode</code>, human-in-the-loop with <code>HumanNode</code>, typed <code>reads</code>/<code>writes</code>.</li>
-<li><strong><a href="../examples/">Examples</a></strong> — 21 runnable files, each with a raw-LangGraph
-  equivalent in the same file; they run offline with no API key.</li>
-<li><strong><a href="../coming-from-langgraph/">Coming from LangGraph</a></strong> — a direct API mapping.</li>
-<li><strong>Retrieval:</strong> wrap any LangChain retriever as a tool with
-  <code>make_retriever_tool</code> (see <a href="../node-types/#rag-tools">Node types</a>) — a
-  complete RAG pipeline is in
-  <a href="https://github.com/TeeratP/pttai/blob/main/examples/nlp/rag_qa.py"><code>examples/nlp/rag_qa.py</code></a>.</li>
+<li><strong><code>messages</code></strong> — the conversation, reduced with LangGraph's <code>add_messages</code>:
+  it appends new messages, replaces by matching <code>id</code>, coerces bare strings to
+  <code>HumanMessage</code>, and merges parallel branches.</li>
+<li><strong><code>log</code></strong> — a trace, reduced with <code>operator.add</code>: every node appends a line
+  (<code>"{name}:{content}"</code>, tool calls, routing decisions). Seed it with <code>[]</code> on
+  invoke to capture the trace.</li>
+<li><strong><code>token</code></strong> — per-model usage totals, accumulated across every node.</li>
+<li><strong><code>decision_{name}</code></strong> — each router (<code>DecisionNode</code>/<code>ConditionNode</code>) writes
+  its choice to its own per-node channel, auto-registered as a plain
+  last-writer-wins key and read by that node's <code>route()</code>. There is no shared
+  <code>decision</code> channel, so multiple routers never clobber each other.</li>
+</ul>
+<p>You rarely declare a schema: nodes auto-register the keys they <code>read</code>/<code>write</code>.
+When you do pass a custom <code>state=</code> schema, it is the same pattern — more
+reduced channels (e.g. a <code>summary: str</code> field for a node with
+<code>writes=["summary"]</code>).</p>
+<h2 id="free-observability-token-and-log">Free observability: <code>token</code> and <code>log</code><a class="headerlink" href="#free-observability-token-and-log" title="Permanent link">&para;</a></h2>
+<p>Total token spend and a per-node trace come with every run — no callbacks, no
+custom reducers to wire:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">out</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span><span class="s2">&quot;messages&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;...&quot;</span><span class="p">],</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span> <span class="p">[]})</span>   <span class="c1"># seed log=[] to capture it</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s2">&quot;token&quot;</span><span class="p">])</span>   <span class="c1"># {&#39;gpt-5.4-nano&#39;: {&#39;input_tokens&#39;: 42, &#39;output_tokens&#39;: 88, &#39;total_tokens&#39;: 130, ...}}</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s2">&quot;log&quot;</span><span class="p">])</span>     <span class="c1"># [&#39;frame:...&#39;, &#39;optimist:...&#39;, ...] — one line per node/tool call</span>
+</code></pre></div>
+<p><code>token</code> is the run total: it accumulates across every node, tool-loop call, and
+parallel branch, deep-summed per model. In raw LangGraph you would hand-wire a
+usage callback plus a custom summing channel to get the same numbers.</p>
+<p>Offline, with no API key, the fake model reports no usage, so <code>token</code> is an
+empty <code>{}</code> — the accounting runs, there is nothing to count. Side-by-side with
+the raw-LangGraph version:
+<a href="https://github.com/TeeratP/pttai/blob/main/examples/basics/13_token_and_log.py"><code>examples/basics/13_token_and_log.py</code></a>.</p>
+<p>The validator reads the same declared <code>reads</code>/<code>writes</code> that drive these
+channels — see <a href="../validator/">The validator</a> for what it checks.</p>
+<h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
+<p>Kept honest on purpose:</p>
+<ul>
+<li><strong>Structured multi-write list fields are <code>str</code>-only.</strong> <code>writes=["a", "b"]</code>
+  produces one <code>str</code> field per key; use the dict form <code>writes={"a": int}</code> for
+  native-typed structured output.</li>
+<li><strong>Map workers don't echo their source item</strong> — return only what you computed;
+  the item you mapped over doesn't need to appear in the worker's output.</li>
+<li><strong><code>[b, c] &gt; [d, e]</code> isn't supported.</strong> Two fan-outs chained directly is
+  Python's element-wise list compare, not join wiring — insert a node between.</li>
+<li><strong>Async is graph-level only.</strong> <code>ainvoke</code>/<code>astream</code> run the sync nodes in
+  LangGraph's threadpool; true per-node async LLM calls aren't implemented.</li>
+<li><strong><code>reasoning_effort</code> is <code>AgentNode</code>-only</strong> — it conflicts with
+  <code>DecisionNode</code>'s structured output on current OpenAI models.</li>
 </ul>
 
 

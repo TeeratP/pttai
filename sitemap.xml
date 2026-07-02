@@ -9,7 +9,7 @@
          <lastmod>2026-07-02</lastmod>
     </url>
     <url>
-         <loc>https://teeratp.github.io/pttai/getting-started/</loc>
+         <loc>https://teeratp.github.io/pttai/examples/</loc>
          <lastmod>2026-07-02</lastmod>
     </url>
     <url>
@@ -21,31 +21,63 @@
          <lastmod>2026-07-02</lastmod>
     </url>
     <url>
+         <loc>https://teeratp.github.io/pttai/state/</loc>
+         <lastmod>2026-07-02</lastmod>
+    </url>
+    <url>
          <loc>https://teeratp.github.io/pttai/validator/</loc>
          <lastmod>2026-07-02</lastmod>
     </url>
     <url>
-         <loc>https://teeratp.github.io/pttai/api/advanced/</loc>
+         <loc>https://teeratp.github.io/pttai/api/advanced/llmnode/</loc>
          <lastmod>2026-07-02</lastmod>
     </url>
     <url>
-         <loc>https://teeratp.github.io/pttai/api/graph/</loc>
+         <loc>https://teeratp.github.io/pttai/api/advanced/routernode/</loc>
          <lastmod>2026-07-02</lastmod>
     </url>
     <url>
-         <loc>https://teeratp.github.io/pttai/api/nodes/</loc>
+         <loc>https://teeratp.github.io/pttai/api/advanced/tools/</loc>
          <lastmod>2026-07-02</lastmod>
     </url>
     <url>
-         <loc>https://teeratp.github.io/pttai/api/state/</loc>
+         <loc>https://teeratp.github.io/pttai/api/advanced/validation/</loc>
          <lastmod>2026-07-02</lastmod>
     </url>
     <url>
-         <loc>https://teeratp.github.io/pttai/examples/architectures/</loc>
+         <loc>https://teeratp.github.io/pttai/api/advanced/wiring/</loc>
          <lastmod>2026-07-02</lastmod>
     </url>
     <url>
-         <loc>https://teeratp.github.io/pttai/examples/basics/</loc>
+         <loc>https://teeratp.github.io/pttai/api/graph/agenticgraph/</loc>
+         <lastmod>2026-07-02</lastmod>
+    </url>
+    <url>
+         <loc>https://teeratp.github.io/pttai/api/nodes/agentnode/</loc>
+         <lastmod>2026-07-02</lastmod>
+    </url>
+    <url>
+         <loc>https://teeratp.github.io/pttai/api/nodes/conditionnode/</loc>
+         <lastmod>2026-07-02</lastmod>
+    </url>
+    <url>
+         <loc>https://teeratp.github.io/pttai/api/nodes/decisionnode/</loc>
+         <lastmod>2026-07-02</lastmod>
+    </url>
+    <url>
+         <loc>https://teeratp.github.io/pttai/api/nodes/fanout/</loc>
+         <lastmod>2026-07-02</lastmod>
+    </url>
+    <url>
+         <loc>https://teeratp.github.io/pttai/api/nodes/humannode/</loc>
+         <lastmod>2026-07-02</lastmod>
+    </url>
+    <url>
+         <loc>https://teeratp.github.io/pttai/api/nodes/node/</loc>
+         <lastmod>2026-07-02</lastmod>
+    </url>
+    <url>
+         <loc>https://teeratp.github.io/pttai/api/state/agenticstate/</loc>
          <lastmod>2026-07-02</lastmod>
     </url>
 </urlset>

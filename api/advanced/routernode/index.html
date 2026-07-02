@@ -10,31 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://teeratp.github.io/pttai/coming-from-langgraph/">
+        <link rel="canonical" href="https://teeratp.github.io/pttai/api/advanced/routernode/">
       
       
-        <link rel="prev" href="../examples/">
+        <link rel="prev" href="../llmnode/">
       
       
-        <link rel="next" href="../api/graph/agenticgraph/">
+        <link rel="next" href="../validation/">
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Coming from LangGraph - pttai</title>
+        <title>RouterNode (base) - pttai</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,9 +53,9 @@
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#coming-from-langgraph" class="md-skip">
+        <a href="#pttai.nodes.decision_node.RouterNode" class="md-skip">
           Skip to content
         </a>
       
@@ -96,7 +96,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="pttai" class="md-header__button md-logo" aria-label="pttai" data-md-component="logo">
+    <a href="../../.." title="pttai" class="md-header__button md-logo" aria-label="pttai" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Coming from LangGraph
+              RouterNode (base)
             
           </span>
         </div>
@@ -234,7 +234,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="pttai" class="md-nav__button md-logo" aria-label="pttai" data-md-component="logo">
+    <a href="../../.." title="pttai" class="md-nav__button md-logo" aria-label="pttai" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -264,7 +264,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   
@@ -291,7 +291,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../quickstart/" class="md-nav__link">
+      <a href="../../../quickstart/" class="md-nav__link">
         
   
   
@@ -318,7 +318,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../node-types/" class="md-nav__link">
+      <a href="../../../node-types/" class="md-nav__link">
         
   
   
@@ -345,7 +345,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../validator/" class="md-nav__link">
+      <a href="../../../validator/" class="md-nav__link">
         
   
   
@@ -372,7 +372,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../state/" class="md-nav__link">
+      <a href="../../../state/" class="md-nav__link">
         
   
   
@@ -399,7 +399,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/" class="md-nav__link">
+      <a href="../../../examples/" class="md-nav__link">
         
   
   
@@ -423,37 +423,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Coming from LangGraph
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../coming-from-langgraph/" class="md-nav__link">
         
   
   
@@ -469,81 +442,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#mapping-table" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Mapping table
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#when-to-use-which" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When to use which
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#under-the-hood" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Under the hood
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#vs-langchains-functional-api" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        vs. LangChain's Functional API
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#why-not-raw-langgraph" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why not raw LangGraph?
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -552,8 +450,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -564,11 +464,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
         
           
           <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
@@ -589,7 +489,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -656,7 +556,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/graph/agenticgraph/" class="md-nav__link">
+      <a href="../../graph/agenticgraph/" class="md-nav__link">
         
   
   
@@ -741,7 +641,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/nodes/node/" class="md-nav__link">
+      <a href="../../nodes/node/" class="md-nav__link">
         
   
   
@@ -769,7 +669,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/nodes/agentnode/" class="md-nav__link">
+      <a href="../../nodes/agentnode/" class="md-nav__link">
         
   
   
@@ -797,7 +697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/nodes/decisionnode/" class="md-nav__link">
+      <a href="../../nodes/decisionnode/" class="md-nav__link">
         
   
   
@@ -825,7 +725,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/nodes/conditionnode/" class="md-nav__link">
+      <a href="../../nodes/conditionnode/" class="md-nav__link">
         
   
   
@@ -853,7 +753,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/nodes/humannode/" class="md-nav__link">
+      <a href="../../nodes/humannode/" class="md-nav__link">
         
   
   
@@ -881,7 +781,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/nodes/fanout/" class="md-nav__link">
+      <a href="../../nodes/fanout/" class="md-nav__link">
         
   
   
@@ -966,7 +866,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/state/agenticstate/" class="md-nav__link">
+      <a href="../../state/agenticstate/" class="md-nav__link">
         
   
   
@@ -999,6 +899,8 @@
                 
   
   
+    
+  
   
   
     
@@ -1008,11 +910,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_4" checked>
         
           
           <label class="md-nav__link" for="__nav_8_4" id="__nav_8_4_label" tabindex="0">
@@ -1033,7 +935,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_8_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1051,7 +953,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/advanced/llmnode/" class="md-nav__link">
+      <a href="../llmnode/" class="md-nav__link">
         
   
   
@@ -1076,10 +978,35 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../api/advanced/routernode/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RouterNode (base)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1095,6 +1022,74 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pttai.nodes.decision_node.RouterNode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RouterNode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RouterNode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pttai.nodes.decision_node.RouterNode.__getitem__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __getitem__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pttai.nodes.decision_node.RouterNode.__gt__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __gt__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pttai.nodes.decision_node.RouterNode.route" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        route
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1107,7 +1102,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/advanced/validation/" class="md-nav__link">
+      <a href="../validation/" class="md-nav__link">
         
   
   
@@ -1135,7 +1130,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/advanced/tools/" class="md-nav__link">
+      <a href="../tools/" class="md-nav__link">
         
   
   
@@ -1163,7 +1158,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/advanced/wiring/" class="md-nav__link">
+      <a href="../wiring/" class="md-nav__link">
         
   
   
@@ -1216,8 +1211,6 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1226,57 +1219,52 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#mapping-table" class="md-nav__link">
+  <a href="#pttai.nodes.decision_node.RouterNode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Mapping table
+        RouterNode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RouterNode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pttai.nodes.decision_node.RouterNode.__getitem__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __getitem__
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#when-to-use-which" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#pttai.nodes.decision_node.RouterNode.__gt__" class="md-nav__link">
     <span class="md-ellipsis">
       
-        When to use which
+        __gt__
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#under-the-hood" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#pttai.nodes.decision_node.RouterNode.route" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Under the hood
+        route
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#vs-langchains-functional-api" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        vs. LangChain's Functional API
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#why-not-raw-langgraph" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why not raw LangGraph?
-      
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1300,168 +1288,230 @@
   
 
 
-<h1 id="coming-from-langgraph">Coming from LangGraph<a class="headerlink" href="#coming-from-langgraph" title="Permanent link">&para;</a></h1>
-<p>pttai <em>is</em> LangGraph underneath — <code>AgenticGraph</code> subclasses <code>StateGraph</code> and
-compiles down to one. Nothing you know is wasted: pttai replaces the imperative
-<code>add_node</code>/<code>add_edge</code>/<code>add_conditional_edges</code>/<code>Send</code> calls with a declarative
-<code>&gt;</code> layer and adds a build-time validator on top. This page maps the LangGraph
-API you already use to its pttai equivalent.</p>
-<h2 id="mapping-table">Mapping table<a class="headerlink" href="#mapping-table" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>LangGraph</th>
-<th>pttai</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>builder.add_node("a", fn)</code></td>
-<td><code>a = AgentNode(name="a", llm=llm, ...)</code></td>
-<td>The node is the object; you don't register it by name.</td>
-</tr>
-<tr>
-<td><code>builder.add_edge("a", "b")</code></td>
-<td><code>a &gt; b</code></td>
-<td><code>&gt;</code> sets <code>a.children = [b]</code> and returns <code>b</code>, so <code>a &gt; b &gt; c</code> chains. No edge exists until <code>AgenticGraph(...)</code> walks the chain.</td>
-</tr>
-<tr>
-<td><code>builder.add_edge(START, "a")</code></td>
-<td><code>AgenticGraph(start_node=a, ...)</code></td>
-<td>The start is a constructor arg, not an edge.</td>
-</tr>
-<tr>
-<td><code>builder.add_edge("z", END)</code></td>
-<td><code>AgenticGraph(..., end_nodes={z})</code></td>
-<td>Termination is controlled by <code>end_nodes</code>, not by <code>.child == None</code>.</td>
-</tr>
-<tr>
-<td>fan-out: two <code>add_edge("a", ...)</code> calls</td>
-<td><code>a &gt; fanout(b, c) &gt; d</code> (or <code>a &gt; [b, c] &gt; d</code>)</td>
-<td>Branches run <strong>concurrently</strong>; the join <code>d</code> is deferred until <strong>all</strong> finish (fires once, not once per branch).</td>
-</tr>
-<tr>
-<td><code>add_conditional_edges("a", router_fn, [...])</code></td>
-<td><code>DecisionNode</code> (LLM) or <code>ConditionNode</code> (predicate)</td>
-<td>Index the choices to wire them: <code>decide["yes"] &gt; handler</code>.</td>
-</tr>
-<tr>
-<td><code>Send("worker", payload)</code> + a conditional edge</td>
-<td><code>dispatch &gt; worker.map("field") &gt; reduce</code></td>
-<td><code>.map("field")</code> fans <code>worker</code> out over <code>state["field"]</code>, one <code>Send</code> per item, in parallel, then joins once at <code>reduce</code>.</td>
-</tr>
-<tr>
-<td><code>ToolNode([tools])</code> + <code>tools_condition</code> + loop-back edge</td>
-<td><code>AgentNode(tools=[...])</code></td>
-<td>The tool-call loop (execute → append <code>ToolMessage</code> → re-invoke) is built into the node, capped by <code>max_tool_iterations</code>.</td>
-</tr>
-<tr>
-<td><code>with_structured_output(Literal[...])</code> + a router fn</td>
-<td><code>DecisionNode(choices=[...])</code></td>
-<td>pttai builds the <code>Literal</code> structured output <em>and</em> the conditional edges; the model can only return a valid branch.</td>
-</tr>
-<tr>
-<td><code>builder.compile()</code></td>
-<td>happens inside <code>AgenticGraph(...)</code></td>
-<td>Construction walks the wiring, <strong>runs the validator</strong>, and compiles.</td>
-</tr>
-<tr>
-<td>a subgraph added via <code>add_node(compiled_subgraph)</code></td>
-<td><code>graph_0 &gt; graph_1</code></td>
-<td>An <code>AgenticGraph</code> composes as a node inside a larger <code>AgenticGraph</code>.</td>
-</tr>
-<tr>
-<td><code>MessagesState</code></td>
-<td><code>AgenticState</code> (the default)</td>
-<td><code>messages</code> + reduced <code>log</code> / <code>token</code> channels; routers auto-register a per-node <code>decision_{name}</code> key. Schema-free by default; nodes auto-register keys.</td>
-</tr>
-<tr>
-<td>— (runtime <code>KeyError</code> when you get it wrong)</td>
-<td><strong>compile-time <code>GraphValidationError</code></strong></td>
-<td>The dataflow validator has no LangGraph equivalent. See <a href="../validator/">the validator</a>.</td>
-</tr>
-</tbody>
-</table>
-<h2 id="when-to-use-which">When to use which<a class="headerlink" href="#when-to-use-which" title="Permanent link">&para;</a></h2>
-<ul>
-<li><strong><code>&gt;</code> (sequential edge)</strong> — one step then the next. The 90% case.</li>
-<li><strong><code>fanout(a, b, c)</code> / <code>[a, b, c]</code></strong> — a <em>fixed, known</em> set of branches that
-  should run in parallel and rejoin (e.g. three critics, then a verdict). Both
-  forms wire identically; <code>fanout(...)</code> reads better inline.</li>
-<li><strong><code>worker.map("field")</code></strong> — a <em>dynamic</em> number of parallel tasks: one worker
-  applied to every item of a state list (map-reduce / orchestrator-workers).
-  Use this instead of hand-rolling <code>Send</code>.</li>
-<li><strong><code>DecisionNode</code></strong> — the branch should be chosen by an <strong>LLM</strong> (classify,
-  triage, route). Constrained to valid choices via structured output. Can take
-  <code>tools=</code> to gather context before routing.</li>
-<li><strong><code>ConditionNode</code></strong> — the branch is decided by <strong>plain Python</strong> (a counter, a
-  flag, a length check). Free, deterministic, no model call — ideal for capping
-  loops.</li>
-<li><strong><code>AgentNode(tools=[...])</code></strong> — any tool-using / ReAct agent. Replaces the
-  <code>ToolNode</code> + <code>tools_condition</code> + loop-back triad with one node.</li>
-<li><strong>Drop back to raw LangGraph</strong> anytime — the compiled graph is a real
-  <code>StateGraph</code>, so streaming, async, <code>durability</code>, checkpointers, and LangSmith
-  all work unchanged. No lock-in.</li>
-</ul>
-<h2 id="under-the-hood">Under the hood<a class="headerlink" href="#under-the-hood" title="Permanent link">&para;</a></h2>
-<p><code>a &gt; b</code> doesn't build an edge — it sets <code>a.children = [b]</code> and returns <code>b</code>, so
-<code>a &gt; b &gt; c</code> builds a linked structure in memory. <code>AgenticGraph(...)</code> walks that
-structure <strong>once</strong> at construction, emits the real LangGraph
-<code>add_node</code>/<code>add_edge</code>/<code>Send</code> calls, runs the dataflow validator, and
-<code>compile()</code>s to a native <code>StateGraph</code> — which <code>AgenticGraph</code> subclasses.</p>
-<p>So pttai is a build-time convenience that disappears at runtime: the execution
-underneath is plain LangGraph, and you can drop down to it anytime.</p>
-<h2 id="vs-langchains-functional-api">vs. LangChain's Functional API<a class="headerlink" href="#vs-langchains-functional-api" title="Permanent link">&para;</a></h2>
-<p>The closest comparison isn't raw graphs — it's LangChain's own Functional API
-(<code>@entrypoint</code> / <code>@task</code>), which also lets you skip explicit graph wiring. The
-difference is <strong>visibility of control flow</strong>:</p>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>Functional API (<code>@entrypoint</code>/<code>@task</code>)</th>
-<th>pttai</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Control flow</td>
-<td>hidden in plain Python (loops, <code>if</code>, <code>await</code>)</td>
-<td>an explicit, declarative DAG</td>
-</tr>
-<tr>
-<td>Fan-out / join</td>
-<td>you orchestrate futures by hand</td>
-<td><code>fanout(...)</code> / <code>.map("field")</code>, one line</td>
-</tr>
-<tr>
-<td>Inspect the topology</td>
-<td>run it and trace</td>
-<td><code>summary()</code> prints the static DAG</td>
-</tr>
-<tr>
-<td>Catch dataflow bugs</td>
-<td>at runtime</td>
-<td>at <strong>compile time</strong>, before any invoke</td>
-</tr>
-</tbody>
-</table>
-<p>Both are concise. The trade pttai makes is keeping the topology <em>inspectable
-and validatable</em>: you can see the fan-out/join/map-reduce structure, render it,
-and have the build reject read-before-written bugs — where the Functional API
-hides the graph inside ordinary Python.</p>
-<h2 id="why-not-raw-langgraph">Why not raw LangGraph?<a class="headerlink" href="#why-not-raw-langgraph" title="Permanent link">&para;</a></h2>
-<p>You keep the entire LangGraph runtime either way — pttai disappears at compile
-time. What it buys you: (1) less wiring boilerplate, (2) an inspectable
-topology (<code>summary()</code> prints the DAG, and the graph renders itself in a
-notebook), and (3) a <a href="../validator/">dataflow validator</a> that rejects
-read-before-write and unwired-branch bugs before you spend a token — which has
-no equivalent in raw LangGraph.</p>
-<p>A worked comparison — the same tool-using agent in 3 lines vs. 10 — is on the
-<a href="../#the-same-agent-both-ways">home page</a>, and every file in the
-<a href="../examples/">Examples</a> galleries pairs the pttai version with a
-<code># --- equivalent in raw LangGraph ---</code> block.</p>
+  <h1>RouterNode (base)</h1>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="pttai.nodes.decision_node.RouterNode" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">pttai.nodes.decision_node.RouterNode</span>
+
+
+<a href="#pttai.nodes.decision_node.RouterNode" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Routing mixin for nodes that pick the next node instead of appending to the
+conversation. Owns the <code>Choice</code> list, <code>route()</code>, the <code>node["choice"] &gt;
+handler</code> wiring (<code>__getitem__</code>), and the <code>__gt__</code> override that forbids a
+direct edge off the router.</p>
+<p>It is a MIXIN (not a Node subclass): concrete routers combine it with their
+real base — <code>ConditionNode(RouterNode, Node)</code> and
+<code>DecisionNode(RouterNode, LLMNode)</code> — and call <code>_setup_choices</code> explicitly
+from their own <code>__init__</code>. Subclasses decide HOW the label is chosen
+(<code>DecisionNode</code> via an LLM, <code>ConditionNode</code> via a Python callable) and
+both write it to a dedicated per-node <code>decision_{name}</code> state field (read by
+<code>route()</code>), never into <code>messages</code>. Because <code>RouterNode</code> stays in the MRO of both,
+<code>graph.py</code>'s <code>isinstance(node, RouterNode)</code> conditional-edge handling
+treats them identically.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pttai.nodes.decision_node.RouterNode.__getitem__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__getitem__</span>
+
+
+<a href="#pttai.nodes.decision_node.RouterNode.__getitem__" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__getitem__</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Choice</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Get a Choice object by its name.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>key</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Name of the choice to retrieve</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pttai.nodes.decision_node.Choice">Choice</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The Choice object</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="ValueError">ValueError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If the choice name is not found</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pttai.nodes.decision_node.RouterNode.__gt__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__gt__</span>
+
+
+<a href="#pttai.nodes.decision_node.RouterNode.__gt__" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__gt__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Prevent direct edge creation from a routing node.</p>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="ValueError">ValueError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Always, since edges must be created from choices</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pttai.nodes.decision_node.RouterNode.route" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">route</span>
+
+
+<a href="#pttai.nodes.decision_node.RouterNode.route" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">route</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Conditional-edge callback: map the chosen label to the next node name.</p>
+<p>Registered with LangGraph via <code>add_conditional_edges(name, route, ...)</code>.
+Reads the label this router wrote to <code>state["decision_{name}"]</code>, finds
+the matching <code>Choice</code>, and returns the name of the node wired to it —
+which LangGraph uses to pick the outgoing edge. Raises <code>ValueError</code> if
+the label is unknown or its choice was never wired to a node.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
 
 
 
@@ -1517,10 +1567,10 @@ no equivalent in raw LangGraph.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "content.code.annotate", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "content.code.annotate", "search.suggest"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
