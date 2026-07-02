@@ -1,89 +1,640 @@
 {
   "summary": {
     "backend": "offline fake",
-    "adjudicated": false,
-    "adjudication_coverage": 0.0,
+    "adjudicated": true,
+    "adjudication_coverage": 1.0,
     "counts": {
-      "total": 9,
-      "buildable": 9,
-      "clean": 4,
-      "flagged": 5,
-      "malformed_excluded": 0,
-      "flags_adjudicated": 0
+      "total": 100,
+      "buildable": 65,
+      "clean": 49,
+      "flagged": 16,
+      "malformed_excluded": 35,
+      "flags_adjudicated": 16
     },
-    "flag_rate_over_buildable": 0.5555555555555556,
+    "flag_rate_over_buildable": 0.24615384615384617,
     "false_positive_rate_among_flags": 0.0,
     "false_positives": [],
-    "true_bugs_among_flags": 5,
+    "true_bugs_among_flags": 16,
     "langgraph_would": {
-      "runtime_only": 4,
+      "runtime_only": 5,
       "silent": 0,
       "build_too": 0,
-      "dsl_strictness": 1,
+      "dsl_strictness": 8,
+      "dsl_internal": 3,
       "unknown": 0,
-      "runtime_or_silent": 4
+      "runtime_or_silent": 5
     },
     "flags_by_class": {
-      "concurrent-write-no-reducer": 1,
-      "dangling-choice": 1,
-      "dead-end-node": 1,
-      "prompt-placeholder-mismatch": 1,
-      "read-before-write": 1
+      "prompt-placeholder-mismatch": 3,
+      "concurrent-write-no-reducer": 3,
+      "dead-end-node": 8,
+      "read-undeclared": 1,
+      "dangling-choice": 1
     },
     "flags_by_langgraph_phase": {
-      "runtime": 4,
-      "dsl-strictness": 1
+      "dsl-internal": 3,
+      "runtime": 5,
+      "dsl-strictness": 8
     }
   },
   "items": [
     {
-      "id": "bug_concurrent_write",
-      "file": "bug_concurrent_write.py",
+      "id": "aspect_review_00",
+      "file": "aspect_review_00.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "aspect_review_01",
+      "file": "aspect_review_01.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "aspect_review_02",
+      "file": "aspect_review_02.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "aspect_review_03",
+      "file": "aspect_review_03.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "aspect_review_04",
+      "file": "aspect_review_04.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/TypeError",
+      "langgraph_phase": null,
+      "error_type": "TypeError",
+      "message": "AgenticGraph.__init__() got an unexpected keyword argument 'state_schema'"
+    },
+    {
+      "id": "change_review_route_00",
+      "file": "change_review_route_00.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "change_review_route_01",
+      "file": "change_review_route_01.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "change_review_route_02",
+      "file": "change_review_route_02.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "You must create edge from choices to other nodes. For example: `decision_node['choice'] > other_node`"
+    },
+    {
+      "id": "change_review_route_03",
+      "file": "change_review_route_03.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "change_review_route_04",
+      "file": "change_review_route_04.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "dialogue_next_turn_00",
+      "file": "dialogue_next_turn_00.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "dialogue_next_turn_01",
+      "file": "dialogue_next_turn_01.py",
+      "bucket": "flagged",
+      "bug_class": "prompt-placeholder-mismatch",
+      "langgraph_phase": "dsl-internal",
+      "error_type": "GraphValidationError",
+      "message": "[error] proceed_agent: node_prompt references placeholder {messages} but 'messages' is not a declared scalar read ['action', 'draft_plan', 'needed_details', 'next_questions']; this raises KeyError when the prompt is interpolated"
+    },
+    {
+      "id": "dialogue_next_turn_02",
+      "file": "dialogue_next_turn_02.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "dialogue_next_turn_03",
+      "file": "dialogue_next_turn_03.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "dialogue_next_turn_04",
+      "file": "dialogue_next_turn_04.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/TypeError",
+      "langgraph_phase": null,
+      "error_type": "TypeError",
+      "message": "DecisionNode.__init__() got an unexpected keyword argument 'writes'"
+    },
+    {
+      "id": "entity_dedup_00",
+      "file": "entity_dedup_00.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "You must create edge from choices to other nodes. For example: `decision_node['choice'] > other_node`"
+    },
+    {
+      "id": "entity_dedup_01",
+      "file": "entity_dedup_01.py",
+      "bucket": "flagged",
+      "bug_class": "prompt-placeholder-mismatch",
+      "langgraph_phase": "dsl-internal",
+      "error_type": "GraphValidationError",
+      "message": "[error] finalize: node_prompt references placeholder {\"canonical_name\"} but '\"canonical_name\"' is not a declared scalar read ['canonical_entities']; this raises KeyError when the prompt is interpolated"
+    },
+    {
+      "id": "entity_dedup_02",
+      "file": "entity_dedup_02.py",
       "bucket": "flagged",
       "bug_class": "concurrent-write-no-reducer",
       "langgraph_phase": "runtime",
       "error_type": "GraphValidationError",
-      "message": "[error] b: concurrently writes 'result' with node 'c', but 'result' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime"
+      "message": "[error] extract_doc_2: concurrently writes 's' with node 'extract_doc_3', but 's' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime"
     },
     {
-      "id": "bug_dangling_choice",
-      "file": "bug_dangling_choice.py",
+      "id": "entity_dedup_03",
+      "file": "entity_dedup_03.py",
       "bucket": "flagged",
-      "bug_class": "dangling-choice",
+      "bug_class": "concurrent-write-no-reducer",
       "langgraph_phase": "runtime",
       "error_type": "GraphValidationError",
-      "message": "[error] triage: choice 'technical' has no connected node; wire it, e.g. `decision['technical'] > some_node`"
+      "message": "[error] doc0_extract: concurrently writes 'extracted' with node 'doc1_extract', but 'extracted' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime"
     },
     {
-      "id": "bug_dead_end",
-      "file": "bug_dead_end.py",
+      "id": "entity_dedup_04",
+      "file": "entity_dedup_04.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "escalation_00",
+      "file": "escalation_00.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "You must create edge from choices to other nodes. For example: `decision_node['choice'] > other_node`"
+    },
+    {
+      "id": "escalation_01",
+      "file": "escalation_01.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "escalation_02",
+      "file": "escalation_02.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "escalation_03",
+      "file": "escalation_03.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "escalation_04",
+      "file": "escalation_04.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "You must create edge from choices to other nodes. For example: `decision_node['choice'] > other_node`"
+    },
+    {
+      "id": "extract_summarize_00",
+      "file": "extract_summarize_00.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "extract_summarize_01",
+      "file": "extract_summarize_01.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "extract_summarize_02",
+      "file": "extract_summarize_02.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "extract_summarize_03",
+      "file": "extract_summarize_03.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "extract_summarize_04",
+      "file": "extract_summarize_04.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "fact_check_00",
+      "file": "fact_check_00.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "You must create edge from choices to other nodes. For example: `decision_node['choice'] > other_node`"
+    },
+    {
+      "id": "fact_check_01",
+      "file": "fact_check_01.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "You must create edge from choices to other nodes. For example: `decision_node['choice'] > other_node`"
+    },
+    {
+      "id": "fact_check_02",
+      "file": "fact_check_02.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "A decision choice cannot route directly to a fan-out/`.map`; wrap it in an AgenticGraph and route to that."
+    },
+    {
+      "id": "fact_check_03",
+      "file": "fact_check_03.py",
       "bucket": "flagged",
       "bug_class": "dead-end-node",
       "langgraph_phase": "dsl-strictness",
       "error_type": "ValueError",
-      "message": "Node 'writeup' has no children and is not an end node."
+      "message": "Node 'frame' has no children and is not an end node."
     },
     {
-      "id": "bug_prompt_placeholder",
-      "file": "bug_prompt_placeholder.py",
+      "id": "fact_check_04",
+      "file": "fact_check_04.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "A decision choice cannot route directly to a fan-out/`.map`; wrap it in an AgenticGraph and route to that."
+    },
+    {
+      "id": "intent_router_00",
+      "file": "intent_router_00.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "intent_router_01",
+      "file": "intent_router_01.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "intent_router_02",
+      "file": "intent_router_02.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "intent_router_03",
+      "file": "intent_router_03.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "intent_router_04",
+      "file": "intent_router_04.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "interview_grader_00",
+      "file": "interview_grader_00.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "interview_grader_01",
+      "file": "interview_grader_01.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "interview_grader_02",
+      "file": "interview_grader_02.py",
+      "bucket": "malformed",
+      "bug_class": "generation-error",
+      "langgraph_phase": null,
+      "error_type": "AttributeError",
+      "message": "'Choice' object has no attribute 'children'"
+    },
+    {
+      "id": "interview_grader_03",
+      "file": "interview_grader_03.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/TypeError",
+      "langgraph_phase": null,
+      "error_type": "TypeError",
+      "message": "DecisionNode.__init__() got an unexpected keyword argument 'writes'"
+    },
+    {
+      "id": "interview_grader_04",
+      "file": "interview_grader_04.py",
       "bucket": "flagged",
       "bug_class": "prompt-placeholder-mismatch",
-      "langgraph_phase": "runtime",
+      "langgraph_phase": "dsl-internal",
       "error_type": "GraphValidationError",
-      "message": "[error] reader: node_prompt references placeholder {subject} but 'subject' is not a declared scalar read ['topic']; this raises KeyError when the prompt is interpolated"
+      "message": "[error] extract_dims: node_prompt references placeholder {\"dimensions\"} but '\"dimensions\"' is not a declared scalar read ['grade_request']; this raises KeyError when the prompt is interpolated"
     },
     {
-      "id": "bug_read_before_write",
-      "file": "bug_read_before_write.py",
+      "id": "map_reduce_summ_00",
+      "file": "map_reduce_summ_00.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "map_reduce_summ_01",
+      "file": "map_reduce_summ_01.py",
       "bucket": "flagged",
-      "bug_class": "read-before-write",
+      "bug_class": "dead-end-node",
+      "langgraph_phase": "dsl-strictness",
+      "error_type": "ValueError",
+      "message": "Node 'summarize_doc' has no children and is not an end node."
+    },
+    {
+      "id": "map_reduce_summ_02",
+      "file": "map_reduce_summ_02.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "map_reduce_summ_03",
+      "file": "map_reduce_summ_03.py",
+      "bucket": "flagged",
+      "bug_class": "dead-end-node",
+      "langgraph_phase": "dsl-strictness",
+      "error_type": "ValueError",
+      "message": "Node 'doc_summarizer' has no children and is not an end node."
+    },
+    {
+      "id": "map_reduce_summ_04",
+      "file": "map_reduce_summ_04.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "multi_hop_00",
+      "file": "multi_hop_00.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/TypeError",
+      "langgraph_phase": null,
+      "error_type": "TypeError",
+      "message": "make_retriever_tool() got an unexpected keyword argument 'retriever_key'"
+    },
+    {
+      "id": "multi_hop_01",
+      "file": "multi_hop_01.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/TypeError",
+      "langgraph_phase": null,
+      "error_type": "TypeError",
+      "message": "make_retriever_tool() got an unexpected keyword argument 'tool_name'"
+    },
+    {
+      "id": "multi_hop_02",
+      "file": "multi_hop_02.py",
+      "bucket": "flagged",
+      "bug_class": "dead-end-node",
+      "langgraph_phase": "dsl-strictness",
+      "error_type": "ValueError",
+      "message": "Node 'retrieve_intermediate' has no children and is not an end node."
+    },
+    {
+      "id": "multi_hop_03",
+      "file": "multi_hop_03.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/TypeError",
+      "langgraph_phase": null,
+      "error_type": "TypeError",
+      "message": "make_retriever_tool() got an unexpected keyword argument 'retriever_name'"
+    },
+    {
+      "id": "multi_hop_04",
+      "file": "multi_hop_04.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "Function must have a docstring if description not provided."
+    },
+    {
+      "id": "plan_execute_00",
+      "file": "plan_execute_00.py",
+      "bucket": "flagged",
+      "bug_class": "dead-end-node",
+      "langgraph_phase": "dsl-strictness",
+      "error_type": "ValueError",
+      "message": "Node 'planner' has no children and is not an end node."
+    },
+    {
+      "id": "plan_execute_01",
+      "file": "plan_execute_01.py",
+      "bucket": "flagged",
+      "bug_class": "dead-end-node",
+      "langgraph_phase": "dsl-strictness",
+      "error_type": "ValueError",
+      "message": "Node 'planner' has no children and is not an end node."
+    },
+    {
+      "id": "plan_execute_02",
+      "file": "plan_execute_02.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "You must create edge from choices to other nodes. For example: `decision_node['choice'] > other_node`"
+    },
+    {
+      "id": "plan_execute_03",
+      "file": "plan_execute_03.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "plan_execute_04",
+      "file": "plan_execute_04.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "rag_qa_00",
+      "file": "rag_qa_00.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/TypeError",
+      "langgraph_phase": null,
+      "error_type": "TypeError",
+      "message": "make_retriever_tool() got an unexpected keyword argument 'retriever_key'"
+    },
+    {
+      "id": "rag_qa_01",
+      "file": "rag_qa_01.py",
+      "bucket": "flagged",
+      "bug_class": "dead-end-node",
+      "langgraph_phase": "dsl-strictness",
+      "error_type": "ValueError",
+      "message": "Node 'retrieve' has no children and is not an end node."
+    },
+    {
+      "id": "rag_qa_02",
+      "file": "rag_qa_02.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "multi-field structured output (writes=[...]) cannot be combined with tools in v1"
+    },
+    {
+      "id": "rag_qa_03",
+      "file": "rag_qa_03.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "multi-field structured output (writes=[...]) cannot be combined with tools in v1"
+    },
+    {
+      "id": "rag_qa_04",
+      "file": "rag_qa_04.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/TypeError",
+      "langgraph_phase": null,
+      "error_type": "TypeError",
+      "message": "make_retriever_tool() got an unexpected keyword argument 'retriever_key'"
+    },
+    {
+      "id": "refine_until_good_00",
+      "file": "refine_until_good_00.py",
+      "bucket": "flagged",
+      "bug_class": "read-undeclared",
       "langgraph_phase": "runtime",
       "error_type": "GraphValidationError",
-      "message": "[error] summarize: reads computed key 'draft' but no upstream node produces it before this node (produced by: ['drafter'], none of which are upstream); available keys here: ['decision', 'log', 'messages', 'token']"
+      "message": "[error] round_seed: reads 'round' but no node produces it and it is not an input key; produce it upstream or declare it in inputs=... if you supply it at invoke(); available keys here: ['content', 'decision', 'log', 'messages', 'score', 'summary', 'token']"
     },
     {
-      "id": "clean_extract_summarize",
-      "file": "clean_extract_summarize.py",
+      "id": "refine_until_good_01",
+      "file": "refine_until_good_01.py",
       "bucket": "clean",
       "bug_class": null,
       "langgraph_phase": null,
@@ -91,8 +642,26 @@
       "message": ""
     },
     {
-      "id": "clean_panel_parallel",
-      "file": "clean_panel_parallel.py",
+      "id": "refine_until_good_02",
+      "file": "refine_until_good_02.py",
+      "bucket": "flagged",
+      "bug_class": "concurrent-write-no-reducer",
+      "langgraph_phase": "runtime",
+      "error_type": "GraphValidationError",
+      "message": "[error] draft_b: concurrently writes 'candidate' with node 'draft_c', but 'candidate' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime"
+    },
+    {
+      "id": "refine_until_good_03",
+      "file": "refine_until_good_03.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/TypeError",
+      "langgraph_phase": null,
+      "error_type": "TypeError",
+      "message": "'AgentNode' object is not subscriptable"
+    },
+    {
+      "id": "refine_until_good_04",
+      "file": "refine_until_good_04.py",
       "bucket": "clean",
       "bug_class": null,
       "langgraph_phase": null,
@@ -100,8 +669,26 @@
       "message": ""
     },
     {
-      "id": "clean_rag_qa",
-      "file": "clean_rag_qa.py",
+      "id": "reflect_revise_00",
+      "file": "reflect_revise_00.py",
+      "bucket": "flagged",
+      "bug_class": "dead-end-node",
+      "langgraph_phase": "dsl-strictness",
+      "error_type": "ValueError",
+      "message": "Node 'draft' has no children and is not an end node."
+    },
+    {
+      "id": "reflect_revise_01",
+      "file": "reflect_revise_01.py",
+      "bucket": "flagged",
+      "bug_class": "dangling-choice",
+      "langgraph_phase": "runtime",
+      "error_type": "GraphValidationError",
+      "message": "[error] has_question: choice 'yes' has no connected node; wire it, e.g. `decision['yes'] > some_node`"
+    },
+    {
+      "id": "reflect_revise_02",
+      "file": "reflect_revise_02.py",
       "bucket": "clean",
       "bug_class": null,
       "langgraph_phase": null,
@@ -109,8 +696,242 @@
       "message": ""
     },
     {
-      "id": "clean_triage_routing",
-      "file": "clean_triage_routing.py",
+      "id": "reflect_revise_03",
+      "file": "reflect_revise_03.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "reflect_revise_04",
+      "file": "reflect_revise_04.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "rerank_00",
+      "file": "rerank_00.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "rerank_01",
+      "file": "rerank_01.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/TypeError",
+      "langgraph_phase": null,
+      "error_type": "TypeError",
+      "message": "make_retriever_tool() missing 1 required positional argument: 'retriever'"
+    },
+    {
+      "id": "rerank_02",
+      "file": "rerank_02.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "multi-field structured output (writes=[...]) cannot be combined with tools in v1"
+    },
+    {
+      "id": "rerank_03",
+      "file": "rerank_03.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/TypeError",
+      "langgraph_phase": null,
+      "error_type": "TypeError",
+      "message": "make_retriever_tool() missing 1 required positional argument: 'retriever'"
+    },
+    {
+      "id": "rerank_04",
+      "file": "rerank_04.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/TypeError",
+      "langgraph_phase": null,
+      "error_type": "TypeError",
+      "message": "make_retriever_tool() missing 1 required positional argument: 'retriever'"
+    },
+    {
+      "id": "sentiment_route_00",
+      "file": "sentiment_route_00.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "sentiment_route_01",
+      "file": "sentiment_route_01.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "sentiment_route_02",
+      "file": "sentiment_route_02.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "sentiment_route_03",
+      "file": "sentiment_route_03.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "sentiment_route_04",
+      "file": "sentiment_route_04.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "tool_use_math_00",
+      "file": "tool_use_math_00.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "Function must have a docstring if description not provided."
+    },
+    {
+      "id": "tool_use_math_01",
+      "file": "tool_use_math_01.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "Function must have a docstring if description not provided."
+    },
+    {
+      "id": "tool_use_math_02",
+      "file": "tool_use_math_02.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "Function must have a docstring if description not provided."
+    },
+    {
+      "id": "tool_use_math_03",
+      "file": "tool_use_math_03.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "Function must have a docstring if description not provided."
+    },
+    {
+      "id": "tool_use_math_04",
+      "file": "tool_use_math_04.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "Function must have a docstring if description not provided."
+    },
+    {
+      "id": "translate_glossary_00",
+      "file": "translate_glossary_00.py",
+      "bucket": "malformed",
+      "bug_class": "generation-error",
+      "langgraph_phase": null,
+      "error_type": "SyntaxError",
+      "message": "keyword argument repeated: writes (translate_glossary_00.py, line 24)"
+    },
+    {
+      "id": "translate_glossary_01",
+      "file": "translate_glossary_01.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "translate_glossary_02",
+      "file": "translate_glossary_02.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "Choice <pttai.nodes.decision_node.Choice object at 0x1084474a0> not found in choices."
+    },
+    {
+      "id": "translate_glossary_03",
+      "file": "translate_glossary_03.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/TypeError",
+      "langgraph_phase": null,
+      "error_type": "TypeError",
+      "message": "'AgentNode' object is not subscriptable"
+    },
+    {
+      "id": "translate_glossary_04",
+      "file": "translate_glossary_04.py",
+      "bucket": "malformed",
+      "bug_class": "unrecognized/ValueError",
+      "langgraph_phase": null,
+      "error_type": "ValueError",
+      "message": "Choice <pttai.nodes.decision_node.Choice object at 0x1083e4530> not found in choices."
+    },
+    {
+      "id": "triage_00",
+      "file": "triage_00.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "triage_01",
+      "file": "triage_01.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "triage_02",
+      "file": "triage_02.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "triage_03",
+      "file": "triage_03.py",
+      "bucket": "clean",
+      "bug_class": null,
+      "langgraph_phase": null,
+      "error_type": null,
+      "message": ""
+    },
+    {
+      "id": "triage_04",
+      "file": "triage_04.py",
       "bucket": "clean",
       "bug_class": null,
       "langgraph_phase": null,

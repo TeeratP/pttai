@@ -1,0 +1,12 @@
+id: interview_grader_04
+bug_class: prompt-placeholder-mismatch
+langgraph_phase: dsl-internal
+error_type: GraphValidationError
+
+pttai.validation.GraphValidationError: AgenticGraph 'graph': 1 error(s), 5 warning(s)
+  [error] extract_dims: node_prompt references placeholder {"dimensions"} but '"dimensions"' is not a declared scalar read ['grade_request']; this raises KeyError when the prompt is interpolated
+  [warning] dim1_score: declares scalar read 'dimensions' but node_prompt never interpolates {dimensions}; the value is fetched and silently ignored (dead read)
+  [warning] dim2_score: declares scalar read 'dimensions' but node_prompt never interpolates {dimensions}; the value is fetched and silently ignored (dead read)
+  [warning] dim3_score: declares scalar read 'dimensions' but node_prompt never interpolates {dimensions}; the value is fetched and silently ignored (dead read)
+  [warning] dim4_score: declares scalar read 'dimensions' but node_prompt never interpolates {dimensions}; the value is fetched and silently ignored (dead read)
+  [warning] dim5_score: declares scalar read 'dimensions' but node_prompt never interpolates {dimensions}; the value is fetched and silently ignored (dead read)

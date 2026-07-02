@@ -57,6 +57,9 @@ from _llm import get_llm  # noqa: E402  (offline fake unless OPENAI_API_KEY is s
 #   dsl-strictness -> a pttai DSL-strictness rejection, NOT a LangGraph bug:
 #             LangGraph runs the pipeline fine (e.g. a childless node is a legal
 #             implicit terminal). Excluded from the pttai-only differentiator count.
+#   dsl-internal -> a bug in a pttai-DSL-only feature that CANNOT occur in raw
+#             LangGraph (e.g. node_prompt {placeholder} interpolation). Reported
+#             separately and EXCLUDED from the differentiator count.
 #   unknown -> an unmapped validation error with no justified LangGraph behavior;
 #             counted separately and EXCLUDED from the differentiator count.
 # Only classes with a known, justified LangGraph behavior (runtime/silent) count
@@ -68,7 +71,10 @@ _VALIDATION_CLASSES = [
      ["is not declared in the state schema", "but no node produces it and it is not an input"]),
     ("concurrent-write-no-reducer", "runtime", ["concurrently writes"]),
     ("dangling-choice", "runtime", ["has no connected node"]),
-    ("prompt-placeholder-mismatch", "runtime", ["references placeholder"]),
+    # prompt-placeholder is a pttai-DSL-internal templating bug: raw LangGraph has
+    # no node_prompt interpolation layer, so it CANNOT occur there. Reported
+    # separately, NOT counted as a pttai-only differentiator.
+    ("prompt-placeholder-mismatch", "dsl-internal", ["references placeholder"]),
     ("write-undeclared", "silent", ["writes key", "silently drops unknown-key"]),
 ]
 _STRUCTURAL_CLASSES = [  # non-GraphValidationError build failures pttai still rejects
@@ -196,6 +202,7 @@ def summarize(rows, adjudication):
     lg_silent = sum(r["langgraph_phase"] == "silent" for r in flagged)
     lg_build = sum(r["langgraph_phase"] == "build" for r in flagged)
     lg_dsl = sum(r["langgraph_phase"] == "dsl-strictness" for r in flagged)
+    lg_dsl_internal = sum(r["langgraph_phase"] == "dsl-internal" for r in flagged)
     lg_unknown = sum(r["langgraph_phase"] == "unknown" for r in flagged)
 
     return {
@@ -213,8 +220,10 @@ def summarize(rows, adjudication):
         "true_bugs_among_flags": len(true_bugs),
         "langgraph_would": {
             "runtime_only": lg_runtime, "silent": lg_silent, "build_too": lg_build,
-            "dsl_strictness": lg_dsl, "unknown": lg_unknown,
+            "dsl_strictness": lg_dsl, "dsl_internal": lg_dsl_internal,
+            "unknown": lg_unknown,
             # differentiator tally: only known runtime/silent classes count.
+            # dsl-strictness / dsl-internal / unknown are excluded.
             "runtime_or_silent": lg_runtime + lg_silent,
         },
         "flags_by_class": dict(by_class),
@@ -265,6 +274,8 @@ def _print(summary, gen_dir):
     print(f"  also at build:     {lg['build_too']}  (not a pttai differentiator)")
     print(f"  DSL-strictness:    {lg.get('dsl_strictness', 0)}  "
           f"(LangGraph runs fine -- not a pttai differentiator)")
+    print(f"  DSL-internal:      {lg.get('dsl_internal', 0)}  "
+          f"(prompt templating; cannot occur in raw LangGraph -- reported separately)")
     print(f"  unknown phase:     {lg.get('unknown', 0)}  "
           f"(unmapped -- excluded from the differentiator count)")
     print(f"  => runtime-or-silent (pttai-only early catch): {lg['runtime_or_silent']}")

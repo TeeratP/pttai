@@ -1,0 +1,134 @@
+==> [1/2] Generating pipelines (per-spec=5)…
+  [1] wrote rag_qa_00.py
+  [2] wrote rag_qa_01.py
+  [3] wrote rag_qa_02.py
+  [4] wrote rag_qa_03.py
+  [5] wrote rag_qa_04.py
+  [6] wrote multi_hop_00.py
+  [7] wrote multi_hop_01.py
+  [8] wrote multi_hop_02.py
+  [9] wrote multi_hop_03.py
+  [10] wrote multi_hop_04.py
+  [11] wrote extract_summarize_00.py
+  [12] wrote extract_summarize_01.py
+  [13] wrote extract_summarize_02.py
+  [14] wrote extract_summarize_03.py
+  [15] wrote extract_summarize_04.py
+  [16] wrote rerank_00.py
+  [17] wrote rerank_01.py
+  [18] wrote rerank_02.py
+  [19] wrote rerank_03.py
+  [20] wrote rerank_04.py
+  [21] wrote plan_execute_00.py
+  [22] wrote plan_execute_01.py
+  [23] wrote plan_execute_02.py
+  [24] wrote plan_execute_03.py
+  [25] wrote plan_execute_04.py
+  [26] wrote translate_glossary_00.py
+  [27] wrote translate_glossary_01.py
+  [28] wrote translate_glossary_02.py
+  [29] wrote translate_glossary_03.py
+  [30] wrote translate_glossary_04.py
+  [31] wrote fact_check_00.py
+  [32] wrote fact_check_01.py
+  [33] wrote fact_check_02.py
+  [34] wrote fact_check_03.py
+  ! fact_check_04.py: syntax error at generation time: cannot assign to comparison (fact_check_04.py, line 152)
+  [35] wrote fact_check_04.py
+  [36] wrote dialogue_next_turn_00.py
+  [37] wrote dialogue_next_turn_01.py
+  [38] wrote dialogue_next_turn_02.py
+  [39] wrote dialogue_next_turn_03.py
+  [40] wrote dialogue_next_turn_04.py
+  [41] wrote triage_00.py
+  [42] wrote triage_01.py
+  [43] wrote triage_02.py
+  [44] wrote triage_03.py
+  [45] wrote triage_04.py
+  [46] wrote sentiment_route_00.py
+  [47] wrote sentiment_route_01.py
+  [48] wrote sentiment_route_02.py
+  [49] wrote sentiment_route_03.py
+  [50] wrote sentiment_route_04.py
+  [51] wrote intent_router_00.py
+  [52] wrote intent_router_01.py
+  [53] wrote intent_router_02.py
+  ! intent_router_03.py: syntax error at generation time: '(' was never closed (intent_router_03.py, line 7)
+  [54] wrote intent_router_03.py
+  [55] wrote intent_router_04.py
+  [56] wrote change_review_route_00.py
+  [57] wrote change_review_route_01.py
+  [58] wrote change_review_route_02.py
+  [59] wrote change_review_route_03.py
+  [60] wrote change_review_route_04.py
+  [61] wrote escalation_00.py
+  [62] wrote escalation_01.py
+  [63] wrote escalation_02.py
+  [64] wrote escalation_03.py
+  [65] wrote escalation_04.py
+  [66] wrote map_reduce_summ_00.py
+  [67] wrote map_reduce_summ_01.py
+  [68] wrote map_reduce_summ_02.py
+  [69] wrote map_reduce_summ_03.py
+  [70] wrote map_reduce_summ_04.py
+  [71] wrote aspect_review_00.py
+  [72] wrote aspect_review_01.py
+  [73] wrote aspect_review_02.py
+  [74] wrote aspect_review_03.py
+  [75] wrote aspect_review_04.py
+  [76] wrote entity_dedup_00.py
+  [77] wrote entity_dedup_01.py
+  [78] wrote entity_dedup_02.py
+  [79] wrote entity_dedup_03.py
+  [80] wrote entity_dedup_04.py
+  [81] wrote reflect_revise_00.py
+  [82] wrote reflect_revise_01.py
+  [83] wrote reflect_revise_02.py
+  [84] wrote reflect_revise_03.py
+  [85] wrote reflect_revise_04.py
+  [86] wrote refine_until_good_00.py
+  [87] wrote refine_until_good_01.py
+  [88] wrote refine_until_good_02.py
+  [89] wrote refine_until_good_03.py
+  [90] wrote refine_until_good_04.py
+  [91] wrote tool_use_math_00.py
+  [92] wrote tool_use_math_01.py
+  [93] wrote tool_use_math_02.py
+  [94] wrote tool_use_math_03.py
+  [95] wrote tool_use_math_04.py
+  [96] wrote interview_grader_00.py
+  [97] wrote interview_grader_01.py
+  [98] wrote interview_grader_02.py
+  [99] wrote interview_grader_03.py
+  [100] wrote interview_grader_04.py
+
+Generated 100 pipelines into eval/llmgen/generated/ (+ manifest.json). Now run score.py.
+==> [2/2] Scoring generated pipelines…
+====================================================================================
+LLM-generated-pipeline study -- pttai validator as an AI-code guardrail
+source: eval/llmgen/generated/    backend: REAL OpenAI
+====================================================================================
+pipelines scored:            150
+  buildable (clean+flagged): 95
+  clean (validator passed):  71
+  FLAGGED by validator:      24
+  malformed (excluded):      55  (broken/non-pttai code -- not counted as flags)
+
+flag rate over buildable:    25%
+false-positive rate among flags (human-adjudicated): 0%  (0/24)
+
+of the 24 flags, raw LangGraph would surface:
+  only at runtime:   13
+  silently (never):  0
+  also at build:     0  (not a pttai differentiator)
+  DSL-strictness:    11  (LangGraph runs fine -- not a pttai differentiator)
+  => runtime-or-silent (pttai-only early catch): 13
+
+flags by class:           {'dead-end-node': 11, 'prompt-placeholder-mismatch': 9, 'read-before-write': 2, 'concurrent-write-no-reducer': 2}
+
+wrote eval/llmgen/results.csv and eval/llmgen/results.json
+flagged snippets + errors copied to eval/llmgen/flagged/ -> adjudicate with adjudicate.md
+
+Done. See eval/llmgen/results.{csv,json} and flagged/.
+Next: adjudicate the flags per eval/llmgen/adjudicate.md (write
+adjudication.csv), then re-run score.py for the human-adjudicated FP rate.

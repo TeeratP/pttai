@@ -1,0 +1,7 @@
+id: dialogue_next_turn_01
+bug_class: prompt-placeholder-mismatch
+langgraph_phase: dsl-internal
+error_type: GraphValidationError
+
+pttai.validation.GraphValidationError: AgenticGraph 'graph': 1 error(s), 0 warning(s)
+  [error] proceed_agent: node_prompt references placeholder {messages} but 'messages' is not a declared scalar read ['action', 'draft_plan', 'needed_details', 'next_questions']; this raises KeyError when the prompt is interpolated

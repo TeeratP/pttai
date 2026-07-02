@@ -1,0 +1,6 @@
+id: reflect_revise_00
+bug_class: dead-end-node
+langgraph_phase: dsl-strictness
+error_type: ValueError
+
+ValueError: Node 'draft' has no children and is not an end node.

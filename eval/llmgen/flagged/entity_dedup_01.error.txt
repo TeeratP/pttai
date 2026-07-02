@@ -1,0 +1,7 @@
+id: entity_dedup_01
+bug_class: prompt-placeholder-mismatch
+langgraph_phase: dsl-internal
+error_type: GraphValidationError
+
+pttai.validation.GraphValidationError: AgenticGraph 'graph': 1 error(s), 0 warning(s)
+  [error] finalize: node_prompt references placeholder {"canonical_name"} but '"canonical_name"' is not a declared scalar read ['canonical_entities']; this raises KeyError when the prompt is interpolated

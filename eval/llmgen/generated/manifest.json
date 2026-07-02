@@ -1,0 +1,729 @@
+{
+  "model": "gpt-5.4-nano",
+  "per_spec": 5,
+  "count": 100,
+  "specs": [
+    "rag_qa",
+    "multi_hop",
+    "extract_summarize",
+    "rerank",
+    "plan_execute",
+    "translate_glossary",
+    "fact_check",
+    "dialogue_next_turn",
+    "triage",
+    "sentiment_route",
+    "intent_router",
+    "change_review_route",
+    "escalation",
+    "map_reduce_summ",
+    "aspect_review",
+    "entity_dedup",
+    "reflect_revise",
+    "refine_until_good",
+    "tool_use_math",
+    "interview_grader"
+  ],
+  "items": [
+    {
+      "file": "rag_qa_00.py",
+      "spec": "rag_qa",
+      "sample": 0,
+      "task": "Answer a user question grounded in a small document corpus: retrieve relevant passages with a search tool, then answer using only those passages.",
+      "syntax_ok": true
+    },
+    {
+      "file": "rag_qa_01.py",
+      "spec": "rag_qa",
+      "sample": 1,
+      "task": "Answer a user question grounded in a small document corpus: retrieve relevant passages with a search tool, then answer using only those passages.",
+      "syntax_ok": true
+    },
+    {
+      "file": "rag_qa_02.py",
+      "spec": "rag_qa",
+      "sample": 2,
+      "task": "Answer a user question grounded in a small document corpus: retrieve relevant passages with a search tool, then answer using only those passages.",
+      "syntax_ok": true
+    },
+    {
+      "file": "rag_qa_03.py",
+      "spec": "rag_qa",
+      "sample": 3,
+      "task": "Answer a user question grounded in a small document corpus: retrieve relevant passages with a search tool, then answer using only those passages.",
+      "syntax_ok": true
+    },
+    {
+      "file": "rag_qa_04.py",
+      "spec": "rag_qa",
+      "sample": 4,
+      "task": "Answer a user question grounded in a small document corpus: retrieve relevant passages with a search tool, then answer using only those passages.",
+      "syntax_ok": true
+    },
+    {
+      "file": "multi_hop_00.py",
+      "spec": "multi_hop",
+      "sample": 0,
+      "task": "Answer a multi-hop question that needs two sequential lookups: first find an intermediate fact, then use it to look up and produce the final answer.",
+      "syntax_ok": true
+    },
+    {
+      "file": "multi_hop_01.py",
+      "spec": "multi_hop",
+      "sample": 1,
+      "task": "Answer a multi-hop question that needs two sequential lookups: first find an intermediate fact, then use it to look up and produce the final answer.",
+      "syntax_ok": true
+    },
+    {
+      "file": "multi_hop_02.py",
+      "spec": "multi_hop",
+      "sample": 2,
+      "task": "Answer a multi-hop question that needs two sequential lookups: first find an intermediate fact, then use it to look up and produce the final answer.",
+      "syntax_ok": true
+    },
+    {
+      "file": "multi_hop_03.py",
+      "spec": "multi_hop",
+      "sample": 3,
+      "task": "Answer a multi-hop question that needs two sequential lookups: first find an intermediate fact, then use it to look up and produce the final answer.",
+      "syntax_ok": true
+    },
+    {
+      "file": "multi_hop_04.py",
+      "spec": "multi_hop",
+      "sample": 4,
+      "task": "Answer a multi-hop question that needs two sequential lookups: first find an intermediate fact, then use it to look up and produce the final answer.",
+      "syntax_ok": true
+    },
+    {
+      "file": "extract_summarize_00.py",
+      "spec": "extract_summarize",
+      "sample": 0,
+      "task": "Extract the key entities and claims from a document, then write a short summary that uses the extracted information.",
+      "syntax_ok": true
+    },
+    {
+      "file": "extract_summarize_01.py",
+      "spec": "extract_summarize",
+      "sample": 1,
+      "task": "Extract the key entities and claims from a document, then write a short summary that uses the extracted information.",
+      "syntax_ok": true
+    },
+    {
+      "file": "extract_summarize_02.py",
+      "spec": "extract_summarize",
+      "sample": 2,
+      "task": "Extract the key entities and claims from a document, then write a short summary that uses the extracted information.",
+      "syntax_ok": true
+    },
+    {
+      "file": "extract_summarize_03.py",
+      "spec": "extract_summarize",
+      "sample": 3,
+      "task": "Extract the key entities and claims from a document, then write a short summary that uses the extracted information.",
+      "syntax_ok": true
+    },
+    {
+      "file": "extract_summarize_04.py",
+      "spec": "extract_summarize",
+      "sample": 4,
+      "task": "Extract the key entities and claims from a document, then write a short summary that uses the extracted information.",
+      "syntax_ok": true
+    },
+    {
+      "file": "rerank_00.py",
+      "spec": "rerank",
+      "sample": 0,
+      "task": "Given a query, retrieve candidate passages, rerank them by relevance, then answer the query using the top reranked passage.",
+      "syntax_ok": true
+    },
+    {
+      "file": "rerank_01.py",
+      "spec": "rerank",
+      "sample": 1,
+      "task": "Given a query, retrieve candidate passages, rerank them by relevance, then answer the query using the top reranked passage.",
+      "syntax_ok": true
+    },
+    {
+      "file": "rerank_02.py",
+      "spec": "rerank",
+      "sample": 2,
+      "task": "Given a query, retrieve candidate passages, rerank them by relevance, then answer the query using the top reranked passage.",
+      "syntax_ok": true
+    },
+    {
+      "file": "rerank_03.py",
+      "spec": "rerank",
+      "sample": 3,
+      "task": "Given a query, retrieve candidate passages, rerank them by relevance, then answer the query using the top reranked passage.",
+      "syntax_ok": true
+    },
+    {
+      "file": "rerank_04.py",
+      "spec": "rerank",
+      "sample": 4,
+      "task": "Given a query, retrieve candidate passages, rerank them by relevance, then answer the query using the top reranked passage.",
+      "syntax_ok": true
+    },
+    {
+      "file": "plan_execute_00.py",
+      "spec": "plan_execute",
+      "sample": 0,
+      "task": "Make a short plan for a research question, then execute the plan step by step and synthesize the findings into one answer.",
+      "syntax_ok": true
+    },
+    {
+      "file": "plan_execute_01.py",
+      "spec": "plan_execute",
+      "sample": 1,
+      "task": "Make a short plan for a research question, then execute the plan step by step and synthesize the findings into one answer.",
+      "syntax_ok": true
+    },
+    {
+      "file": "plan_execute_02.py",
+      "spec": "plan_execute",
+      "sample": 2,
+      "task": "Make a short plan for a research question, then execute the plan step by step and synthesize the findings into one answer.",
+      "syntax_ok": true
+    },
+    {
+      "file": "plan_execute_03.py",
+      "spec": "plan_execute",
+      "sample": 3,
+      "task": "Make a short plan for a research question, then execute the plan step by step and synthesize the findings into one answer.",
+      "syntax_ok": true
+    },
+    {
+      "file": "plan_execute_04.py",
+      "spec": "plan_execute",
+      "sample": 4,
+      "task": "Make a short plan for a research question, then execute the plan step by step and synthesize the findings into one answer.",
+      "syntax_ok": true
+    },
+    {
+      "file": "translate_glossary_00.py",
+      "spec": "translate_glossary",
+      "sample": 0,
+      "task": "Detect the language of a passage, translate it into English, then build a short glossary of the key terms that appear in the translation.",
+      "syntax_ok": false
+    },
+    {
+      "file": "translate_glossary_01.py",
+      "spec": "translate_glossary",
+      "sample": 1,
+      "task": "Detect the language of a passage, translate it into English, then build a short glossary of the key terms that appear in the translation.",
+      "syntax_ok": true
+    },
+    {
+      "file": "translate_glossary_02.py",
+      "spec": "translate_glossary",
+      "sample": 2,
+      "task": "Detect the language of a passage, translate it into English, then build a short glossary of the key terms that appear in the translation.",
+      "syntax_ok": true
+    },
+    {
+      "file": "translate_glossary_03.py",
+      "spec": "translate_glossary",
+      "sample": 3,
+      "task": "Detect the language of a passage, translate it into English, then build a short glossary of the key terms that appear in the translation.",
+      "syntax_ok": true
+    },
+    {
+      "file": "translate_glossary_04.py",
+      "spec": "translate_glossary",
+      "sample": 4,
+      "task": "Detect the language of a passage, translate it into English, then build a short glossary of the key terms that appear in the translation.",
+      "syntax_ok": true
+    },
+    {
+      "file": "fact_check_00.py",
+      "spec": "fact_check",
+      "sample": 0,
+      "task": "Given a factual claim, gather supporting and contradicting evidence, then issue a verdict with a short rationale.",
+      "syntax_ok": true
+    },
+    {
+      "file": "fact_check_01.py",
+      "spec": "fact_check",
+      "sample": 1,
+      "task": "Given a factual claim, gather supporting and contradicting evidence, then issue a verdict with a short rationale.",
+      "syntax_ok": true
+    },
+    {
+      "file": "fact_check_02.py",
+      "spec": "fact_check",
+      "sample": 2,
+      "task": "Given a factual claim, gather supporting and contradicting evidence, then issue a verdict with a short rationale.",
+      "syntax_ok": true
+    },
+    {
+      "file": "fact_check_03.py",
+      "spec": "fact_check",
+      "sample": 3,
+      "task": "Given a factual claim, gather supporting and contradicting evidence, then issue a verdict with a short rationale.",
+      "syntax_ok": true
+    },
+    {
+      "file": "fact_check_04.py",
+      "spec": "fact_check",
+      "sample": 4,
+      "task": "Given a factual claim, gather supporting and contradicting evidence, then issue a verdict with a short rationale.",
+      "syntax_ok": true
+    },
+    {
+      "file": "dialogue_next_turn_00.py",
+      "spec": "dialogue_next_turn",
+      "sample": 0,
+      "task": "From a customer conversation, work out the requested action and the details still needed, then write the next agent turn.",
+      "syntax_ok": true
+    },
+    {
+      "file": "dialogue_next_turn_01.py",
+      "spec": "dialogue_next_turn",
+      "sample": 1,
+      "task": "From a customer conversation, work out the requested action and the details still needed, then write the next agent turn.",
+      "syntax_ok": true
+    },
+    {
+      "file": "dialogue_next_turn_02.py",
+      "spec": "dialogue_next_turn",
+      "sample": 2,
+      "task": "From a customer conversation, work out the requested action and the details still needed, then write the next agent turn.",
+      "syntax_ok": true
+    },
+    {
+      "file": "dialogue_next_turn_03.py",
+      "spec": "dialogue_next_turn",
+      "sample": 3,
+      "task": "From a customer conversation, work out the requested action and the details still needed, then write the next agent turn.",
+      "syntax_ok": true
+    },
+    {
+      "file": "dialogue_next_turn_04.py",
+      "spec": "dialogue_next_turn",
+      "sample": 4,
+      "task": "From a customer conversation, work out the requested action and the details still needed, then write the next agent turn.",
+      "syntax_ok": true
+    },
+    {
+      "file": "triage_00.py",
+      "spec": "triage",
+      "sample": 0,
+      "task": "Triage an incoming support message: classify it as billing, technical, or other, then route it to a handler that drafts the appropriate reply.",
+      "syntax_ok": true
+    },
+    {
+      "file": "triage_01.py",
+      "spec": "triage",
+      "sample": 1,
+      "task": "Triage an incoming support message: classify it as billing, technical, or other, then route it to a handler that drafts the appropriate reply.",
+      "syntax_ok": true
+    },
+    {
+      "file": "triage_02.py",
+      "spec": "triage",
+      "sample": 2,
+      "task": "Triage an incoming support message: classify it as billing, technical, or other, then route it to a handler that drafts the appropriate reply.",
+      "syntax_ok": true
+    },
+    {
+      "file": "triage_03.py",
+      "spec": "triage",
+      "sample": 3,
+      "task": "Triage an incoming support message: classify it as billing, technical, or other, then route it to a handler that drafts the appropriate reply.",
+      "syntax_ok": true
+    },
+    {
+      "file": "triage_04.py",
+      "spec": "triage",
+      "sample": 4,
+      "task": "Triage an incoming support message: classify it as billing, technical, or other, then route it to a handler that drafts the appropriate reply.",
+      "syntax_ok": true
+    },
+    {
+      "file": "sentiment_route_00.py",
+      "spec": "sentiment_route",
+      "sample": 0,
+      "task": "Classify the sentiment of a product review as positive or negative, then route to a handler that writes an appropriate response.",
+      "syntax_ok": true
+    },
+    {
+      "file": "sentiment_route_01.py",
+      "spec": "sentiment_route",
+      "sample": 1,
+      "task": "Classify the sentiment of a product review as positive or negative, then route to a handler that writes an appropriate response.",
+      "syntax_ok": true
+    },
+    {
+      "file": "sentiment_route_02.py",
+      "spec": "sentiment_route",
+      "sample": 2,
+      "task": "Classify the sentiment of a product review as positive or negative, then route to a handler that writes an appropriate response.",
+      "syntax_ok": true
+    },
+    {
+      "file": "sentiment_route_03.py",
+      "spec": "sentiment_route",
+      "sample": 3,
+      "task": "Classify the sentiment of a product review as positive or negative, then route to a handler that writes an appropriate response.",
+      "syntax_ok": true
+    },
+    {
+      "file": "sentiment_route_04.py",
+      "spec": "sentiment_route",
+      "sample": 4,
+      "task": "Classify the sentiment of a product review as positive or negative, then route to a handler that writes an appropriate response.",
+      "syntax_ok": true
+    },
+    {
+      "file": "intent_router_00.py",
+      "spec": "intent_router",
+      "sample": 0,
+      "task": "Classify a chat message into one of several intents -- weather, news, reminder, small talk, or unknown -- and route it to a matching responder.",
+      "syntax_ok": true
+    },
+    {
+      "file": "intent_router_01.py",
+      "spec": "intent_router",
+      "sample": 1,
+      "task": "Classify a chat message into one of several intents -- weather, news, reminder, small talk, or unknown -- and route it to a matching responder.",
+      "syntax_ok": true
+    },
+    {
+      "file": "intent_router_02.py",
+      "spec": "intent_router",
+      "sample": 2,
+      "task": "Classify a chat message into one of several intents -- weather, news, reminder, small talk, or unknown -- and route it to a matching responder.",
+      "syntax_ok": true
+    },
+    {
+      "file": "intent_router_03.py",
+      "spec": "intent_router",
+      "sample": 3,
+      "task": "Classify a chat message into one of several intents -- weather, news, reminder, small talk, or unknown -- and route it to a matching responder.",
+      "syntax_ok": true
+    },
+    {
+      "file": "intent_router_04.py",
+      "spec": "intent_router",
+      "sample": 4,
+      "task": "Classify a chat message into one of several intents -- weather, news, reminder, small talk, or unknown -- and route it to a matching responder.",
+      "syntax_ok": true
+    },
+    {
+      "file": "change_review_route_00.py",
+      "spec": "change_review_route",
+      "sample": 0,
+      "task": "Read a description of a code change, decide whether it is a bug fix, a new feature, or a refactor, and route to a reviewer that writes fitting feedback.",
+      "syntax_ok": true
+    },
+    {
+      "file": "change_review_route_01.py",
+      "spec": "change_review_route",
+      "sample": 1,
+      "task": "Read a description of a code change, decide whether it is a bug fix, a new feature, or a refactor, and route to a reviewer that writes fitting feedback.",
+      "syntax_ok": true
+    },
+    {
+      "file": "change_review_route_02.py",
+      "spec": "change_review_route",
+      "sample": 2,
+      "task": "Read a description of a code change, decide whether it is a bug fix, a new feature, or a refactor, and route to a reviewer that writes fitting feedback.",
+      "syntax_ok": true
+    },
+    {
+      "file": "change_review_route_03.py",
+      "spec": "change_review_route",
+      "sample": 3,
+      "task": "Read a description of a code change, decide whether it is a bug fix, a new feature, or a refactor, and route to a reviewer that writes fitting feedback.",
+      "syntax_ok": true
+    },
+    {
+      "file": "change_review_route_04.py",
+      "spec": "change_review_route",
+      "sample": 4,
+      "task": "Read a description of a code change, decide whether it is a bug fix, a new feature, or a refactor, and route to a reviewer that writes fitting feedback.",
+      "syntax_ok": true
+    },
+    {
+      "file": "escalation_00.py",
+      "spec": "escalation",
+      "sample": 0,
+      "task": "Read a support thread, judge how severe it is, then either auto-resolve it, ask the customer a clarifying question, or escalate it to a human agent.",
+      "syntax_ok": true
+    },
+    {
+      "file": "escalation_01.py",
+      "spec": "escalation",
+      "sample": 1,
+      "task": "Read a support thread, judge how severe it is, then either auto-resolve it, ask the customer a clarifying question, or escalate it to a human agent.",
+      "syntax_ok": true
+    },
+    {
+      "file": "escalation_02.py",
+      "spec": "escalation",
+      "sample": 2,
+      "task": "Read a support thread, judge how severe it is, then either auto-resolve it, ask the customer a clarifying question, or escalate it to a human agent.",
+      "syntax_ok": true
+    },
+    {
+      "file": "escalation_03.py",
+      "spec": "escalation",
+      "sample": 3,
+      "task": "Read a support thread, judge how severe it is, then either auto-resolve it, ask the customer a clarifying question, or escalate it to a human agent.",
+      "syntax_ok": true
+    },
+    {
+      "file": "escalation_04.py",
+      "spec": "escalation",
+      "sample": 4,
+      "task": "Read a support thread, judge how severe it is, then either auto-resolve it, ask the customer a clarifying question, or escalate it to a human agent.",
+      "syntax_ok": true
+    },
+    {
+      "file": "map_reduce_summ_00.py",
+      "spec": "map_reduce_summ",
+      "sample": 0,
+      "task": "Summarize each of several documents independently in parallel, then reduce the per-document summaries into one combined summary.",
+      "syntax_ok": true
+    },
+    {
+      "file": "map_reduce_summ_01.py",
+      "spec": "map_reduce_summ",
+      "sample": 1,
+      "task": "Summarize each of several documents independently in parallel, then reduce the per-document summaries into one combined summary.",
+      "syntax_ok": true
+    },
+    {
+      "file": "map_reduce_summ_02.py",
+      "spec": "map_reduce_summ",
+      "sample": 2,
+      "task": "Summarize each of several documents independently in parallel, then reduce the per-document summaries into one combined summary.",
+      "syntax_ok": true
+    },
+    {
+      "file": "map_reduce_summ_03.py",
+      "spec": "map_reduce_summ",
+      "sample": 3,
+      "task": "Summarize each of several documents independently in parallel, then reduce the per-document summaries into one combined summary.",
+      "syntax_ok": true
+    },
+    {
+      "file": "map_reduce_summ_04.py",
+      "spec": "map_reduce_summ",
+      "sample": 4,
+      "task": "Summarize each of several documents independently in parallel, then reduce the per-document summaries into one combined summary.",
+      "syntax_ok": true
+    },
+    {
+      "file": "aspect_review_00.py",
+      "spec": "aspect_review",
+      "sample": 0,
+      "task": "Review a short piece of writing along several aspects at once -- clarity, grammar, and tone -- then merge the notes into one consolidated critique.",
+      "syntax_ok": true
+    },
+    {
+      "file": "aspect_review_01.py",
+      "spec": "aspect_review",
+      "sample": 1,
+      "task": "Review a short piece of writing along several aspects at once -- clarity, grammar, and tone -- then merge the notes into one consolidated critique.",
+      "syntax_ok": true
+    },
+    {
+      "file": "aspect_review_02.py",
+      "spec": "aspect_review",
+      "sample": 2,
+      "task": "Review a short piece of writing along several aspects at once -- clarity, grammar, and tone -- then merge the notes into one consolidated critique.",
+      "syntax_ok": true
+    },
+    {
+      "file": "aspect_review_03.py",
+      "spec": "aspect_review",
+      "sample": 3,
+      "task": "Review a short piece of writing along several aspects at once -- clarity, grammar, and tone -- then merge the notes into one consolidated critique.",
+      "syntax_ok": true
+    },
+    {
+      "file": "aspect_review_04.py",
+      "spec": "aspect_review",
+      "sample": 4,
+      "task": "Review a short piece of writing along several aspects at once -- clarity, grammar, and tone -- then merge the notes into one consolidated critique.",
+      "syntax_ok": true
+    },
+    {
+      "file": "entity_dedup_00.py",
+      "spec": "entity_dedup",
+      "sample": 0,
+      "task": "Extract the named entities from several documents in parallel, then reconcile and deduplicate them into one canonical list.",
+      "syntax_ok": true
+    },
+    {
+      "file": "entity_dedup_01.py",
+      "spec": "entity_dedup",
+      "sample": 1,
+      "task": "Extract the named entities from several documents in parallel, then reconcile and deduplicate them into one canonical list.",
+      "syntax_ok": true
+    },
+    {
+      "file": "entity_dedup_02.py",
+      "spec": "entity_dedup",
+      "sample": 2,
+      "task": "Extract the named entities from several documents in parallel, then reconcile and deduplicate them into one canonical list.",
+      "syntax_ok": true
+    },
+    {
+      "file": "entity_dedup_03.py",
+      "spec": "entity_dedup",
+      "sample": 3,
+      "task": "Extract the named entities from several documents in parallel, then reconcile and deduplicate them into one canonical list.",
+      "syntax_ok": true
+    },
+    {
+      "file": "entity_dedup_04.py",
+      "spec": "entity_dedup",
+      "sample": 4,
+      "task": "Extract the named entities from several documents in parallel, then reconcile and deduplicate them into one canonical list.",
+      "syntax_ok": true
+    },
+    {
+      "file": "reflect_revise_00.py",
+      "spec": "reflect_revise",
+      "sample": 0,
+      "task": "Draft an answer, then critique the draft, then revise the answer using the critique before returning it.",
+      "syntax_ok": true
+    },
+    {
+      "file": "reflect_revise_01.py",
+      "spec": "reflect_revise",
+      "sample": 1,
+      "task": "Draft an answer, then critique the draft, then revise the answer using the critique before returning it.",
+      "syntax_ok": true
+    },
+    {
+      "file": "reflect_revise_02.py",
+      "spec": "reflect_revise",
+      "sample": 2,
+      "task": "Draft an answer, then critique the draft, then revise the answer using the critique before returning it.",
+      "syntax_ok": true
+    },
+    {
+      "file": "reflect_revise_03.py",
+      "spec": "reflect_revise",
+      "sample": 3,
+      "task": "Draft an answer, then critique the draft, then revise the answer using the critique before returning it.",
+      "syntax_ok": true
+    },
+    {
+      "file": "reflect_revise_04.py",
+      "spec": "reflect_revise",
+      "sample": 4,
+      "task": "Draft an answer, then critique the draft, then revise the answer using the critique before returning it.",
+      "syntax_ok": true
+    },
+    {
+      "file": "refine_until_good_00.py",
+      "spec": "refine_until_good",
+      "sample": 0,
+      "task": "Draft a summary, score its quality, and keep refining it until the score is good enough or a few rounds have passed, then return the best version.",
+      "syntax_ok": true
+    },
+    {
+      "file": "refine_until_good_01.py",
+      "spec": "refine_until_good",
+      "sample": 1,
+      "task": "Draft a summary, score its quality, and keep refining it until the score is good enough or a few rounds have passed, then return the best version.",
+      "syntax_ok": true
+    },
+    {
+      "file": "refine_until_good_02.py",
+      "spec": "refine_until_good",
+      "sample": 2,
+      "task": "Draft a summary, score its quality, and keep refining it until the score is good enough or a few rounds have passed, then return the best version.",
+      "syntax_ok": true
+    },
+    {
+      "file": "refine_until_good_03.py",
+      "spec": "refine_until_good",
+      "sample": 3,
+      "task": "Draft a summary, score its quality, and keep refining it until the score is good enough or a few rounds have passed, then return the best version.",
+      "syntax_ok": true
+    },
+    {
+      "file": "refine_until_good_04.py",
+      "spec": "refine_until_good",
+      "sample": 4,
+      "task": "Draft a summary, score its quality, and keep refining it until the score is good enough or a few rounds have passed, then return the best version.",
+      "syntax_ok": true
+    },
+    {
+      "file": "tool_use_math_00.py",
+      "spec": "tool_use_math",
+      "sample": 0,
+      "task": "Build a calculator agent that answers arithmetic word problems by calling add and multiply tools in a loop until it has the final number.",
+      "syntax_ok": true
+    },
+    {
+      "file": "tool_use_math_01.py",
+      "spec": "tool_use_math",
+      "sample": 1,
+      "task": "Build a calculator agent that answers arithmetic word problems by calling add and multiply tools in a loop until it has the final number.",
+      "syntax_ok": true
+    },
+    {
+      "file": "tool_use_math_02.py",
+      "spec": "tool_use_math",
+      "sample": 2,
+      "task": "Build a calculator agent that answers arithmetic word problems by calling add and multiply tools in a loop until it has the final number.",
+      "syntax_ok": true
+    },
+    {
+      "file": "tool_use_math_03.py",
+      "spec": "tool_use_math",
+      "sample": 3,
+      "task": "Build a calculator agent that answers arithmetic word problems by calling add and multiply tools in a loop until it has the final number.",
+      "syntax_ok": true
+    },
+    {
+      "file": "tool_use_math_04.py",
+      "spec": "tool_use_math",
+      "sample": 4,
+      "task": "Build a calculator agent that answers arithmetic word problems by calling add and multiply tools in a loop until it has the final number.",
+      "syntax_ok": true
+    },
+    {
+      "file": "interview_grader_00.py",
+      "spec": "interview_grader",
+      "sample": 0,
+      "task": "Grade a candidate's interview answer on several rubric dimensions and give an overall hire / no-hire recommendation.",
+      "syntax_ok": true
+    },
+    {
+      "file": "interview_grader_01.py",
+      "spec": "interview_grader",
+      "sample": 1,
+      "task": "Grade a candidate's interview answer on several rubric dimensions and give an overall hire / no-hire recommendation.",
+      "syntax_ok": true
+    },
+    {
+      "file": "interview_grader_02.py",
+      "spec": "interview_grader",
+      "sample": 2,
+      "task": "Grade a candidate's interview answer on several rubric dimensions and give an overall hire / no-hire recommendation.",
+      "syntax_ok": true
+    },
+    {
+      "file": "interview_grader_03.py",
+      "spec": "interview_grader",
+      "sample": 3,
+      "task": "Grade a candidate's interview answer on several rubric dimensions and give an overall hire / no-hire recommendation.",
+      "syntax_ok": true
+    },
+    {
+      "file": "interview_grader_04.py",
+      "spec": "interview_grader",
+      "sample": 4,
+      "task": "Grade a candidate's interview answer on several rubric dimensions and give an overall hire / no-hire recommendation.",
+      "syntax_ok": true
+    }
+  ]
+}

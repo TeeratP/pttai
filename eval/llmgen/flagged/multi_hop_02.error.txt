@@ -1,0 +1,6 @@
+id: multi_hop_02
+bug_class: dead-end-node
+langgraph_phase: dsl-strictness
+error_type: ValueError
+
+ValueError: Node 'retrieve_intermediate' has no children and is not an end node.

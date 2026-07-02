@@ -52,11 +52,26 @@ Most flags are decidable by inspection (no model run). Per class, judge against
 | `dead-end-node` | run fine (childless node = legal implicit terminal) | pttai DSL-strictness; report separately, not a differentiator |
 | `duplicate-node-names` | **also** raise `ValueError('… already present')` at build | caught by both; not a differentiator |
 
-Label `true-bug` only when the pipeline genuinely fails/misbehaves under LangGraph
-semantics (outcome 1). Label `false-positive` only when you can show it would have
-run fine and produced the right result (outcome 3). DSL-strictness and
-DSL-internal flags are recorded in the `note` (and their bug class) so they are
-visibly excluded from the differentiator tally — do **not** mark them `true-bug`.
+The `verdict` field has exactly two values and measures ONE thing — the
+false-positive rate: `true-bug` = the flag correctly identifies a genuine defect
+in the pipeline (not a false alarm); `false-positive` = the validator rejected a
+pipeline that would have run fine and produced the right result. Label
+`false-positive` only when you can show the pipeline was runnable and correct.
+
+The **differentiator** question is a SEPARATE axis, driven by each flag's bug
+class / `langgraph_phase` in `score.py`, NOT by the verdict:
+- **differentiator** — fails/misbehaves under LangGraph too (outcome 1): the only
+  classes counted toward the differentiator claim (`read-before-write`,
+  `read-undeclared`, `dangling-choice`, `concurrent-write-no-reducer`).
+- **DSL-strictness** — `dead-end-node`: a genuine incomplete-graph defect, so it is
+  a `true-bug` (not a false positive), but LangGraph tolerates it, so it is
+  excluded from the differentiator tally.
+- **DSL-internal** — `prompt-placeholder-mismatch`: a genuine pttai-runtime defect,
+  so it is a `true-bug`, but it cannot occur in raw LangGraph, so it is reported
+  separately and excluded from the differentiator tally.
+So DSL-strictness and DSL-internal flags are still `true-bug` (they are real
+defects, not false positives); the `note` records why they don't count as
+differentiators, and `score.py`'s phase mapping does the exclusion.
 
 **Second rater recommended.** For the judgment-bearing flags (anything where the
 LangGraph verdict is not mechanical), a **second, non-author rater** should label

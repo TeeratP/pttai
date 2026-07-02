@@ -1,0 +1,13 @@
+id: refine_until_good_02
+bug_class: concurrent-write-no-reducer
+langgraph_phase: runtime
+error_type: GraphValidationError
+
+pttai.validation.GraphValidationError: AgenticGraph 'graph': 3 error(s), 4 warning(s)
+  [error] draft_b: concurrently writes 'candidate' with node 'draft_c', but 'candidate' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+  [error] draft_a: concurrently writes 'candidate' with node 'draft_b', but 'candidate' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+  [error] draft_a: concurrently writes 'candidate' with node 'draft_c', but 'candidate' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+  [warning] refine: is an end node but still has children; the children are unreachable from it (an end node terminates the graph)
+  [warning] rate_quality: is unreachable from the start node
+  [warning] should_refine_more: is unreachable from the start node
+  [warning] refine_again: is unreachable from the start node

@@ -1,0 +1,20 @@
+id: entity_dedup_02
+bug_class: concurrent-write-no-reducer
+langgraph_phase: runtime
+error_type: GraphValidationError
+
+pttai.validation.GraphValidationError: AgenticGraph 'graph': 11 error(s), 0 warning(s)
+  [error] extract_doc_2: concurrently writes 's' with node 'extract_doc_3', but 's' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+  [error] extract_doc_2: concurrently writes 'g' with node 'extract_doc_3', but 'g' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+  [error] extract_doc_2: concurrently writes 'a' with node 'extract_doc_3', but 'a' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+  [error] extract_doc_2: concurrently writes 'e' with node 'extract_doc_3', but 'e' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+  [error] extract_doc_2: concurrently writes 'm' with node 'extract_doc_3', but 'm' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+  [error] extract_doc_1: node_prompt references placeholder {
+  "entities"} but '\n  "entities"' is not a declared scalar read ['document_1']; this raises KeyError when the prompt is interpolated
+  [error] extract_doc_1: node_prompt references placeholder {"entities"} but '"entities"' is not a declared scalar read ['document_1']; this raises KeyError when the prompt is interpolated
+  [error] extract_doc_2: node_prompt references placeholder {
+  "entities"} but '\n  "entities"' is not a declared scalar read ['document_2']; this raises KeyError when the prompt is interpolated
+  [error] extract_doc_2: node_prompt references placeholder {"entities"} but '"entities"' is not a declared scalar read ['document_2']; this raises KeyError when the prompt is interpolated
+  [error] extract_doc_3: node_prompt references placeholder {
+  "entities"} but '\n  "entities"' is not a declared scalar read ['document_3']; this raises KeyError when the prompt is interpolated
+  [error] extract_doc_3: node_prompt references placeholder {"entities"} but '"entities"' is not a declared scalar read ['document_3']; this raises KeyError when the prompt is interpolated

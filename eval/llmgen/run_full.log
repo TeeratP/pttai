@@ -1,0 +1,132 @@
+==> [1/2] Generating pipelines (per-spec=10)…
+  [1] wrote rag_qa_00.py
+  [2] wrote rag_qa_01.py
+  [3] wrote rag_qa_02.py
+  [4] wrote rag_qa_03.py
+  [5] wrote rag_qa_04.py
+  [6] wrote rag_qa_05.py
+  [7] wrote rag_qa_06.py
+  [8] wrote rag_qa_07.py
+  [9] wrote rag_qa_08.py
+  [10] wrote rag_qa_09.py
+  [11] wrote multi_hop_00.py
+  [12] wrote multi_hop_01.py
+  [13] wrote multi_hop_02.py
+  [14] wrote multi_hop_03.py
+  [15] wrote multi_hop_04.py
+  [16] wrote multi_hop_05.py
+  [17] wrote multi_hop_06.py
+  [18] wrote multi_hop_07.py
+  [19] wrote multi_hop_08.py
+  [20] wrote multi_hop_09.py
+  [21] wrote extract_summarize_00.py
+  [22] wrote extract_summarize_01.py
+  [23] wrote extract_summarize_02.py
+  [24] wrote extract_summarize_03.py
+  [25] wrote extract_summarize_04.py
+  [26] wrote extract_summarize_05.py
+  [27] wrote extract_summarize_06.py
+  [28] wrote extract_summarize_07.py
+  [29] wrote extract_summarize_08.py
+  [30] wrote extract_summarize_09.py
+  [31] wrote triage_00.py
+  [32] wrote triage_01.py
+  [33] wrote triage_02.py
+  [34] wrote triage_03.py
+  [35] wrote triage_04.py
+  [36] wrote triage_05.py
+  [37] wrote triage_06.py
+  [38] wrote triage_07.py
+  [39] wrote triage_08.py
+  [40] wrote triage_09.py
+  [41] wrote rerank_00.py
+  [42] wrote rerank_01.py
+  [43] wrote rerank_02.py
+  [44] wrote rerank_03.py
+  [45] wrote rerank_04.py
+  [46] wrote rerank_05.py
+  [47] wrote rerank_06.py
+  [48] wrote rerank_07.py
+  [49] wrote rerank_08.py
+  [50] wrote rerank_09.py
+  [51] wrote tool_use_math_00.py
+  [52] wrote tool_use_math_01.py
+  [53] wrote tool_use_math_02.py
+  [54] wrote tool_use_math_03.py
+  [55] wrote tool_use_math_04.py
+  [56] wrote tool_use_math_05.py
+  [57] wrote tool_use_math_06.py
+  [58] wrote tool_use_math_07.py
+  [59] wrote tool_use_math_08.py
+  [60] wrote tool_use_math_09.py
+  [61] wrote reflect_revise_00.py
+  [62] wrote reflect_revise_01.py
+  [63] wrote reflect_revise_02.py
+  [64] wrote reflect_revise_03.py
+  [65] wrote reflect_revise_04.py
+  [66] wrote reflect_revise_05.py
+  [67] wrote reflect_revise_06.py
+  [68] wrote reflect_revise_07.py
+  [69] wrote reflect_revise_08.py
+  [70] wrote reflect_revise_09.py
+  [71] wrote plan_execute_00.py
+  [72] wrote plan_execute_01.py
+  [73] wrote plan_execute_02.py
+  [74] wrote plan_execute_03.py
+  [75] wrote plan_execute_04.py
+  [76] wrote plan_execute_05.py
+  [77] wrote plan_execute_06.py
+  [78] wrote plan_execute_07.py
+  [79] wrote plan_execute_08.py
+  [80] wrote plan_execute_09.py
+  [81] wrote sentiment_route_00.py
+  [82] wrote sentiment_route_01.py
+  [83] wrote sentiment_route_02.py
+  [84] wrote sentiment_route_03.py
+  [85] wrote sentiment_route_04.py
+  [86] wrote sentiment_route_05.py
+  [87] wrote sentiment_route_06.py
+  [88] wrote sentiment_route_07.py
+  [89] wrote sentiment_route_08.py
+  [90] wrote sentiment_route_09.py
+  [91] wrote map_reduce_summ_00.py
+  [92] wrote map_reduce_summ_01.py
+  [93] wrote map_reduce_summ_02.py
+  [94] wrote map_reduce_summ_03.py
+  [95] wrote map_reduce_summ_04.py
+  [96] wrote map_reduce_summ_05.py
+  [97] wrote map_reduce_summ_06.py
+  [98] wrote map_reduce_summ_07.py
+  [99] wrote map_reduce_summ_08.py
+  [100] wrote map_reduce_summ_09.py
+
+Generated 100 pipelines into eval/llmgen/generated/ (+ manifest.json). Now run score.py.
+==> [2/2] Scoring generated pipelines…
+====================================================================================
+LLM-generated-pipeline study -- pttai validator as an AI-code guardrail
+source: eval/llmgen/generated/    backend: REAL OpenAI
+====================================================================================
+pipelines scored:            100
+  buildable (clean+flagged): 47
+  clean (validator passed):  42
+  FLAGGED by validator:      5
+  malformed (excluded):      53  (broken/non-pttai code -- not counted as flags)
+
+flag rate over buildable:    11%
+false-positive rate among flags (HEURISTIC (run adjudication)): 0%  (0/5)
+
+of the 5 flags, raw LangGraph would surface:
+  only at runtime:   2
+  silently (never):  0
+  also at build:     0  (not a pttai differentiator)
+  DSL-strictness:    3  (LangGraph runs fine -- not a pttai differentiator)
+  => runtime-or-silent (pttai-only early catch): 2
+
+flags by class:           {'dead-end-node': 3, 'prompt-placeholder-mismatch': 2}
+
+wrote eval/llmgen/results.csv and eval/llmgen/results.json
+flagged snippets + errors copied to eval/llmgen/flagged/ -> adjudicate with adjudicate.md
+
+Done. See eval/llmgen/results.{csv,json} and flagged/.
+Next: adjudicate the flags per eval/llmgen/adjudicate.md (write
+adjudication.csv), then re-run score.py for the human-adjudicated FP rate.

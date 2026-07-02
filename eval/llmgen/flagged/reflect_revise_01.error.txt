@@ -1,0 +1,7 @@
+id: reflect_revise_01
+bug_class: dangling-choice
+langgraph_phase: runtime
+error_type: GraphValidationError
+
+pttai.validation.GraphValidationError: AgenticGraph 'graph': 1 error(s), 0 warning(s)
+  [error] has_question: choice 'yes' has no connected node; wire it, e.g. `decision['yes'] > some_node`

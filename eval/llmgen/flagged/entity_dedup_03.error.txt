@@ -1,0 +1,25 @@
+id: entity_dedup_03
+bug_class: concurrent-write-no-reducer
+langgraph_phase: runtime
+error_type: GraphValidationError
+
+pttai.validation.GraphValidationError: AgenticGraph 'graph': 11 error(s), 8 warning(s)
+  [error] doc0_extract: concurrently writes 'extracted' with node 'doc1_extract', but 'extracted' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+  [error] select0: concurrently writes 'document' with node 'select1', but 'document' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+  [error] doc0_extract: concurrently writes 'extracted' with node 'doc2_extract', but 'extracted' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+  [error] select0: concurrently writes 'document' with node 'select2', but 'document' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+  [error] select1: concurrently writes 'document' with node 'select2', but 'document' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+  [error] doc1_extract: concurrently writes 'extracted' with node 'doc2_extract', but 'extracted' has no reducer in the schema; concurrent writes to a plain key raise InvalidUpdateError at runtime
+  [warning] frame: declares scalar read 'documents' but node_prompt never interpolates {documents}; the value is fetched and silently ignored (dead read)
+  [warning] rename0: declares scalar read 'extracted' but node_prompt never interpolates {extracted}; the value is fetched and silently ignored (dead read)
+  [error] assemble: node_prompt references placeholder {"doc_extractions"} but '"doc_extractions"' is not a declared scalar read ['doc0_extracted', 'doc1_extracted', 'doc2_extracted']; this raises KeyError when the prompt is interpolated
+  [error] assemble: node_prompt references placeholder {doc0} but 'doc0' is not a declared scalar read ['doc0_extracted', 'doc1_extracted', 'doc2_extracted']; this raises KeyError when the prompt is interpolated
+  [error] assemble: node_prompt references placeholder {doc1} but 'doc1' is not a declared scalar read ['doc0_extracted', 'doc1_extracted', 'doc2_extracted']; this raises KeyError when the prompt is interpolated
+  [error] assemble: node_prompt references placeholder {doc2} but 'doc2' is not a declared scalar read ['doc0_extracted', 'doc1_extracted', 'doc2_extracted']; this raises KeyError when the prompt is interpolated
+  [warning] assemble: declares scalar read 'doc0_extracted' but node_prompt never interpolates {doc0_extracted}; the value is fetched and silently ignored (dead read)
+  [warning] assemble: declares scalar read 'doc1_extracted' but node_prompt never interpolates {doc1_extracted}; the value is fetched and silently ignored (dead read)
+  [warning] assemble: declares scalar read 'doc2_extracted' but node_prompt never interpolates {doc2_extracted}; the value is fetched and silently ignored (dead read)
+  [error] reconcile: node_prompt references placeholder {"entities"} but '"entities"' is not a declared scalar read ['doc_extractions', 'entity_spec']; this raises KeyError when the prompt is interpolated
+  [warning] reconcile: declares scalar read 'doc_extractions' but node_prompt never interpolates {doc_extractions}; the value is fetched and silently ignored (dead read)
+  [warning] rename1: declares scalar read 'extracted' but node_prompt never interpolates {extracted}; the value is fetched and silently ignored (dead read)
+  [warning] rename2: declares scalar read 'extracted' but node_prompt never interpolates {extracted}; the value is fetched and silently ignored (dead read)

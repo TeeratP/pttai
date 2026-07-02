@@ -1,0 +1,6 @@
+id: map_reduce_summ_01
+bug_class: dead-end-node
+langgraph_phase: dsl-strictness
+error_type: ValueError
+
+ValueError: Node 'summarize_doc' has no children and is not an end node.

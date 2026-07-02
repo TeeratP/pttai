@@ -1,0 +1,6 @@
+id: fact_check_03
+bug_class: dead-end-node
+langgraph_phase: dsl-strictness
+error_type: ValueError
+
+ValueError: Node 'frame' has no children and is not an end node.

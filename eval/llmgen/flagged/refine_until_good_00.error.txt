@@ -1,0 +1,12 @@
+id: refine_until_good_00
+bug_class: read-undeclared
+langgraph_phase: runtime
+error_type: GraphValidationError
+
+pttai.validation.GraphValidationError: AgenticGraph 'graph': 1 error(s), 5 warning(s)
+  [error] round_seed: reads 'round' but no node produces it and it is not an input key; produce it upstream or declare it in inputs=... if you supply it at invoke(); available keys here: ['content', 'decision', 'log', 'messages', 'score', 'summary', 'token']
+  [warning] extract_summary: is an end node but still has children; the children are unreachable from it (an end node terminates the graph)
+  [warning] score_summary: is unreachable from the start node
+  [warning] continue_or_done: is unreachable from the start node
+  [warning] inc_round: is unreachable from the start node
+  [warning] refine: is unreachable from the start node
