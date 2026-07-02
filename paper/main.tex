@@ -42,23 +42,28 @@
 
 \begin{abstract}
 LLM agent pipelines are graphs of model calls, tools, and branches over a shared
-state. A miswired one---a node that reads a state key nothing produced, an
-unwired branch, a concurrent write to a key with no reducer---does not fail when
-you build it. It fails \emph{after} the model has already run, once execution
-reaches the broken node, having burned tokens, latency, and (with tools) real
-side effects on a run that was doomed at construction. We present \code{pttai}, a
-thin declarative layer that compiles a \code{>}-wired pipeline to a native
-LangGraph \code{StateGraph} and, before compiling, runs a forward
-\emph{dataflow} analysis over the graph. To our knowledge this is the first
-compile-time dataflow analysis for LLM agent graphs. It is a \may/\must\ fixpoint
-in the tradition of definite-assignment analysis: hard errors are raised only
-from the \may\ (some-path) set, so the analysis is false-positive-free by
-construction---it never rejects a graph that would have run. On a
-15-item bug benchmark \code{pttai} fails the build on all 15; 13 of these raw
-LangGraph surfaces only at runtime or never, costing 15 wasted model calls
-against \code{pttai}'s zero, with no false positives on 19 valid pipelines. The
-demonstration is an interactive playground that paints the offending node red at
-build time, before any model call.
+state. A miswired one---a node that reads a state key nothing upstream produced,
+an unwired branch, a concurrent write to a key with no reducer---does not fail
+when you build it. It fails \emph{after} the model has already run, once
+execution reaches the broken node, having burned tokens, latency, and (with
+tools) real side effects on a run that was doomed at construction. We present
+\code{pttai}, a thin declarative layer in which each node declares the state keys
+it \code{reads} and \code{writes}, wired with a \code{>} operator; it compiles to
+a native LangGraph~\citep{langgraph} \code{StateGraph} and, \emph{before}
+compiling, runs a build-time availability (dataflow) analysis over the graph. The
+analysis is a \may/\must\ fixpoint over the graph's acyclic condensation, in the
+tradition of reaching-definitions and definite-assignment
+analysis~\citep{kildall,dragon,jls}: hard errors are raised only from the \may\
+(some-path) set, so it does not reject a pipeline that would have run---we observe
+\textbf{0} false positives on 19 valid pipelines, which we report as a
+measurement, not a guarantee. On a controlled 17-item bug suite \code{pttai}
+fails the build on all 17; on the 12-item subset that raw LangGraph does not also
+catch at build, LangGraph surfaces every case only at run time. Our primary,
+non-circular evaluation applies the same validator to pipelines a frontier model
+generates from NLP task specs---a static guardrail for AI-written agent code
+(numbers pending a keyed generation run; \S\ref{sec:eval}). The demonstration is
+an interactive playground that paints the offending node red at build time,
+before any model call.
 \end{abstract}
 
 \section{Introduction}
@@ -80,43 +85,44 @@ has already made model calls: tokens spent, latency incurred, and, if earlier
 nodes called tools, side effects committed, all on a run that was structurally
 broken before it started. The same is true of an unwired conditional branch (a
 routing key that resolves to nowhere) and of two parallel branches writing the
-same non-reduced state key (a runtime \code{InvalidUpdateError}). We verified
-that all three are recurring, publicly reported failures against raw LangGraph
+same non-reduced state key (a runtime \code{InvalidUpdateError}). These are
+recurring, publicly reported failures against raw LangGraph
 (\S\ref{sec:wild}).
 
 The root cause is that the graph builder checks \emph{structure} but not
 \emph{dataflow}: LangGraph's \code{compile()} does not verify that every state
 key a node reads is produced upstream. Ordinary compilers have solved the
-analogous problem for decades---definite-assignment analysis rejects a Java
-program that reads a local before it is assigned on some
-path~\citep{jls,kildall,dragon}---but no LLM-graph framework applies it to the
-graph's shared state.
+analogous problem for decades---definite-assignment analysis rejects a program
+that reads a local before it is assigned on some
+path~\citep{jls,kildall,dragon}. \code{pttai}'s contribution is not that
+algorithm, which is textbook; it is \emph{applying} it to an LLM pipeline's
+shared state, and the annotation design (per-node \code{reads}/\code{writes})
+that makes the shared-state dataflow explicit enough to analyze at build time.
 
-We present \code{pttai}, a declarative layer over LangGraph whose contribution is
-exactly this missing check.\footnote{Source, examples, benchmark, and demo:
+We present \code{pttai}, a declarative layer over
+LangGraph.\footnote{Source, examples, benchmark, and demo:
 \url{https://github.com/TeeratP/agentic-framework}.}
 Our contributions are:
 \begin{enumerate}[noitemsep,topsep=2pt]
-  \item \textbf{A compile-time dataflow analysis for LLM agent graphs}
-  (\S\ref{sec:validator}): a forward \may/\must\ fixpoint over the wired graph
-  that fails the build---with zero model calls---when a node reads a key no
-  upstream node produces, when a branch is unwired, or when parallel branches
-  write an unreduced key. Because hard errors come only from the \may\
-  (some-path) set, the analysis is \emph{false-positive-free by construction}: a
-  graph that would actually run is never rejected.
-  \item \textbf{An interactive demonstration} (\S\ref{sec:demo}): a playground in
-  which you edit a pipeline and see the compiled LangGraph, or, when the build
-  fails, the pre-compile graph with the offending node(s) painted red---the
-  picture of the bug, before any model call.
-  \item \textbf{An evaluation} (\S\ref{sec:eval}) on a bug benchmark
-  (13 differentiating bug classes caught at build with 0 false positives on 19
-  valid pipelines), a wild-bug survey grounding the taxonomy, and negligible
-  build overhead with identical run-time behavior.
+  \item \textbf{A declarative \code{>} DSL over LangGraph}
+  (\S\ref{sec:design}) whose typed per-node \code{reads}/\code{writes}
+  annotations make the shared-state dataflow of a pipeline explicit, while
+  compiling down to a native LangGraph \code{StateGraph} so that streaming,
+  async, checkpointers, and observability are inherited, not reimplemented.
+  \item \textbf{A build-time availability (dataflow) analysis for these graphs}
+  (\S\ref{sec:validator}): a forward \may/\must\ fixpoint over the graph's
+  acyclic condensation---reaching-definitions / definite-assignment adapted to
+  agent graphs~\citep{kildall,dragon,jls}---that fails the build, with zero model
+  calls, when a node reads a key no upstream node produces, a branch is unwired,
+  or parallel branches write an unreduced key. Because hard errors come only from
+  the \may\ (some-path) set, we observe no false positives on our valid corpus.
+  \item \textbf{An evaluation} (\S\ref{sec:eval}) whose primary, non-circular
+  arm applies the validator to \emph{LLM-generated} pipelines, supported by a
+  controlled bug suite and a survey of wild bugs.
 \end{enumerate}
 \code{pttai} borrows the ``ergonomic layer over a powerful runtime'' idea from
 Keras~\citep{keras}, but the ergonomics are not the contribution; the validator
-is. Everything \code{pttai} builds is a plain LangGraph graph, so streaming,
-async, checkpointers, and observability are inherited, not reimplemented.
+is.
 
 \begin{figure}[t]
   \centering
@@ -150,10 +156,11 @@ is \code{fanout(a, b)} and map-reduce is \code{.map(field)}.
 Nodes read and write a shared, reducer-based state. Each node declares its
 \code{reads} and \code{writes}; a node returns only the keys it updates and the
 channel reducers merge them, which is what makes parallel branches and
-checkpointing correct. Crucially, an \code{AgenticGraph} \emph{is} a LangGraph
-\code{StateGraph} and its compiled artifact is LangGraph's
-\code{CompiledStateGraph}: \code{pttai} adds a build pass on top of LangGraph and
-then hands the compiled graph to it. Nothing in the runtime is reimplemented.
+checkpointing correct. Those declarations are also what the validator analyzes.
+Crucially, an \code{AgenticGraph} \emph{is} a LangGraph \code{StateGraph} and its
+compiled artifact is LangGraph's \code{CompiledStateGraph}: \code{pttai} adds a
+build pass on top of LangGraph and then hands the compiled graph to it. Nothing
+in the runtime is reimplemented.
 
 \subsection{The build-time dataflow validator}
 \label{sec:validator}
@@ -165,7 +172,8 @@ the wired nodes and \textbf{fails the build} on a hard error, raising
 \paragraph{The analysis.} During the build we record a tagged edge list:
 each edge is \code{(src, dst, kind)} where \code{kind} is \code{seq} (an
 unconditional, \textsc{and} edge) or \code{cond} (an exclusive, \textsc{or} edge:
-a \code{DecisionNode} choice or a \code{Send} fan-out target). Over this graph we
+a \code{DecisionNode} choice or a \code{Send} fan-out target). We compute the
+graph's acyclic condensation by excluding loop-back edges (found by a DFS), then
 compute, per node, two sets of available state keys by forward fixpoint:
 \begin{itemize}[noitemsep,topsep=2pt]
   \item \may---keys available on \emph{some} path into the node. A
@@ -182,18 +190,23 @@ sees both branches' writes), and \emph{intersect across an exclusive
 every choice branch produces). The seed is the \emph{input} keys---reduced
 channels, schema keys no node writes, and user-declared inputs---not all declared
 keys; seeding with inputs rather than the whole schema is what lets the analysis
-catch a read of a \emph{computed} key before its producer has run. The fixpoint
-iterates until a full sweep changes nothing, bounded by the node count.
+catch a read of a \emph{computed} key before its producer has run. Excluding
+loop-back edges makes the analysis reflect first-iteration reality: a key
+produced only by a downstream node that cycles back is \emph{not} credited as
+available on entry, so loop-carried read-before-write is flagged rather than
+silently accepted. The fixpoint iterates until a full sweep changes nothing,
+bounded by the node count.
 
-\paragraph{Soundness / no false positives.} Hard \emph{errors} are raised only
-from the \may\ set: a read is an error only when the key is available on
+\paragraph{Errors from \may, warnings from \must.} Hard \emph{errors} are raised
+only from the \may\ set: a read is an error only when the key is available on
 \emph{no} path into the node. If a key is available on some but not all paths
-(\may\ but not \must), that is a \emph{warning}, never a build failure. So the
-validator never rejects a graph that would actually run---false-positive-freedom
-is a property of raising errors from the some-path set, exactly as
-definite-assignment analysis reports ``used before assigned'' only when
-\emph{no} path assigns the variable~\citep{jls,nielson}. The \must\ set only
-drives warnings.
+(\may\ but not \must), that is a \emph{warning}, never a build failure. This is
+why we observe no false positives: the analysis reports ``used before produced''
+only when \emph{no} path produces the key, exactly as definite-assignment
+analysis does~\citep{jls,nielson}. We are careful \emph{not} to claim this as a
+soundness proof (see Limitations): it is sound for the errors it raises given the
+declared annotations, not complete, and the 0-false-positive figure is a
+measurement on our corpus.
 
 \paragraph{What it checks.} On top of the dataflow sets, \code{pttai} raises
 seven error classes and four warning classes (Table~\ref{tab:checks}). Errors
@@ -213,7 +226,7 @@ be promoted to errors with \code{strict=True}.
     concurrent write, no reducer & two parallel branches write the same
     non-reduced key \\
     dangling choice & a \code{DecisionNode} choice with no wired handler \\
-    dead-end node & a non-terminal node with no child \\
+    dead-end node & a non-terminal node with no child$^\ddagger$ \\
     duplicate node name & two distinct nodes share a name$^\dagger$ \\
     prompt/read mismatch & a \code{node\_prompt} \code{\{placeholder\}} that is
     not a declared scalar read \\
@@ -228,8 +241,11 @@ be promoted to errors with \code{strict=True}.
   \end{tabular}
   \caption{The validator's error and warning classes. $^\dagger$Duplicate names
   and dead ends are raised structurally during the build walk (as
-  \code{ValueError}); the rest come from the dataflow pass. A dead read (a scalar
-  read never interpolated) is an additional warning.}
+  \code{ValueError}); the rest come from the dataflow pass. $^\ddagger$The
+  dead-end rejection is a \code{pttai} DSL-strictness choice, \emph{not} a
+  LangGraph bug: LangGraph treats a childless node as a legal implicit terminal
+  (\S\ref{sec:bugbench}). A dead read (a scalar read never interpolated) is an
+  additional warning.}
   \label{tab:checks}
 \end{table}
 
@@ -250,8 +266,13 @@ red} and the exact error attached (``\code{reads computed key 'passages' but no
 upstream node produces it}''), with \emph{zero model calls made}. The reviewer
 sees the picture of the bug before running anything.
 
-Because the playground \code{exec}s user-supplied code, it is sandboxed for
-public hosting: the snippet is size-capped, AST-checked (imports allow-listed to
+The playground itself never invokes a model---it builds, validates, and draws.
+To show that \code{pttai} \emph{is} a working agent framework and not only a
+linter, the accompanying screencast first runs a live pipeline (the
+parallelization example, which really calls the model) end-to-end, and only then
+switches to the playground for the build-time catch. Because the playground
+\code{exec}s user-supplied code, it is sandboxed for public hosting: the snippet
+is size-capped, AST-checked (imports allow-listed to
 \code{pttai}/\code{typing}/safe stdlib; dunder access and dangerous builtins such
 as \code{eval}/\code{open}/\code{\_\_import\_\_} rejected), run with a restricted
 \code{\_\_builtins\_\_}, and executed under a per-request timeout. The model
@@ -271,50 +292,112 @@ call. A \textless2.5-minute screencast accompanies the submission.
 \label{sec:eval}
 
 All evaluations run offline (no API key); the harness is in the repository under
-\code{eval/}.
+\code{eval/}. The controlled suite and wild-bug survey are authored by us and are
+therefore vulnerable to the objection that a validator catches only the bugs its
+author planted. Our \emph{primary} evaluation is designed to remove that
+objection.
 
-\paragraph{Bug benchmark.} We built \code{bugbench}, 15 buggy pipelines (three
-each of read-before-write, dangling choice, dead-end; two each of concurrent
-unreduced write, prompt/read mismatch; two duplicate-name) and 19 valid
-pipelines (the shipped example suite). For each we record whether \code{pttai}
-fails the build and how many model calls each framework wastes before the bug
-surfaces. \code{pttai} fails the build on \textbf{all 15} buggy pipelines with
-the correct diagnostic, at a median of under 1\,ms and \textbf{0} wasted model
-calls. Raw LangGraph catches only the 2 duplicate-name cases at build; the other
-\textbf{13} it surfaces at run time (10 as \code{KeyError} /
-\code{InvalidUpdateError} after the model has run) or never (3 dead-end cases
-loop silently). Across the buggy set, LangGraph wastes \textbf{15} model calls to
-\code{pttai}'s \textbf{0}. On the 19 valid pipelines \code{pttai} raises
-\textbf{0 false positives} (0 spurious build failures)---consistent with the
-some-path error rule. So on the differentiating classes the catch rate is
-13/13 with 0 false positives; duplicate names are caught by both frameworks and
-are not a differentiator.
+\subsection{Primary: LLM-generated pipelines}
+\label{sec:llmgen}
 
-\paragraph{Externally-grounded study (in progress).} A benchmark authored by us
-invites the objection that the validator catches only the bugs its author
-planted. We therefore designed a complementary study
-(\code{eval/llmgen/}) in which a frontier model generates pipelines from short
-NLP task specs---given the docs and \emph{never told to write bugs}---and every
-generated pipeline is built and adjudicated, so the bug distribution comes from
-real AI-written agent code rather than a hand-picked corpus. The scoring path is
-proven offline on a committed sample set of 9 pipelines (4 clean, 5 buggy): 5
-flagged, \textbf{0 false positives}, of which raw LangGraph would surface 4 only
-at run time and 1 silently. \textbf{The headline numbers require an API key and a
-generation run that the build environment cannot perform; they are reported as a
-placeholder and must be filled from a keyed run before submission.}
-% TODO(author): run eval/llmgen/run_study.sh with an API key, adjudicate, and
-% fill the headline N / flag-rate / adjudicated-FP-rate here from results.json.
+The most 2026-relevant question is whether the validator is a useful static
+guardrail for \emph{AI-written} agent code. We therefore designed a study
+(\code{eval/llmgen/}) in which a frontier model generates \code{pttai} pipelines
+from short NLP task specs---given only the docs, and \textbf{never told to write
+bugs}---after which every generated pipeline is built through the validator and
+every flag is author-adjudicated as a true bug or a false positive per a fixed
+protocol (\code{adjudicate.md}). Because the bug distribution comes from a model
+solving ordinary tasks, whatever the validator catches, misses, or wrongly flags
+is a fact about real AI-written code, not about a hand-picked corpus. The
+protocol targets $N\!\ge\!100$ generated pipelines; construction alone scores a
+pipeline (the validator runs inside \code{AgenticGraph.\_\_init\_\_}), so scoring
+needs no model call, only the generation step does. The scoring path is verified
+offline on a committed 9-pipeline sample set (4 clean, 5 flagged, 0 false
+positives), but that is a harness self-test, not the study.
 
-\paragraph{Wild-bug survey.}
+\begin{quote}\small
+\textbf{TODO(author):} populate from \code{eval/llmgen/run\_study.sh}. Report
+$N$, the fraction of \emph{buildable} pipelines flagged, the
+\emph{author-adjudicated} false-positive rate among flags, and the split of flags
+by the LangGraph phase (runtime / silent / also-at-build). These require an
+\code{OPENAI\_API\_KEY} and a keyed generation run that the build environment
+cannot perform; \textbf{we do not report or claim them here}.
+\end{quote}
+
+\subsection{Controlled bug suite}
+\label{sec:bugbench}
+
+\code{bugbench} is a labeled unit-test suite of 17 buggy and 19 valid pipelines
+that pins the validator's behavior per bug class; it is not the headline result.
+For each item we record whether \code{pttai} fails the build and---using an
+offline fake model---in which phase raw LangGraph would surface the same bug.
+\code{pttai} fails the build on \textbf{all 17} buggy pipelines with the correct
+diagnostic (median build time under 1\,ms) and \textbf{0} false positives on the
+19 valid pipelines. We partition the buggy set into three honest categories
+(Table~\ref{tab:bugbench}):
+
+\begin{itemize}[noitemsep,topsep=2pt]
+  \item \textbf{Differentiator (12 items, 5 classes)}: read-before-write,
+  cyclic-read-before-write, dangling-choice, concurrent-write-no-reducer,
+  prompt-placeholder-mismatch. \code{pttai} catches all 12 at build; raw
+  LangGraph catches \textbf{0} at build and surfaces all \textbf{12} at run
+  time.
+  \item \textbf{Caught by both (2 items)}: duplicate node names. Both frameworks
+  reject these at build (\code{ValueError}), so they are \emph{not} a
+  differentiator---we say so explicitly.
+  \item \textbf{DSL-strictness (3 items, excluded)}: dead-end nodes. LangGraph
+  1.2 treats a childless node as a legal implicit terminal that compiles and runs
+  (we verified this empirically); \code{pttai} rejecting it is a strictness
+  choice of our DSL, \emph{not} a LangGraph bug, so we exclude these from the
+  differentiator claim.
+\end{itemize}
+
+On the differentiator subset, the offline harness attributes \textbf{8}
+LangGraph model calls to reaching the bug against \code{pttai}'s \textbf{0}. We
+flag this number as \emph{simulated}: it is produced by a deterministic offline
+fake model under a worst-case node ordering, not a measurement of real token cost.
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    \textbf{Category / class} & \textbf{$n$} & \textbf{pttai} &
+    \textbf{LangGraph} \\
+    \midrule
+    \multicolumn{4}{@{}l}{\emph{Differentiator (build-catch only in pttai)}} \\
+    read-before-write        & 3 & build & runtime \\
+    cyclic-read-before-write & 2 & build & runtime \\
+    dangling-choice          & 3 & build & runtime \\
+    concurrent-write/no-red. & 2 & build & runtime \\
+    prompt/read mismatch     & 2 & build & runtime \\
+    \emph{subtotal}          & \textbf{12} & \textbf{12/12} & \textbf{0/12} \\
+    \midrule
+    \multicolumn{4}{@{}l}{\emph{Caught by both (not a differentiator)}} \\
+    duplicate node names     & 2 & build & build \\
+    \midrule
+    \multicolumn{4}{@{}l}{\emph{DSL-strictness (excluded)}} \\
+    dead-end node            & 3 & build & runs \\
+    \bottomrule
+  \end{tabular}
+  \caption{\code{bugbench} outcomes by category (\code{eval/bugbench/results.json}).
+  ``build'' = rejected at construction; ``runtime'' = raises only at
+  \code{invoke()}; ``runs'' = LangGraph executes it as a legal terminal.
+  \code{pttai} additionally raises 0 false positives on 19 valid pipelines.}
+  \label{tab:bugbench}
+\end{table}
+
+\subsection{Wild-bug survey}
 \label{sec:wild}
-To show the taxonomy is not author-imagined, we mined public issue trackers for
-each targeted class (Table~\ref{tab:wild}): nine independent, verified reports
-against raw LangGraph, at least two per class. Every one is a runtime failure or
-a non-terminating graph that \code{pttai}'s build-time check would have caught
-first. (Duplicate names and the prompt/read check are excluded here: the former
-both frameworks already catch at build, and the latter is a
-\code{pttai}-internal reformulation of a generic \code{str.format} error with no
-LangGraph-specific report.)
+To show the taxonomy is not author-imagined, we mined public issue trackers
+(Table~\ref{tab:wild}): six independent, verified reports against raw LangGraph,
+two per class, each a runtime failure that \code{pttai}'s build-time check would
+have caught first. This is an \emph{illustrative sample}, not a frequency claim:
+these are six issues drawn from thousands, with no denominator, so they establish
+that the classes occur in the wild, not how often. (Duplicate names and the
+prompt/read check are excluded: the former both frameworks already catch at
+build, and the latter is a \code{pttai}-internal reformulation of a generic
+\code{str.format} error with no LangGraph-specific report.)
 
 \begin{table}[t]
   \centering
@@ -324,82 +407,80 @@ LangGraph-specific report.)
     \textbf{Bug class (runtime symptom)} & \textbf{Reports} \\
     \midrule
     read-before-write (\code{KeyError} on a state key) & 2 \\
-    concurrent write, no reducer (\code{InvalidUpdateError}) & 3 \\
+    concurrent write, no reducer (\code{InvalidUpdateError}) & 2 \\
     dangling conditional edge & 2 \\
-    dead-end / non-terminating graph & 2 \\
     \midrule
-    \textbf{Total} & \textbf{9} \\
+    \textbf{Total} & \textbf{6} \\
     \bottomrule
   \end{tabular}
   \caption{Independent, publicly reported wild bugs against raw LangGraph, by
-  targeted class (details and issue links in the repository's
-  \code{docs/EVIDENCE.md}).}
+  targeted class---an illustrative sample, not a census (details and issue links
+  in \code{docs/EVIDENCE.md}).}
   \label{tab:wild}
 \end{table}
 
-\paragraph{Conciseness (a side effect).} Across 12 canonical pipelines (the
-agentic-pattern and basics suites) ported both ways, the \code{pttai} versions
-total 113 lines against 281 for hand-written LangGraph---about 60\% fewer
-(Figure~\ref{fig:loc}). This is a consequence of folding \code{add\_node} /
-\code{add\_edge} / structured-output routing / the tool-call loop into the node
-abstractions, not the point of the system; the validator is.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{figures/loc_comparison.png}
-  \caption{Lines of code, \code{pttai} vs.\ hand-written LangGraph, across 12
-  canonical pipelines (113 vs.\ 281 lines total).}
-  \label{fig:loc}
-\end{figure}
-
-\paragraph{Overhead.} The added build pass (wiring + full dataflow validation +
-compile) has a sub-millisecond median and is within measurement noise of a bare
-LangGraph \code{compile()}; because \code{pttai} compiles to a native
-\code{CompiledStateGraph}, run time is LangGraph---identical model-call count and
-identical output.
+\subsection{Conciseness and overhead}
+As a side effect of folding \code{add\_node}/\code{add\_edge}/structured-output
+routing/the tool-call loop into the node abstractions, the \code{pttai} versions
+of 12 canonical pipelines total 113 lines against 281 for hand-written LangGraph
+(\code{eval/loc\_results.csv}); this is a consequence of the DSL, not the point of
+the system. The added build pass has a sub-millisecond to low-single-digit-ms
+build time on every corpus pipeline (\code{eval/bugbench/results.json}); because
+\code{pttai} compiles to a native \code{CompiledStateGraph}, run time, model-call
+count, and output are LangGraph's.
 
 \section{Related Work}
 \label{sec:related}
 
 \code{pttai} is complementary to, not a replacement for, existing frameworks; it
-adds a static dataflow check none of them performs and compiles down to
-LangGraph. \textbf{LangGraph}~\citep{langgraph} is the runtime \code{pttai}
-targets; its \code{compile()} runs basic structural checks (it raises on a node
-with no path to the end) but does not analyze which state keys are produced
-before they are read---the gap this work fills. \textbf{DSPy}~\citep{dspy}
-optimizes prompts and demonstrations against a metric; its control flow is
-arbitrary Python, so there is no declared graph to check statically.
-\textbf{LMQL}~\citep{lmql} and \textbf{Guidance}~\citep{guidance} constrain
-\emph{within} a single generation (decoding, output structure) rather than across
-a multi-node graph. \textbf{CrewAI}~\citep{crewai} orchestrates via roles and a
-sequential/hierarchical process, with no declared node/edge graph or dataflow
-validation. \textbf{AutoGen}'s GraphFlow~\citep{autogen} and
-\textbf{LlamaIndex} Workflows~\citep{llamaindex} do validate graph
-\emph{structure} (entry points, reachability, event-type wiring) before running,
-and \textbf{Haystack}~\citep{haystack} type-checks explicit component
-connections---but none performs a shared-state \emph{dataflow} analysis
-(read-before-write / concurrent-unreduced-write), and thus none has a
-false-positive guarantee to offer. To our knowledge \code{pttai} is the only one
-of these that runs a build-time state-key dataflow analysis, and the only one
-that lowers to an established graph runtime rather than shipping its own.
+adds a build-time state-key dataflow check and compiles down to LangGraph.
+\textbf{LangGraph}~\citep{langgraph} is the runtime \code{pttai} targets; its
+\code{compile()} runs basic structural checks but does not analyze which state
+keys are produced before they are read---the gap this work fills. Several
+frameworks already perform genuine build-time \emph{structural} checks, so we do
+\emph{not} claim to be the first build-time check of any kind:
+\textbf{pydantic-graph} (PydanticAI)~\citep{pydanticgraph} encodes a node's
+out-edges in the return-type annotation of its \code{run} method, so a standard
+static type checker (mypy/pyright) flags a mis-wired edge before the graph runs---
+a build-time graph-\emph{structure} check---but its state is a single shared
+object passed uniformly to every node, with no per-node read/write availability
+analysis; \textbf{AutoGen}'s GraphFlow~\citep{autogen} and
+\textbf{LlamaIndex} Workflows~\citep{llamaindex} validate graph structure (entry
+points, reachability, event-type wiring), and \textbf{Haystack}~\citep{haystack}
+type-checks explicit component connections. What none of these does is a
+shared-state \emph{dataflow} availability analysis (read-before-write /
+concurrent-unreduced-write). \textbf{DSPy}~\citep{dspy} optimizes prompts against
+a metric; its control flow is arbitrary Python, so there is no declared graph to
+check. \textbf{LMQL}~\citep{lmql} and \textbf{Guidance}~\citep{guidance} constrain
+\emph{within} a single generation rather than across a multi-node graph, and
+\textbf{CrewAI}~\citep{crewai} orchestrates via roles with no declared node/edge
+graph. To our knowledge, among the frameworks we surveyed \code{pttai} is the
+only one that runs a build-time state-key \emph{dataflow} availability check, and
+the only one that lowers to an established graph runtime rather than shipping its
+own.
 
 \section*{Limitations}
 
-The dataflow analysis reasons about state-key \emph{availability}, not
-\emph{types or values}: it verifies that a key a node reads is produced upstream,
-not that its value has the expected type or is non-empty. A key produced with the
-wrong type still passes. The \must\ (all-paths) set over-approximates
-exclusivity in one case---a decision handler that merges back via an
-unconditional edge unions into the successor's \must\ set as if unconditional---
-which can only \emph{under}-warn (miss a some-paths warning); it never produces a
-wrong hard error, since errors come from \may\ only. The analysis is intentionally
-sound-for-errors rather than complete: it will not flag a semantic bug that is
-nonetheless well-formed dataflow (e.g., a prompt that asks for the wrong thing).
-The wild-bug survey is a targeted sample of public reports, not an exhaustive
-census, and establishes that the classes occur, not their frequency. Finally,
-the externally-grounded LLM-generation study is designed and its scoring path
-verified, but its headline numbers await a keyed generation run
-(\S\ref{sec:eval}); we do not report them here and do not claim them.
+We state the analysis's holes as owned limitations. (1) The \may/\must\ analysis
+is \emph{sound for the errors it raises but not complete}: it is not a soundness
+proof, and it reasons over \emph{availability}, not types or values---a key
+produced with the wrong type or an empty value still passes. (2) It analyzes only
+the \emph{declared} \code{reads}/\code{writes} and the graph edges; it does
+\textbf{not} read the code inside \code{ConditionNode} predicates (arbitrary
+lambdas), tool bodies, or other custom callables, so a state key touched only
+inside such a callable is invisible unless the node declares it. (3) After the
+loop-back-edge fix the analysis catches loop-carried read-before-write on the
+first iteration, but it makes no termination or runaway-loop guarantee: a graph
+that loops forever still passes the build. (4) The 0-false-positive figure is
+\emph{observed on 19 valid pipelines}, not a guarantee; the \must\ set can also
+over-approximate exclusivity where a decision handler merges back through an
+unconditional edge, which can only \emph{under}-warn, never produce a wrong hard
+error. (5) Requiring \code{reads=}/\code{writes=} declarations means an undeclared
+but genuinely-produced input can be rejected until it is declared, and the DSL
+itself has wiring footguns (e.g.\ \code{[b,c] > [d,e]}). (6) The wild-bug survey
+is an illustrative sample, not a census; and the primary LLM-generation study is
+designed and its scoring path verified, but its headline numbers await a keyed
+generation run (\S\ref{sec:eval})---we do not report or claim them here.
 
 \section*{Ethics and Broader Impact}
 
@@ -422,15 +503,16 @@ released under the MIT license.
 \section{Reproducing the evaluation}
 \label{app:repro}
 
-All numbers are produced offline (no API key) from the repository:
-\code{eval/bugbench/run.py} regenerates \code{eval/bugbench/results.csv} (the 15
-buggy / 19 valid outcomes and per-pipeline wasted-call counts);
-\code{eval/loc\_compare.py} regenerates \code{eval/loc\_results.csv} (the 113
-vs.\ 281 line counts over 12 pipelines); \code{eval/overhead.py} prints the
+All controlled numbers are produced offline (no API key) from the repository:
+\code{eval/bugbench/run.py} regenerates \code{eval/bugbench/results.json} (the 17
+buggy / 19 valid outcomes, per-class categories, and simulated wasted-call
+counts); \code{eval/loc\_compare.py} regenerates \code{eval/loc\_results.csv} (the
+113 vs.\ 281 line counts over 12 pipelines); \code{eval/overhead.py} prints the
 build-time and runtime-parity measurements; and
-\code{eval/llmgen/score.py --gen-dir samples} runs the sample-set self-test of
-the externally-grounded study. The wild-bug reports with issue links are in
-\code{docs/EVIDENCE.md}.
+\code{eval/llmgen/score.py --gen-dir samples} runs the offline sample-set
+self-test of the primary study. The primary study's headline numbers require an
+\code{OPENAI\_API\_KEY} and \code{eval/llmgen/run\_study.sh}. The wild-bug reports
+with issue links are in \code{docs/EVIDENCE.md}.
 
 \section{Example: a validated NLP pipeline}
 \label{app:example}

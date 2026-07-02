@@ -52,6 +52,9 @@ from _llm import get_llm  # noqa: E402  (offline fake unless OPENAI_API_KEY is s
 #   runtime -> LangGraph raises only at invoke() (KeyError / InvalidUpdateError);
 #   silent  -> LangGraph never errors (wrong/empty output, or a dropped write);
 #   build   -> LangGraph ALSO catches it at construction (not a pttai differentiator).
+#   dsl-strictness -> a pttai DSL-strictness rejection, NOT a LangGraph bug:
+#             LangGraph runs the pipeline fine (e.g. a childless node is a legal
+#             implicit terminal). Excluded from the pttai-only differentiator count.
 # ---------------------------------------------------------------------------
 _VALIDATION_CLASSES = [
     ("read-before-write", "runtime", ["reads computed key"]),
@@ -63,7 +66,10 @@ _VALIDATION_CLASSES = [
     ("write-undeclared", "silent", ["writes key", "silently drops unknown-key"]),
 ]
 _STRUCTURAL_CLASSES = [  # non-GraphValidationError build failures pttai still rejects
-    ("dead-end-node", "silent", ["has no children and is not an end node"]),
+    # dead-end is DSL-strictness, NOT a LangGraph bug: LangGraph treats a childless
+    # node as a legal implicit terminal and runs fine, so this is not a pttai-only
+    # differentiator (mirrors the eval/bugbench reclassification).
+    ("dead-end-node", "dsl-strictness", ["has no children and is not an end node"]),
     ("duplicate-node-names", "build", ["already present"]),
 ]
 # Exceptions that mean "the model wrote broken/non-pttai code", not a validator flag.
@@ -173,6 +179,7 @@ def summarize(rows, adjudication):
     lg_runtime = sum(r["langgraph_phase"] == "runtime" for r in flagged)
     lg_silent = sum(r["langgraph_phase"] == "silent" for r in flagged)
     lg_build = sum(r["langgraph_phase"] == "build" for r in flagged)
+    lg_dsl = sum(r["langgraph_phase"] == "dsl-strictness" for r in flagged)
 
     return {
         "backend": "REAL OpenAI" if os.environ.get("OPENAI_API_KEY") else "offline fake",
@@ -187,6 +194,7 @@ def summarize(rows, adjudication):
         "true_bugs_among_flags": len(true_bugs),
         "langgraph_would": {
             "runtime_only": lg_runtime, "silent": lg_silent, "build_too": lg_build,
+            "dsl_strictness": lg_dsl,
             "runtime_or_silent": lg_runtime + lg_silent,
         },
         "flags_by_class": dict(by_class),
@@ -232,6 +240,8 @@ def _print(summary, gen_dir):
     print(f"  only at runtime:   {lg['runtime_only']}")
     print(f"  silently (never):  {lg['silent']}")
     print(f"  also at build:     {lg['build_too']}  (not a pttai differentiator)")
+    print(f"  DSL-strictness:    {lg.get('dsl_strictness', 0)}  "
+          f"(LangGraph runs fine -- not a pttai differentiator)")
     print(f"  => runtime-or-silent (pttai-only early catch): {lg['runtime_or_silent']}")
     print(f"\nflags by class:           {summary['flags_by_class']}")
 

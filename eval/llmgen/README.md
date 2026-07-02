@@ -69,8 +69,10 @@ PYTHONPATH=. .venv/bin/python eval/llmgen/score.py --gen-dir samples
 
 Measured offline result on the sample set (this is a **harness self-test**, not
 the study): 9 scored → 4 clean, **5 flagged (0 false positives)**, 0 malformed;
-of the 5 flags, raw LangGraph would surface 4 only at runtime and 1 silently.
-This is what the committed `results.{csv,json}` currently contain.
+of the 5 flags, raw LangGraph would surface 4 only at runtime, and the 5th
+(dead-end) is a pttai **DSL-strictness** rejection LangGraph runs fine — not a
+pttai-only differentiator. This is what the committed `results.{csv,json}`
+currently contain.
 
 ## Headline results — populate by running `run_study.sh`
 

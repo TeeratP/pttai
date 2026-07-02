@@ -1,7 +1,9 @@
 # pttai NLP pipelines — concrete NLP tasks, both ways
 
-pttai is an NLP orchestration layer: you wire language-model steps into a
-pipeline and it compiles down to a native LangGraph `StateGraph`. Each file here
+pttai is a declarative DSL over LangGraph whose typed per-node `reads`/`writes`
+enable a build-time dataflow lint: you wire language-model steps with `>` and it
+compiles down to a native LangGraph `StateGraph`. NLP pipelines are a use case,
+not pttai's identity — these examples just make the DSL concrete. Each file here
 builds a real NLP pipeline the **pttai way first**, then a runnable
 `# --- equivalent in raw LangGraph ---` block, so you see the same task both ways.
 

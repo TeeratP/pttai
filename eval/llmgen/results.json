@@ -15,9 +15,10 @@
     "true_bugs_among_flags": 5,
     "langgraph_would": {
       "runtime_only": 4,
-      "silent": 1,
+      "silent": 0,
       "build_too": 0,
-      "runtime_or_silent": 5
+      "dsl_strictness": 1,
+      "runtime_or_silent": 4
     },
     "flags_by_class": {
       "concurrent-write-no-reducer": 1,
@@ -28,7 +29,7 @@
     },
     "flags_by_langgraph_phase": {
       "runtime": 4,
-      "silent": 1
+      "dsl-strictness": 1
     }
   },
   "items": [
@@ -55,7 +56,7 @@
       "file": "bug_dead_end.py",
       "bucket": "flagged",
       "bug_class": "dead-end-node",
-      "langgraph_phase": "silent",
+      "langgraph_phase": "dsl-strictness",
       "error_type": "ValueError",
       "message": "Node 'writeup' has no children and is not an end node."
     },
