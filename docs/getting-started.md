@@ -2,7 +2,12 @@
 
 ## Install
 
-Not on PyPI yet — install from source:
+```bash
+pip install pttai              # core
+pip install "pttai[openai]"    # + langchain-openai & python-dotenv (for live model calls)
+```
+
+Or from source (for development):
 
 ```bash
 git clone https://github.com/TeeratP/pttai && cd pttai

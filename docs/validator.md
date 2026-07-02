@@ -156,17 +156,18 @@ that isn't declared terminal would leave the graph with nowhere to go. This is a
 pass):
 
 ```python
-a = AgentNode(name="a", llm=llm)
-b = AgentNode(name="b", llm=llm)
-a > b
-AgenticGraph(start_node=a, end_nodes={a})   # b has no child and isn't an end node
+p = AgentNode(name="p", llm=llm)
+q = AgentNode(name="q", llm=llm)
+r = AgentNode(name="r", llm=llm)
+p > [q, r]                                   # q and r both run after p
+AgenticGraph(start_node=p, end_nodes={r})    # but only r is terminal — q dead-ends
 ```
 
 ```
-ValueError: Node 'b' has no children and is not an end node.
+ValueError: Node 'q' has no children and is not an end node.
 ```
 
-Fix: add `b` to `end_nodes`, or wire `b` onward.
+Fix: add `q` to `end_nodes`, or wire `q` onward.
 
 ### 6. Duplicate node names
 
