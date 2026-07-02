@@ -906,7 +906,12 @@ view of the DAG (per-node reads / writes / available keys):</p>
 <h2 id="token-usage">Token usage<a class="headerlink" href="#token-usage" title="Permanent link">&para;</a></h2>
 <p><code>out["token"]</code> is a <code>{model: {total_tokens / input_tokens / output_tokens}}</code>
 breakdown accumulated across every node in the run — per-model, so a graph that
-mixes models keeps them separate.</p>
+mixes models keeps them separate. It's tracked <strong>automatically — no callbacks,
+no custom reducer</strong>; every LLM call (including tool-loop and parallel-branch
+calls) is deep-summed into the total. Offline (no <code>OPENAI_API_KEY</code>) the fake
+model reports no usage, so <code>token</code> is an empty <code>{}</code>; a real model fills it.
+Side-by-side vs. the hand-wired raw-LangGraph equivalent:
+<a href="https://github.com/TeeratP/agentic-framework/blob/main/examples/basics/13_token_and_log.py"><code>examples/basics/13_token_and_log.py</code></a>.</p>
 <h2 id="prompt-caching">Prompt caching<a class="headerlink" href="#prompt-caching" title="Permanent link">&para;</a></h2>
 <p>Opt-in OpenAI prompt caching: <code>AgenticGraph(..., prompt_cache=True)</code> threads one
 cache key through every OpenAI <code>AgentNode</code> call in the graph.</p>
